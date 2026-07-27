@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 1 of 7
+-- HTML Hero — course seed, part 1 of 8
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -24,23 +24,19 @@ begin;
 -- rather than duplicating them, so content edits can be re-seeded safely.
 
 begin;
--- Content is replaced wholesale; learner data is untouched because every
--- learner table references the catalogue rather than being part of it.
+-- Learner progress hangs off the catalogue by foreign key, and those keys
+-- cascade. Deleting a lesson therefore deletes every learner's progress
+-- through it, so rows a learner can reference are UPDATED IN PLACE by slug
+-- and never dropped and rebuilt. Only child rows nothing owns are replaced
+-- wholesale: blocks, requirements, options and join tables.
 delete from public.lesson_blocks;
 delete from public.exercise_requirements;
 delete from public.quiz_options;
-delete from public.quiz_questions;
-delete from public.exercises;
-delete from public.lessons;
 delete from public.module_skills;
 delete from public.module_prerequisites;
-delete from public.assessments;
-delete from public.modules;
-delete from public.levels;
 delete from public.skill_prerequisites;
 delete from public.media_attributions;
 delete from public.learning_media;
-delete from public.project_templates;
 -- --------------------------------------------------------------------------
 -- Skills
 -- --------------------------------------------------------------------------
@@ -1392,16 +1388,28 @@ on conflict (slug) do update set
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
 select c.id, 'html-explorer', 1, 'HTML Explorer', 'From "I have never written code" to a real, valid web page',
        'Every word in this level is explained before it is used. You will learn what a browser actually does, what an HTML file is, and how to write one that a browser understands.', 'You can write a correctly structured HTML page from a blank file, from memory.', 'blue'
-from public.courses c where c.slug = 'html-hero';
+from public.courses c where c.slug = 'html-hero'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
 insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
 select l.id, NULL, 'level-1-milestone', 'milestone'::public.assessment_kind, 'Level 1 milestone: HTML Explorer', 'Ten questions covering everything in Level 1. You need 75% to move on. If you do not reach it, the questions you missed become targeted practice — nothing is lost.',
        0.75, 150, 1
-from public.levels l where l.slug = 'html-explorer';
+from public.levels l where l.slug = 'html-explorer'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
 -- module: How the web actually works
 insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
 select l.id, 'how-the-web-works', 1, 'How the web actually works', 'Before writing anything, a short, plain-English picture of what happens between clicking a link and seeing a page.',
        35, false
-from public.levels l where l.slug = 'html-explorer';
+from public.levels l where l.slug = 'html-explorer'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
 insert into public.module_skills (module_id, skill_id, mastery_required)
 select m.id, s.id, 0
 from public.modules m, public.skills s
@@ -1411,7 +1419,12 @@ insert into public.lessons
   (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
 select m.id, 'what-happens-when-you-open-a-page', 1, 'What happens when you open a web page', 'Browsers, servers, and the file in the middle', 'A web page is a text file that one computer sends to another. Understanding that one sentence makes everything else easier.',
        ARRAY['Explain in your own words what a browser does', 'Describe what a web server sends when you visit a page', 'Recognise HTML as plain text, not a picture of a page']::text[], 12, 40, (select id from public.skills where slug = 'document-structure'), 0.7
-from public.modules m where m.slug = 'how-the-web-works';
+from public.modules m where m.slug = 'how-the-web-works'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
 select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
        NULL, NULL, NULL, '{"items":["Explain what a browser does with a web page","Describe what travels across the internet when you visit a site","Recognise that HTML is ordinary text you can read and write"]}'::jsonb
@@ -1469,7 +1482,13 @@ We open at 6am and bake until we sell out.', '<h1>Fresh bread, every morning</h1
 <p>We open at 6am and bake until we sell out.</p>', ARRAY['A label goes before and after the text it applies to. The one before is written <h1> and the one after is written </h1> — note the slash.', 'So the first line becomes: <h1>Fresh bread, every morning</h1>', 'Do the same for the second line, but with p instead of h1: <p>We open at 6am and bake until we sell out.</p>']::text[],
        30, 1,
        (select id from public.skills where slug = 'syntax'), false
-from public.lessons l where l.slug = 'what-happens-when-you-open-a-page';
+from public.lessons l where l.slug = 'what-happens-when-you-open-a-page'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 1, 'unique_element'::public.requirement_kind, 'h1', NULL,
@@ -1502,7 +1521,13 @@ select l.id, 'first-markup-debug', 2, 'debug'::public.exercise_kind, 'Find the m
 <p>Bikes, helmets and route maps, seven days a week.</p>', ARRAY['Look carefully at the two h1 labels. One of them is meant to close the heading.', 'A closing label always has a forward slash after the opening angle bracket: </h1>']::text[],
        25, 1,
        (select id from public.skills where slug = 'syntax'), false
-from public.lessons l where l.slug = 'what-happens-when-you-open-a-page';
+from public.lessons l where l.slug = 'what-happens-when-you-open-a-page'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 1, 'unique_element'::public.requirement_kind, 'h1', NULL,
@@ -1523,7 +1548,12 @@ select e.id, 3, 'text_content'::public.requirement_kind, 'p', NULL,
 from public.exercises e where e.slug = 'first-markup-debug';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'what-happens-when-you-open-a-page'), NULL, 'q-what-is-html', 1, 'single'::public.question_kind,
-        'What does a web server send to your browser when you visit a page?', 'The server sends files — starting with an HTML file. Your browser reads that file and draws the page from it. The picture you see is produced on your computer, not sent as a picture.', (select id from public.skills where slug = 'document-structure'), 10);
+        'What does a web server send to your browser when you visit a page?', 'The server sends files — starting with an HTML file. Your browser reads that file and draws the page from it. The picture you see is produced on your computer, not sent as a picture.', (select id from public.skills where slug = 'document-structure'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'A picture of the finished page', false, NULL
 from public.quiz_questions where slug = 'q-what-is-html';
@@ -1538,7 +1568,12 @@ select id, 4, 'A text file containing HTML, which the browser draws', true, NULL
 from public.quiz_questions where slug = 'q-what-is-html';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'what-happens-when-you-open-a-page'), NULL, 'q-html-purpose', 2, 'single'::public.question_kind,
-        'What is the job of HTML?', 'HTML describes what content *is* — a heading, a paragraph, a link. Appearance is CSS''s job, and behaviour is JavaScript''s job.', (select id from public.skills where slug = 'document-structure'), 10);
+        'What is the job of HTML?', 'HTML describes what content *is* — a heading, a paragraph, a link. Appearance is CSS''s job, and behaviour is JavaScript''s job.', (select id from public.skills where slug = 'document-structure'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'To describe what each piece of content means', true, NULL
 from public.quiz_questions where slug = 'q-html-purpose';
@@ -1556,7 +1591,12 @@ insert into public.lessons
   (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
 select m.id, 'tags-elements-attributes', 2, 'Tags, elements and attributes', 'The three words that unlock everything else', 'Almost all of HTML is one pattern repeated. Learn the pattern once and every new element becomes easy.',
        ARRAY['Tell a tag apart from an element', 'Write an attribute correctly, with its name and value', 'Recognise elements that have no closing tag']::text[], 14, 40, (select id from public.skills where slug = 'syntax'), 0.7
-from public.modules m where m.slug = 'how-the-web-works';
+from public.modules m where m.slug = 'how-the-web-works'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
 select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
        NULL, NULL, NULL, '{"items":["Explain the difference between a tag and an element","Add an attribute to an element with the correct syntax","Identify void elements, which never have a closing tag"]}'::jsonb
@@ -1625,7 +1665,13 @@ select l.id, 'attributes-guided', 1, 'guided'::public.exercise_kind, 'Add an att
        'The link below has no destination, so clicking it does nothing. Add an `href` attribute with the value `opening-hours.html`, keeping the visible text exactly as it is.', '<p>Check our <a>opening hours</a> before you visit.</p>', '<p>Check our <a href="opening-hours.html">opening hours</a> before you visit.</p>', ARRAY['An attribute goes inside the opening tag, after the element name, separated by a space.', 'The pattern is: <a href="value">', 'The finished tag is <a href="opening-hours.html"> — remember the quotation marks.']::text[],
        30, 1,
        (select id from public.skills where slug = 'syntax'), false
-from public.lessons l where l.slug = 'tags-elements-attributes';
+from public.lessons l where l.slug = 'tags-elements-attributes'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 1, 'element_present'::public.requirement_kind, 'a', NULL,
@@ -1658,7 +1704,13 @@ select l.id, 'attributes-challenge', 2, 'challenge'::public.exercise_kind, 'Buil
 <a href="menu.html">See our menu</a>', ARRAY['You need three separate elements, each on its own line.', 'Start with <h1>…</h1>, then <p>…</p>, then a link.', 'The link needs an href attribute pointing at menu.html.']::text[],
        40, 2,
        (select id from public.skills where slug = 'syntax'), false
-from public.lessons l where l.slug = 'tags-elements-attributes';
+from public.lessons l where l.slug = 'tags-elements-attributes'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 1, 'unique_element'::public.requirement_kind, 'h1', NULL,
@@ -1705,7 +1757,13 @@ select l.id, 'attributes-debug', 3, 'debug'::public.exercise_kind, 'Three broken
 <a href="contact.html">Contact</a>', ARRAY['Line 1: the value has no quotation marks around it.', 'Line 2: a quotation mark is opened but never closed, so the alt text got swallowed.', 'Line 3: there should be no spaces around the equals sign.']::text[],
        35, 2,
        (select id from public.skills where slug = 'validation'), false
-from public.lessons l where l.slug = 'tags-elements-attributes';
+from public.lessons l where l.slug = 'tags-elements-attributes'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 1, 'element_count'::public.requirement_kind, 'a', NULL,
@@ -1738,7 +1796,12 @@ select e.id, 5, 'text_content'::public.requirement_kind, 'a', NULL,
 from public.exercises e where e.slug = 'attributes-debug';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'tags-elements-attributes'), NULL, 'q-tag-vs-element', 1, 'single'::public.question_kind,
-        'In `<p>Hello</p>`, which part is the element?', 'The element is the whole thing: opening tag, content and closing tag. `<p>` on its own is just a tag.', (select id from public.skills where slug = 'syntax'), 10);
+        'In `<p>Hello</p>`, which part is the element?', 'The element is the whole thing: opening tag, content and closing tag. `<p>` on its own is just a tag.', (select id from public.skills where slug = 'syntax'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'Just `</p>`', false, NULL
 from public.quiz_questions where slug = 'q-tag-vs-element';
@@ -1753,7 +1816,12 @@ select id, 4, 'Just the word `Hello`', false, NULL
 from public.quiz_questions where slug = 'q-tag-vs-element';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'tags-elements-attributes'), NULL, 'q-attribute-syntax', 2, 'single'::public.question_kind,
-        'Which of these writes an attribute correctly?', 'The name touches the equals sign, the equals sign touches the value, and the value sits in quotation marks.', (select id from public.skills where slug = 'syntax'), 10);
+        'Which of these writes an attribute correctly?', 'The name touches the equals sign, the equals sign touches the value, and the value sits in quotation marks.', (select id from public.skills where slug = 'syntax'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, '<a href="shop.html">', true, NULL
 from public.quiz_questions where slug = 'q-attribute-syntax';
@@ -1768,7 +1836,12 @@ select id, 4, '<a "href"=shop.html>', false, NULL
 from public.quiz_questions where slug = 'q-attribute-syntax';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'tags-elements-attributes'), NULL, 'q-void-elements', 3, 'single'::public.question_kind,
-        'Why does `<img>` have no closing tag?', 'Void elements do not wrap any content, so there is nothing for a closing tag to close. Everything the element needs is given as attributes.', (select id from public.skills where slug = 'syntax'), 10);
+        'Why does `<img>` have no closing tag?', 'Void elements do not wrap any content, so there is nothing for a closing tag to close. Everything the element needs is given as attributes.', (select id from public.skills where slug = 'syntax'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'It wraps no content, so there is nothing to close', true, NULL
 from public.quiz_questions where slug = 'q-void-elements';
@@ -1786,7 +1859,12 @@ insert into public.lessons
   (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
 select m.id, 'nesting-and-the-document-tree', 3, 'Nesting and the document tree', 'Why order matters, and how to keep it readable', 'Elements go inside other elements. Getting the order right is the single biggest thing that separates markup that works from markup that mysteriously does not.',
        ARRAY['Nest elements in the correct order', 'Read an HTML document as a tree', 'Indent your code so mistakes become visible']::text[], 14, 40, (select id from public.skills where slug = 'syntax'), 0.7
-from public.modules m where m.slug = 'how-the-web-works';
+from public.modules m where m.slug = 'how-the-web-works'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
 select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
        NULL, NULL, NULL, '{"items":["Nest elements correctly and spot when they overlap","Describe a page as a tree of parents and children","Use indentation and comments to keep markup readable"]}'::jsonb
@@ -1825,63 +1903,5 @@ select id, 8, 'annotated_code'::public.block_type, 'Line by line', NULL,
   </p>
 </article>', 'html', NULL, '{"annotations":[{"line":"1","text":"`<article>` opens at the far left — it is the outermost element here."},{"line":"2-5","text":"Its children are indented two spaces, showing they sit inside it."},{"line":"4","text":"The `<strong>` is a child of the paragraph, so it is indented again."},{"line":"6","text":"`</article>` lines up exactly with `<article>`. If the indentation of an opening and closing tag do not line up, something is wrong."}]}'::jsonb
 from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'prose'::public.block_type, NULL, 'You can also leave notes for yourself in the file. Anything between `<!--` and `-->` is a comment: the browser ignores it completely, and it never appears on the page.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'code_example'::public.block_type, 'A comment', NULL,
-       '<!-- Opening hours are updated every Monday -->
-<p>Open 6am to 2pm, Tuesday to Sunday.</p>', 'html', NULL, '{}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'callout'::public.block_type, 'Comments are not private', 'Anyone can view the source of your page and read your comments. Never put passwords, personal information or unflattering remarks in them.',
-       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'progressive_detail'::public.block_type, 'What browsers do with broken nesting', 'The HTML specification defines a detailed error-recovery algorithm, so a browser will always produce *something* from broken markup rather than showing an error. That sounds helpful, and it is — but the repair it chooses may not be the page you intended, and CSS and JavaScript written against the structure you meant will then fail in confusing ways. This is why the checker in this course reports overlapping tags as errors even though the preview still renders.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
-       NULL, NULL, NULL, '{"points":["Elements nest inside one another and must close in reverse order.","The nested structure is a tree; the browser''s live copy of it is called the DOM.","Indent two spaces per level so a missing closing tag is visible at a glance.","Comments (`<!-- … -->`) are ignored by the browser but readable by anyone."],"nextUp":"Next: the skeleton every real HTML file needs."}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'nesting-guided', 1, 'guided'::public.exercise_kind, 'Nest a list correctly',
-       'Build an unordered list (`<ul>`) containing exactly three list items (`<li>`), one for each of three services. Indent the items two spaces inside the list.', '<ul>
-
-</ul>', '<ul>
-  <li>Bike hire by the hour or day</li>
-  <li>Guided river routes</li>
-  <li>Repairs while you wait</li>
-</ul>', ARRAY['Each item is its own element: <li>…</li>', 'All three <li> elements go between the <ul> and the </ul>.', 'Indent each <li> by two spaces so the nesting is visible.']::text[],
-       30, 1,
-       (select id from public.skills where slug = 'syntax'), false
-from public.lessons l where l.slug = 'nesting-and-the-document-tree';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'element_present'::public.requirement_kind, 'ul', NULL,
-       NULL, NULL, NULL, NULL,
-       'There is an unordered list', NULL, 1, true
-from public.exercises e where e.slug = 'nesting-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'element_count'::public.requirement_kind, 'ul > li', NULL,
-       NULL, NULL, 3, 3,
-       'The list has exactly three items', NULL, 1, true
-from public.exercises e where e.slug = 'nesting-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'text_not_empty'::public.requirement_kind, 'li', NULL,
-       NULL, NULL, NULL, NULL,
-       'Every item has text', NULL, 1, true
-from public.exercises e where e.slug = 'nesting-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'valid_nesting'::public.requirement_kind, NULL, NULL,
-       NULL, NULL, NULL, NULL,
-       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
-from public.exercises e where e.slug = 'nesting-guided';
 
 commit;

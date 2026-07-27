@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 6 of 7
+-- HTML Hero — course seed, part 6 of 8
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -10,6 +10,1174 @@
 -- Run part 5 first.
 
 begin;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'accessible_name'::public.requirement_kind, 'button', NULL,
+       NULL, NULL, NULL, NULL,
+       'Both buttons have visible text', NULL, 1, true
+from public.exercises e where e.slug = 'popover-guided';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'dialog-debug', 2, 'debug'::public.exercise_kind, 'A dialog with no way out',
+       'This dialog has no close mechanism and no heading. Add a heading and a `<form method="dialog">` with a close button.', '<dialog id="policy">
+  <p>Cancel up to two hours before your booking for a full refund.</p>
+</dialog>', '<dialog id="policy">
+  <h2>Cancellation policy</h2>
+  <p>Cancel up to two hours before your booking for a full refund.</p>
+  <form method="dialog">
+    <button type="submit">Close</button>
+  </form>
+</dialog>', ARRAY['A dialog should start with a heading so its purpose is announced.', 'A form with method="dialog" closes the dialog when submitted.', 'Put a submit button inside that form.']::text[],
+       40, 2,
+       (select id from public.skills where slug = 'native-interaction'), false
+from public.lessons l where l.slug = 'dialog-and-popover'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'nesting'::public.requirement_kind, 'h2, h3', NULL,
+       NULL, 'dialog', 1, NULL,
+       'The dialog has a heading', NULL, 1, true
+from public.exercises e where e.slug = 'dialog-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'attribute_value'::public.requirement_kind, 'dialog form', 'method',
+       'dialog', NULL, NULL, NULL,
+       'A form with method="dialog" is present', NULL, 1, true
+from public.exercises e where e.slug = 'dialog-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'nesting'::public.requirement_kind, 'button', NULL,
+       NULL, 'dialog form', 1, NULL,
+       'There is a close button inside that form', NULL, 1, true
+from public.exercises e where e.slug = 'dialog-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'accessible_name'::public.requirement_kind, 'button', NULL,
+       NULL, NULL, NULL, NULL,
+       'The button has visible text', NULL, 1, true
+from public.exercises e where e.slug = 'dialog-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'dialog-and-popover'), NULL, 'q-dialog-close', 1, 'single'::public.question_kind,
+        'How can a `<dialog>` be closed without JavaScript?', 'With a `<form method="dialog">` — submitting it closes the dialog.', (select id from public.skills where slug = 'native-interaction'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It cannot be, ever', false, NULL
+from public.quiz_questions where slug = 'q-dialog-close';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A form with method="dialog"', true, NULL
+from public.quiz_questions where slug = 'q-dialog-close';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'A button with type="reset"', false, NULL
+from public.quiz_questions where slug = 'q-dialog-close';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A link to #close', false, NULL
+from public.quiz_questions where slug = 'q-dialog-close';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'dialog-and-popover'), NULL, 'q-popover-js', 2, 'single'::public.question_kind,
+        'Does the `popover` attribute require JavaScript?', 'No. `popovertarget` on a button wires up the whole interaction, including the ARIA relationship.', (select id from public.skills where slug = 'native-interaction'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Yes, to show it', false, NULL
+from public.quiz_questions where slug = 'q-popover-js';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Yes, to close it', false, NULL
+from public.quiz_questions where slug = 'q-popover-js';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Only on mobile browsers', false, NULL
+from public.quiz_questions where slug = 'q-popover-js';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'No — popovertarget handles it entirely', true, NULL
+from public.quiz_questions where slug = 'q-popover-js';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'dialog-and-popover'), NULL, 'q-modal-content', 3, 'single'::public.question_kind,
+        'Why should essential content never live only inside a dialog?', 'Anyone whose browser does not open it, or whose JavaScript fails, cannot reach the content at all.', (select id from public.skills where slug = 'progressive-enhancement'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Dialogs cannot contain paragraphs', false, NULL
+from public.quiz_questions where slug = 'q-modal-content';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Search engines index dialogs twice', false, NULL
+from public.quiz_questions where slug = 'q-modal-content';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Dialogs are not keyboard accessible', false, NULL
+from public.quiz_questions where slug = 'q-modal-content';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'If the overlay does not open, the content is unreachable', true, NULL
+from public.quiz_questions where slug = 'q-modal-content';
+-- lesson: Progress, meter, datalist — and the milestone
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'progress-meter-datalist-milestone', 3, 'Progress, meter, datalist — and the milestone', 'The last four native controls, then build the lot', 'Three small elements with precise meanings, plus a native autocomplete — and then the Level 7 milestone build.',
+       ARRAY['Use progress and meter for their correct, different meanings', 'Add native autocomplete with datalist', 'Combine every Level 7 feature on one page']::text[], 25, 40, (select id from public.skills where slug = 'native-interaction'), 0.8
+from public.modules m where m.slug = 'disclosure-and-dialog'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Distinguish progress from meter","Build a datalist-backed input","Build a complete interactive page with no JavaScript"]}'::jsonb
+from public.lessons where slug = 'progress-meter-datalist-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'comparison'::public.block_type, 'progress or meter?', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"`<progress>` — a task advancing","code":"<label for=\"setup\">Profile completeness</label>\n<progress id=\"setup\" value=\"7\" max=\"10\">7 of 10</progress>","why":"Something that moves towards completion: an upload, a form wizard, a download. It has a beginning and an end."},"bad":{"label":"`<meter>` — a measurement in a range","code":"<label for=\"fleet\">Bikes available today</label>\n<meter id=\"fleet\" value=\"6\" min=\"0\" max=\"24\" low=\"5\" high=\"18\" optimum=\"20\">6 of 24</meter>","why":"A gauge reading, with no notion of completion: disk usage, a rating, stock level. `low`, `high` and `optimum` let browsers colour it."}}'::jsonb
+from public.lessons where slug = 'progress-meter-datalist-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'callout'::public.block_type, 'A meter is not a progress bar', 'Using `<meter>` for a download, or `<progress>` for stock level, is announced wrongly by screen readers and coloured wrongly by browsers. Ask: is this moving towards being finished? If yes, `<progress>`. If it is simply a reading within a range, `<meter>`.',
+       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
+from public.lessons where slug = 'progress-meter-datalist-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'prose'::public.block_type, NULL, 'The text inside `<progress>` or `<meter>` is fallback content for very old browsers — but it is also worth keeping, because it states the value in words.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'progress-meter-datalist-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'annotated_code'::public.block_type, 'Line by line', NULL,
+       '<label for="route-choice">Which route?</label>
+<input list="routes" id="route-choice" name="route"
+       autocomplete="off" placeholder="Start typing…">
+
+<datalist id="routes">
+  <option value="Harbour loop"></option>
+  <option value="Mill and back"></option>
+  <option value="The full valley"></option>
+</datalist>', 'html', NULL, '{"annotations":[{"line":"2","text":"`list=\"routes\"` connects the input to a `<datalist>` by its id."},{"line":"5-9","text":"The `<datalist>` holds the suggestions. It renders nothing itself."},{"line":"2","text":"Crucially, this is a *suggestion* list, not a restriction — the user can type anything. If only the listed values are acceptable, use a `<select>` instead."}]}'::jsonb
+from public.lessons where slug = 'progress-meter-datalist-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'term'::public.block_type, '<output>', 'A place for a calculated result. It is a live region by default, so screen readers announce changes to it — which is exactly what you want for a running total.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'progress-meter-datalist-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'checklist'::public.block_type, 'The Level 7 milestone page needs', NULL,
+       NULL, NULL, NULL, '{"items":["An FAQ accordion of at least three `<details>` sharing a `name`","A `<dialog>` with a heading and a `<form method=\"dialog\">` close button","A popover with a trigger button and a close button","A `<progress>` element with a label","A `<meter>` element with a label","An input backed by a `<datalist>`","No `<script>` elements anywhere"]}'::jsonb
+from public.lessons where slug = 'progress-meter-datalist-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["`<progress>` for tasks advancing; `<meter>` for gauge readings.","`<datalist>` suggests values without restricting them.","`<output>` announces calculated results to screen readers.","Everything in this level works without a line of JavaScript."],"nextUp":"Level 8 next: accessibility in depth."}'::jsonb
+from public.lessons where slug = 'progress-meter-datalist-milestone';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'datalist-guided', 1, 'guided'::public.exercise_kind, 'Add native autocomplete',
+       'Connect this input to a `<datalist>` with the id `routes` containing three options. Also add a labelled `<meter>` showing 6 bikes available out of 24.', '<label for="route-choice">Which route?</label>
+<input id="route-choice" name="route" placeholder="Start typing…">
+
+<label for="fleet">Bikes available today</label>
+', '<label for="route-choice">Which route?</label>
+<input list="routes" id="route-choice" name="route" placeholder="Start typing…">
+
+<datalist id="routes">
+  <option value="Harbour loop"></option>
+  <option value="Mill and back"></option>
+  <option value="The full valley"></option>
+</datalist>
+
+<label for="fleet">Bikes available today</label>
+<meter id="fleet" value="6" min="0" max="24" low="5" high="18" optimum="20">6 of 24</meter>', ARRAY['Add list="routes" to the input, matching the datalist id.', 'Each suggestion is an <option value="…"></option> inside the datalist.', 'The meter needs value="6", min="0" and max="24", plus an id matching its label.']::text[],
+       50, 3,
+       (select id from public.skills where slug = 'native-interaction'), false
+from public.lessons l where l.slug = 'progress-meter-datalist-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'attribute_value'::public.requirement_kind, 'input', 'list',
+       'routes', NULL, NULL, NULL,
+       'The input is connected to the datalist', NULL, 1, true
+from public.exercises e where e.slug = 'datalist-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'element_present'::public.requirement_kind, 'datalist#routes', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a datalist with that id', NULL, 1, true
+from public.exercises e where e.slug = 'datalist-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'element_count'::public.requirement_kind, 'datalist option', NULL,
+       NULL, NULL, 3, NULL,
+       'The datalist offers at least three options', NULL, 1, true
+from public.exercises e where e.slug = 'datalist-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'element_present'::public.requirement_kind, 'meter', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a meter', NULL, 1, true
+from public.exercises e where e.slug = 'datalist-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'attribute_value'::public.requirement_kind, 'meter', 'value',
+       '6', NULL, NULL, NULL,
+       'The meter shows the current value', NULL, 1, true
+from public.exercises e where e.slug = 'datalist-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'attribute_value'::public.requirement_kind, 'meter', 'max',
+       '24', NULL, NULL, NULL,
+       'The meter declares its maximum', NULL, 1, true
+from public.exercises e where e.slug = 'datalist-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 7, 'label_association'::public.requirement_kind, 'input, meter', NULL,
+       NULL, NULL, NULL, NULL,
+       'Both controls are labelled', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+from public.exercises e where e.slug = 'datalist-guided';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'native-milestone', 2, 'challenge'::public.exercise_kind, 'Milestone: an interactive page with no JavaScript',
+       'Build a page meeting every item on the checklist above. Everything must work with no scripting at all — the preview will not run any.', '', '<h1>Booking help</h1>
+
+<h2>Frequently asked questions</h2>
+
+<details name="faq" open>
+  <summary>Do I need to book in advance?</summary>
+  <p>Not on weekdays. At weekends, please book a day ahead.</p>
+</details>
+
+<details name="faq">
+  <summary>Are helmets included?</summary>
+  <p>Yes — a helmet and a lock come with every hire.</p>
+</details>
+
+<details name="faq">
+  <summary>What if it rains?</summary>
+  <p>
+    Cancel up to two hours before for a full refund.
+    <button popovertarget="policy-tip" popovertargetaction="toggle">See the details</button>
+  </p>
+</details>
+
+<div id="policy-tip" popover>
+  <h3>Cancellation in detail</h3>
+  <p>Refunds are returned to the original payment method within five working days.</p>
+  <button popovertarget="policy-tip" popovertargetaction="hide">Close</button>
+</div>
+
+<dialog id="terms">
+  <h2>Hire terms</h2>
+  <p>Bikes must be returned by 6pm on the day of hire.</p>
+  <form method="dialog">
+    <button type="submit">Close</button>
+  </form>
+</dialog>
+
+<h2>Today at a glance</h2>
+
+<label for="setup">Your booking, so far</label>
+<progress id="setup" value="3" max="5">3 of 5 steps complete</progress>
+
+<label for="fleet">Bikes available today</label>
+<meter id="fleet" value="6" min="0" max="24" low="5" high="18" optimum="20">6 of 24</meter>
+
+<label for="route-choice">Which route?</label>
+<input list="routes" id="route-choice" name="route" placeholder="Start typing…">
+<datalist id="routes">
+  <option value="Harbour loop"></option>
+  <option value="Mill and back"></option>
+  <option value="The full valley"></option>
+</datalist>', ARRAY['Work down the checklist one item at a time; each is only a few lines.', 'The three details elements need a shared name so only one opens at a time.', 'progress and meter both need labels connected by for and id.', 'Do not add any <script> — the checker will flag it.']::text[],
+       150, 5,
+       (select id from public.skills where slug = 'native-interaction'), false
+from public.lessons l where l.slug = 'progress-meter-datalist-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_count'::public.requirement_kind, 'details', NULL,
+       NULL, NULL, 3, NULL,
+       'At least three details elements', NULL, 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'attribute_present'::public.requirement_kind, 'details', 'name',
+       NULL, NULL, NULL, NULL,
+       'The details elements share a name', NULL, 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'element_count'::public.requirement_kind, 'details > summary', NULL,
+       NULL, NULL, 3, NULL,
+       'Each details has a summary', NULL, 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'element_present'::public.requirement_kind, 'dialog', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a dialog', NULL, 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'attribute_value'::public.requirement_kind, 'dialog form', 'method',
+       'dialog', NULL, NULL, NULL,
+       'The dialog can be closed without JavaScript', NULL, 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'element_present'::public.requirement_kind, '[popover]', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a popover', NULL, 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 7, 'element_present'::public.requirement_kind, 'button[popovertarget]', NULL,
+       NULL, NULL, NULL, NULL,
+       'A button controls the popover', NULL, 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 8, 'element_present'::public.requirement_kind, 'progress', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a progress element', NULL, 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 9, 'element_present'::public.requirement_kind, 'meter', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a meter element', NULL, 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 10, 'element_present'::public.requirement_kind, 'datalist', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a datalist', NULL, 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 11, 'attribute_present'::public.requirement_kind, 'input', 'list',
+       NULL, NULL, NULL, NULL,
+       'An input is connected to the datalist', NULL, 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 12, 'label_association'::public.requirement_kind, 'progress, meter, input', NULL,
+       NULL, NULL, NULL, NULL,
+       'Every control is labelled', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 13, 'element_count'::public.requirement_kind, 'script', NULL,
+       NULL, NULL, 0, 0,
+       'The page contains no JavaScript', NULL, 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 14, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 15, 'heading_order'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'The heading hierarchy is correct: one <h1>, and no skipped levels', 'Start with a single <h1>, then step down one level at a time — h2 before h3.', 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 16, 'valid_nesting'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
+from public.exercises e where e.slug = 'native-milestone';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'native-mission', 3, 'project_mission'::public.exercise_kind, 'Capstone mission: add an FAQ section',
+       'Add an FAQ accordion to one of your capstone pages using `<details>`, and a progress or meter display somewhere it genuinely fits — availability, capacity, or how far through a process a visitor is.', '<section aria-labelledby="faq-heading">
+  <h2 id="faq-heading">Frequently asked questions</h2>
+
+  <!-- Add at least three details elements sharing a name -->
+</section>', '<section aria-labelledby="faq-heading">
+  <h2 id="faq-heading">Frequently asked questions</h2>
+
+  <details name="faq" open>
+    <summary>Do I need to book in advance?</summary>
+    <p>Not on weekdays. At weekends, please book a day ahead.</p>
+  </details>
+
+  <details name="faq">
+    <summary>Are helmets included?</summary>
+    <p>Yes — a helmet and a lock come with every hire.</p>
+  </details>
+
+  <details name="faq">
+    <summary>Do you hire to children?</summary>
+    <p>Yes, from age six, with a parent or guardian present.</p>
+  </details>
+
+  <label for="fleet">Bikes available today</label>
+  <meter id="fleet" value="6" min="0" max="24" low="5" high="18" optimum="20">6 of 24</meter>
+</section>', ARRAY['Write questions your own visitors would genuinely ask.', 'All the details elements need the same name attribute.', 'The meter or progress element needs a label connected by for and id.']::text[],
+       90, 3,
+       (select id from public.skills where slug = 'native-interaction'), false
+from public.lessons l where l.slug = 'progress-meter-datalist-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_count'::public.requirement_kind, 'details', NULL,
+       NULL, NULL, 3, NULL,
+       'At least three FAQ entries', NULL, 1, true
+from public.exercises e where e.slug = 'native-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'element_count'::public.requirement_kind, 'details > summary', NULL,
+       NULL, NULL, 3, NULL,
+       'Each has a summary as its first child', NULL, 1, true
+from public.exercises e where e.slug = 'native-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'text_not_empty'::public.requirement_kind, 'summary', NULL,
+       NULL, NULL, NULL, NULL,
+       'Every question has text', NULL, 1, true
+from public.exercises e where e.slug = 'native-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'element_present'::public.requirement_kind, 'progress, meter', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a progress or meter display', NULL, 1, true
+from public.exercises e where e.slug = 'native-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'label_association'::public.requirement_kind, 'progress, meter', NULL,
+       NULL, NULL, NULL, NULL,
+       'The display is labelled', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+from public.exercises e where e.slug = 'native-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'element_count'::public.requirement_kind, 'script', NULL,
+       NULL, NULL, 0, 0,
+       'No JavaScript is used', NULL, 1, true
+from public.exercises e where e.slug = 'native-mission';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'progress-meter-datalist-milestone'), NULL, 'q-progress-vs-meter', 1, 'single'::public.question_kind,
+        'Which element suits "disk space used: 62%"?', 'A gauge reading within a range, with no notion of completion — that is `<meter>`.', (select id from public.skills where slug = 'native-interaction'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '<progress>', false, NULL
+from public.quiz_questions where slug = 'q-progress-vs-meter';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '<output>', false, NULL
+from public.quiz_questions where slug = 'q-progress-vs-meter';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '<data>', false, NULL
+from public.quiz_questions where slug = 'q-progress-vs-meter';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '<meter>', true, NULL
+from public.quiz_questions where slug = 'q-progress-vs-meter';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'progress-meter-datalist-milestone'), NULL, 'q-datalist-restrict', 2, 'single'::public.question_kind,
+        'Does a `<datalist>` restrict what the user can type?', 'No — it suggests. If only certain values are acceptable, use a `<select>` instead.', (select id from public.skills where slug = 'native-interaction'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Yes, only listed values are accepted', false, NULL
+from public.quiz_questions where slug = 'q-datalist-restrict';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Yes, when combined with required', false, NULL
+from public.quiz_questions where slug = 'q-datalist-restrict';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Only when the input has a pattern', false, NULL
+from public.quiz_questions where slug = 'q-datalist-restrict';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'No, it only suggests — use <select> to restrict', true, NULL
+from public.quiz_questions where slug = 'q-datalist-restrict';
+-- Level 7 milestone: Native Interaction Expert questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-7-milestone'), 'a7-q1', 1, 'single'::public.question_kind,
+        'What does `<details>` give you that a hand-built accordion must reimplement?', 'Keyboard activation, expanded/collapsed announcements, find-in-page support and correct printing — all built in.', (select id from public.skills where slug = 'native-interaction'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Server-side rendering', false, NULL
+from public.quiz_questions where slug = 'a7-q1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Keyboard, screen-reader, find-in-page and print behaviour', true, NULL
+from public.quiz_questions where slug = 'a7-q1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Animated transitions', false, NULL
+from public.quiz_questions where slug = 'a7-q1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Automatic styling', false, NULL
+from public.quiz_questions where slug = 'a7-q1';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-7-milestone'), 'a7-q2', 2, 'single'::public.question_kind,
+        'Which part of using `<dialog>` still needs JavaScript?', 'Opening it. `showModal()` is a JavaScript method with no HTML equivalent.', (select id from public.skills where slug = 'native-interaction'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Opening it', true, NULL
+from public.quiz_questions where slug = 'a7-q2';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Closing it', false, NULL
+from public.quiz_questions where slug = 'a7-q2';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Trapping focus inside it', false, NULL
+from public.quiz_questions where slug = 'a7-q2';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Making the background inert', false, NULL
+from public.quiz_questions where slug = 'a7-q2';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-7-milestone'), 'a7-q3', 3, 'single'::public.question_kind,
+        'What connects a button to a popover?', '`popovertarget`, holding the id of the popover element.', (select id from public.skills where slug = 'native-interaction'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'aria-controls', false, NULL
+from public.quiz_questions where slug = 'a7-q3';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'for', false, NULL
+from public.quiz_questions where slug = 'a7-q3';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'href', false, NULL
+from public.quiz_questions where slug = 'a7-q3';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'popovertarget', true, NULL
+from public.quiz_questions where slug = 'a7-q3';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-7-milestone'), 'a7-q4', 4, 'single'::public.question_kind,
+        'Which element suits "uploading file 3 of 5"?', 'A task moving towards completion — `<progress>`.', (select id from public.skills where slug = 'native-interaction'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '<output>', false, NULL
+from public.quiz_questions where slug = 'a7-q4';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '<datalist>', false, NULL
+from public.quiz_questions where slug = 'a7-q4';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '<progress>', true, NULL
+from public.quiz_questions where slug = 'a7-q4';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '<meter>', false, NULL
+from public.quiz_questions where slug = 'a7-q4';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-7-milestone'), 'a7-q5', 5, 'single'::public.question_kind,
+        'What is progressive enhancement?', 'Building so the page works without the enhancement, then layering the enhancement on for browsers that support it.', (select id from public.skills where slug = 'progressive-enhancement'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Compressing assets progressively', false, NULL
+from public.quiz_questions where slug = 'a7-q5';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Building so it works first, then enhancing where supported', true, NULL
+from public.quiz_questions where slug = 'a7-q5';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Loading features one at a time as the page scrolls', false, NULL
+from public.quiz_questions where slug = 'a7-q5';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Only supporting the newest browsers', false, NULL
+from public.quiz_questions where slug = 'a7-q5';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-7-milestone'), 'a7-q6', 6, 'single'::public.question_kind,
+        'Several `<details>` share `name="faq"`. What happens when you open the second one?', 'The first closes. A shared name makes them mutually exclusive.', (select id from public.skills where slug = 'native-interaction'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The first one closes', true, NULL
+from public.quiz_questions where slug = 'a7-q6';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Both stay open', false, NULL
+from public.quiz_questions where slug = 'a7-q6';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The form is submitted', false, NULL
+from public.quiz_questions where slug = 'a7-q6';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Nothing — name has no effect', false, NULL
+from public.quiz_questions where slug = 'a7-q6';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-7-milestone'), 'a7-q7', 7, 'single'::public.question_kind,
+        'Why is `<output>` useful for a calculated total?', 'It is a live region by default, so screen readers announce the new value when it changes.', (select id from public.skills where slug = 'aria'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It calculates the total for you', false, NULL
+from public.quiz_questions where slug = 'a7-q7';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It is styled as a result box', false, NULL
+from public.quiz_questions where slug = 'a7-q7';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It is submitted with the form', false, NULL
+from public.quiz_questions where slug = 'a7-q7';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It is a live region, so changes are announced', true, NULL
+from public.quiz_questions where slug = 'a7-q7';
+-- --------------------------------------------------------------------------
+-- Level 8: Accessibility Champion
+-- --------------------------------------------------------------------------
+
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'accessibility-champion', 8, 'Accessibility Champion', 'Build so everybody can use it — using the HTML you already know',
+       'Almost everything in this level is something you have already met. What changes here is that you learn to audit, to test with a keyboard, and to know the small set of ARIA worth using. Accessibility is not a layer added at the end; it is what correct HTML already does.', 'You can audit a page against WCAG 2.2 AA principles and repair what you find.', 'emerald'
+from public.courses c where c.slug = 'html-hero'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, NULL, 'level-8-milestone', 'milestone'::public.assessment_kind, 'Level 8 milestone: Accessibility Champion', 'Nine questions on accessibility and ARIA. Pass mark 80% — this level matters.',
+       0.8, 220, 8
+from public.levels l where l.slug = 'accessibility-champion'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+-- module: Accessibility foundations
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'accessibility-foundations', 1, 'Accessibility foundations', 'How assistive technology reads your page, how to test with a keyboard, and the accessibility your HTML already provides.',
+       50, false
+from public.levels l where l.slug = 'accessibility-champion'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'accessibility-foundations' and p.slug = 'disclosure-and-dialog';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'accessibility-foundations' and s.slug = 'accessibility';
+-- lesson: How assistive technology reads a page
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'how-assistive-tech-reads-a-page', 1, 'How assistive technology reads a page', 'The accessibility tree, keyboard order, and what you can test today', 'You do not need a screen reader to catch most problems. You need a keyboard and ten minutes.',
+       ARRAY['Explain what the accessibility tree is', 'Test a page using only the keyboard', 'Name the four WCAG principles']::text[], 14, 40, (select id from public.skills where slug = 'accessibility'), 0.7
+from public.modules m where m.slug = 'accessibility-foundations'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Describe how HTML becomes the accessibility tree","Run a keyboard-only test on any page","Explain what WCAG 2.2 AA means in practice"]}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'visual'::public.block_type, NULL, 'Your HTML becomes an accessibility tree, which assistive technology reads.',
+       NULL, NULL, 'accessibility-tree', '{}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, NULL, 'The browser builds two things from your markup: the DOM, which drives what is drawn on screen, and the accessibility tree, which is what screen readers, voice-control software and switch devices read. Correct HTML fills that second tree automatically. Incorrect HTML leaves it empty or wrong, and no amount of visual polish will fix it.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'term'::public.block_type, 'Role', 'What an element *is*, as far as assistive technology is concerned. `<button>` has the role `button`; `<nav>` has `navigation`. You rarely need to set one, because using the right element sets it for you.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'term'::public.block_type, 'Accessible name', 'The text an element is announced by. It comes from its label, its alt text, its contents, or an `aria-label` — in that order of preference.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'term'::public.block_type, 'State', 'Whether something is expanded, checked, disabled or current. Native elements manage their own state; anything you build by hand does not.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'callout'::public.block_type, 'The keyboard test — do this on every page you build', 'Click into the address bar, then press Tab repeatedly. Four questions: (1) Can you reach every interactive thing? (2) Can you always see where focus is? (3) Does the order follow the visual layout? (4) Can you get *out* of everything you get into? Any "no" is a bug. This takes two minutes and catches the majority of real-world accessibility failures.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'interactive_demo'::public.block_type, 'Focus order follows source order', 'Not the order things appear on screen.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Source order matches visual order","code":"<nav aria-label=\"Main\"><a href=\"#a\">First</a> <a href=\"#b\">Second</a></nav>\n<main id=\"a\"><h1>Content</h1></main>","note":"Tab reaches First, then Second, then the content. Exactly what a sighted user expects."},{"label":"Content before navigation in the source","code":"<main id=\"a\"><h1>Content</h1><a href=\"#x\">A link in the content</a></main>\n<nav aria-label=\"Main\"><a href=\"#b\">Menu item</a></nav>","note":"If CSS moved the nav to the top visually, keyboard users would reach the content link first — a jarring mismatch. Get the source order right and CSS cannot break it."}]}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'prose'::public.block_type, NULL, 'WCAG — the Web Content Accessibility Guidelines — organises everything under four principles. The current version is 2.2, and AA is the level almost every organisation and law targets.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'code_example'::public.block_type, 'The four WCAG principles, in plain terms', NULL,
+       'Perceivable    Can people sense the content?
+               → alt text, captions, colour contrast, not relying on colour alone
+
+Operable       Can people use the interface?
+               → keyboard access, skip links, enough time, visible focus
+
+Understandable Is it clear and predictable?
+               → language declared, consistent navigation, clear error messages
+
+Robust         Does it work with the tools people actually use?
+               → valid HTML, correct names and roles, no duplicate ids', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'callout'::public.block_type, 'How much of this is HTML?', 'A great deal. Of the WCAG 2.2 AA criteria, the ones you can meet or fail purely in markup include page language, page titles, heading structure, link purpose, form labels, error identification, name-role-value, bypass blocks, and info-and-relationships. Colour contrast and reflow are CSS; timing and motion are usually JavaScript. Getting the HTML right takes you most of the way.',
+       NULL, NULL, NULL, '{"tone":"note"}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'progressive_detail'::public.block_type, 'Who is actually affected?', 'The stereotype is a blind screen-reader user, and they matter — but the population is much wider. Someone with a broken wrist using only a keyboard. Someone with a tremor who cannot hit a small target. Someone with dyslexia who relies on clear heading structure. Someone watching a video on a train with the sound off. Someone with a migraine using their phone at low brightness. Accessibility work is rarely for a minority; it is usually for everybody, some of the time.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["The browser builds an accessibility tree from your HTML; correct elements fill it for free.","Role, accessible name and state are what assistive technology reads.","The keyboard test takes two minutes and catches most real problems.","WCAG 2.2 AA is the working standard; much of it is markup."],"nextUp":"Next: the ARIA worth knowing, and the ARIA to avoid."}'::jsonb
+from public.lessons where slug = 'how-assistive-tech-reads-a-page';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'keyboard-debug', 1, 'debug'::public.exercise_kind, 'A page a keyboard user cannot use',
+       'Three things here cannot be reached or used with a keyboard: a `<div>` acting as a button, a link with no href, and an image link with no accessible name. Fix all three using the right native elements.', '<div class="button" onclick="submitForm()">Send enquiry</div>
+
+<a class="nav-link">Prices</a>
+
+<a href="index.html">
+  <img src="/learning-media/icons/home.svg" alt="">
+</a>', '<button type="submit">Send enquiry</button>
+
+<a href="prices.html">Prices</a>
+
+<a href="index.html">
+  <img src="/learning-media/icons/home.svg" alt="">
+  Home
+</a>', ARRAY['A div is not focusable and is not announced as a button. Use a real <button>.', 'An <a> with no href is not a link at all — it cannot be focused or activated.', 'An image link with alt="" has no accessible name. Add visible text, or give the image alt text describing where the link goes.']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'accessibility'), false
+from public.lessons l where l.slug = 'how-assistive-tech-reads-a-page'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_present'::public.requirement_kind, 'button', NULL,
+       NULL, NULL, NULL, NULL,
+       'The action uses a real button element', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'attribute_present'::public.requirement_kind, 'button', 'type',
+       NULL, NULL, NULL, NULL,
+       'The button has an explicit type', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'attribute_present'::public.requirement_kind, 'a', 'href',
+       NULL, NULL, NULL, NULL,
+       'Every link has an href', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'accessible_name'::public.requirement_kind, 'a', NULL,
+       NULL, NULL, NULL, NULL,
+       'Every link has an accessible name', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'element_count'::public.requirement_kind, 'div[onclick], [onclick]', NULL,
+       NULL, NULL, 0, 0,
+       'No inline click handlers on non-interactive elements', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'accessible_name'::public.requirement_kind, 'button', NULL,
+       NULL, NULL, NULL, NULL,
+       'The button has visible text', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'how-assistive-tech-reads-a-page'), NULL, 'q-a11y-tree', 1, 'single'::public.question_kind,
+        'What is the accessibility tree?', 'A second structure the browser builds from your HTML, containing roles, names and states, which assistive technology reads.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'A file screen readers download separately', false, NULL
+from public.quiz_questions where slug = 'q-a11y-tree';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A structure of roles, names and states built from your HTML', true, NULL
+from public.quiz_questions where slug = 'q-a11y-tree';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'A list of accessibility errors on the page', false, NULL
+from public.quiz_questions where slug = 'q-a11y-tree';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The DOM with CSS applied', false, NULL
+from public.quiz_questions where slug = 'q-a11y-tree';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'how-assistive-tech-reads-a-page'), NULL, 'q-keyboard-test', 2, 'single'::public.question_kind,
+        'What does pressing Tab through a page test?', 'Whether every interactive element is reachable, whether focus is visible, and whether the order makes sense.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Whether everything interactive is reachable, visible and in a sensible order', true, NULL
+from public.quiz_questions where slug = 'q-keyboard-test';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Whether the colour contrast is sufficient', false, NULL
+from public.quiz_questions where slug = 'q-keyboard-test';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Whether images have alt text', false, NULL
+from public.quiz_questions where slug = 'q-keyboard-test';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Whether the HTML validates', false, NULL
+from public.quiz_questions where slug = 'q-keyboard-test';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'how-assistive-tech-reads-a-page'), NULL, 'q-div-button', 3, 'single'::public.question_kind,
+        'Why is `<div onclick="…">` not a button?', 'It cannot be focused with a keyboard, is not announced as a button, and does not respond to Enter or Space.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Divs cannot contain text', false, NULL
+from public.quiz_questions where slug = 'q-div-button';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It works fine — the elements are equivalent', false, NULL
+from public.quiz_questions where slug = 'q-div-button';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It is not focusable, not announced as a button, and ignores Enter and Space', true, NULL
+from public.quiz_questions where slug = 'q-div-button';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'onclick only works on buttons', false, NULL
+from public.quiz_questions where slug = 'q-div-button';
+-- lesson: ARIA fundamentals
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'aria-fundamentals', 2, 'ARIA fundamentals', 'A small, useful set — and the rule that matters most', 'ARIA can make a page more accessible or considerably less. The first rule of ARIA is not to use it.',
+       ARRAY['State the first rule of ARIA', 'Use aria-label, aria-labelledby, aria-describedby and aria-current correctly', 'Explain what a live region is and when to use one']::text[], 15, 40, (select id from public.skills where slug = 'aria'), 0.7
+from public.modules m where m.slug = 'accessibility-foundations'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Explain why native HTML beats ARIA","Apply the handful of ARIA attributes worth knowing","Recognise ARIA that makes a page worse"]}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'callout'::public.block_type, 'The first rule of ARIA', 'If a native HTML element will do the job, use it instead. ARIA changes what assistive technology *announces*; it changes nothing about how an element actually behaves. `<div role="button">` is announced as a button but is still not focusable, still ignores Enter and Space, and still does nothing on a keyboard. You would have to add all of that yourself — or use `<button>`, which has it already.',
+       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'comparison'::public.block_type, 'The same control, two ways', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"Native","code":"<button type=\"button\">Menu</button>","why":"Focusable, announced as a button, responds to Enter and Space, works with voice control. Zero extra work."},"bad":{"label":"ARIA rebuild","code":"<div role=\"button\" tabindex=\"0\" aria-pressed=\"false\">Menu</div>","why":"Announced as a button, but Enter and Space do nothing without JavaScript, and voice-control software may not find it. More code, less function."}}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'prose'::public.block_type, NULL, 'These are the ARIA attributes genuinely worth knowing at this stage.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'code_example'::public.block_type, 'The ARIA worth learning first', NULL,
+       'aria-label="Main"          Names an element that has no visible label.
+                           Use on <nav>, <section>, <iframe>, icon-only buttons.
+
+aria-labelledby="id"       Names an element using text that is already on the page.
+                           Prefer this over aria-label when such text exists.
+
+aria-describedby="id"      Attaches extra description, read after the name.
+                           Use for format hints and error messages on form fields.
+
+aria-current="page"        Marks the current item in a set — the link to the page
+                           you are already on, or the current step in a process.
+
+aria-expanded="true"       States whether a control''s target is open. Native
+                           <details> manages this for you; custom widgets do not.
+
+aria-live="polite"         Marks a region whose changes should be announced when
+                           the user is idle. Use very sparingly.
+
+aria-hidden="true"         Removes an element from the accessibility tree entirely.
+                           Only for genuinely decorative things.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'annotated_code'::public.block_type, 'Line by line', NULL,
+       '<section aria-labelledby="hours-heading">
+  <h2 id="hours-heading">Opening hours</h2>
+  <p>Tuesday to Sunday, 8am to 6pm.</p>
+</section>
+
+<button type="button" aria-label="Search">
+  <img src="/learning-media/icons/search.svg" alt="" width="24" height="24">
+</button>', 'html', NULL, '{"annotations":[{"line":"1","text":"`aria-labelledby` names the section using its own heading. Better than `aria-label`, because the name and the visible text can never drift apart."},{"line":"6","text":"An icon-only button has no text, so it has no accessible name. `aria-label=\"Search\"` supplies one."},{"line":"7","text":"The icon itself takes `alt=\"\"`: the button already has a name, and describing the icon too would announce it twice."}]}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'callout'::public.block_type, '`aria-label` on the wrong element', '`aria-label` is ignored on most non-interactive elements — a `<span>`, a `<div>` with no role, a plain `<p>`. It works on interactive elements and on landmarks. Putting it on a `<div>` and assuming it will be read is one of the most common ARIA mistakes.',
+       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'term'::public.block_type, 'Live region', 'An area whose changes should be announced without moving focus — a form error summary, a "message sent" confirmation, a live score. `aria-live="polite"` waits for a pause; `assertive` interrupts immediately and should be reserved for genuine emergencies.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'code_example'::public.block_type, 'An accessible error message', NULL,
+       '<p id="email-error" role="alert">
+  Enter an email address in the format name@example.com
+</p>
+
+<input type="email" id="email" name="email"
+       aria-describedby="email-error" aria-invalid="true">', 'html', NULL, '{}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'callout'::public.block_type, 'What makes an error message accessible', 'Four things. It says what is wrong in plain words. It says how to fix it. It is connected to the field with `aria-describedby`, so it is read when the user reaches the field. And it is announced when it appears, via `role="alert"` — because a message the user has to go looking for is a message they will miss.',
+       NULL, NULL, NULL, '{"tone":"accessibility"}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'progressive_detail'::public.block_type, 'When ARIA is genuinely the right answer', 'ARIA earns its place where HTML has no equivalent: naming a landmark that has no visible heading; announcing a change that happens without a page load; marking the current item in a set; describing a relationship between elements that are not nested. Those are real gaps, and ARIA fills them well. What it cannot do is turn a `<div>` into a working control.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["First rule of ARIA: use native HTML instead, whenever you can.","ARIA changes announcements, never behaviour.","`aria-labelledby` is better than `aria-label` when visible text already exists.","Error messages need plain words, a fix, `aria-describedby`, and an announcement."],"nextUp":"Next: the accessibility audit milestone."}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'aria-guided', 1, 'guided'::public.exercise_kind, 'Name three unnamed things',
+       'Three elements here have no accessible name: a section, an icon-only button and a second nav. Name the section using its own heading with `aria-labelledby`, the button with `aria-label`, and the nav with `aria-label`.', '<section>
+  <h2 id="hours-heading">Opening hours</h2>
+  <p>Tuesday to Sunday, 8am to 6pm.</p>
+</section>
+
+<button type="button">
+  <img src="/learning-media/icons/search.svg" alt="" width="24" height="24">
+</button>
+
+<nav>
+  <ul><li><a href="privacy.html">Privacy</a></li></ul>
+</nav>', '<section aria-labelledby="hours-heading">
+  <h2 id="hours-heading">Opening hours</h2>
+  <p>Tuesday to Sunday, 8am to 6pm.</p>
+</section>
+
+<button type="button" aria-label="Search">
+  <img src="/learning-media/icons/search.svg" alt="" width="24" height="24">
+</button>
+
+<nav aria-label="Footer">
+  <ul><li><a href="privacy.html">Privacy</a></li></ul>
+</nav>', ARRAY['The heading already has id="hours-heading" — point aria-labelledby at it.', 'The button contains only an icon, so it needs aria-label="Search".', 'Give the nav an aria-label describing which navigation it is.']::text[],
+       50, 3,
+       (select id from public.skills where slug = 'aria'), false
+from public.lessons l where l.slug = 'aria-fundamentals'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'attribute_value'::public.requirement_kind, 'section', 'aria-labelledby',
+       'hours-heading', NULL, NULL, NULL,
+       'The section is named by its heading', NULL, 1, true
+from public.exercises e where e.slug = 'aria-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'attribute_present'::public.requirement_kind, 'button', 'aria-label',
+       NULL, NULL, NULL, NULL,
+       'The icon-only button has an accessible name', NULL, 1, true
+from public.exercises e where e.slug = 'aria-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'attribute_present'::public.requirement_kind, 'nav', 'aria-label',
+       NULL, NULL, NULL, NULL,
+       'The nav is labelled', NULL, 1, true
+from public.exercises e where e.slug = 'aria-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'accessible_name'::public.requirement_kind, 'button', NULL,
+       NULL, NULL, NULL, NULL,
+       'The button has an accessible name', NULL, 1, true
+from public.exercises e where e.slug = 'aria-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'attribute_value'::public.requirement_kind, 'button img', 'alt',
+       '', NULL, NULL, NULL,
+       'The decorative icon uses alt=""', NULL, 1, true
+from public.exercises e where e.slug = 'aria-guided';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'aria-debug', 2, 'debug'::public.exercise_kind, 'ARIA that makes things worse',
+       'Every line here uses ARIA where native HTML would be better, or uses it wrongly. Rewrite them all with correct native elements.', '<div role="button" tabindex="0">Send</div>
+<div role="heading" aria-level="2">Our routes</div>
+<span role="link" tabindex="0">Prices</span>
+<ul role="list"><li role="listitem">Helmet</li></ul>', '<button type="button">Send</button>
+<h2>Our routes</h2>
+<a href="prices.html">Prices</a>
+<ul><li>Helmet</li></ul>', ARRAY['role="button" on a div should just be a <button>.', 'role="heading" aria-level="2" should just be an <h2>.', 'role="link" should be an <a href="…">.', 'A <ul> already has the list role — the ARIA is redundant noise.']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'aria'), false
+from public.lessons l where l.slug = 'aria-fundamentals'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_present'::public.requirement_kind, 'button', NULL,
+       NULL, NULL, NULL, NULL,
+       'The action is a real button', NULL, 1, true
+from public.exercises e where e.slug = 'aria-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'element_present'::public.requirement_kind, 'h2', NULL,
+       NULL, NULL, NULL, NULL,
+       'The heading is a real h2', NULL, 1, true
+from public.exercises e where e.slug = 'aria-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'attribute_present'::public.requirement_kind, 'a', 'href',
+       NULL, NULL, NULL, NULL,
+       'The link is a real link with an href', NULL, 1, true
+from public.exercises e where e.slug = 'aria-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'element_count'::public.requirement_kind, '[role]', NULL,
+       NULL, NULL, 0, 0,
+       'No redundant role attributes remain', NULL, 1, true
+from public.exercises e where e.slug = 'aria-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'element_count'::public.requirement_kind, '[tabindex]', NULL,
+       NULL, NULL, 0, 0,
+       'No tabindex needed — native elements are focusable already', NULL, 1, true
+from public.exercises e where e.slug = 'aria-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'element_present'::public.requirement_kind, 'ul > li', NULL,
+       NULL, NULL, NULL, NULL,
+       'The list is still a list', NULL, 1, true
+from public.exercises e where e.slug = 'aria-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'aria-fundamentals'), NULL, 'q-aria-first-rule', 1, 'single'::public.question_kind,
+        'What is the first rule of ARIA?', 'Do not use ARIA if a native HTML element will do the job.', (select id from public.skills where slug = 'aria'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Always add a role to every element', false, NULL
+from public.quiz_questions where slug = 'q-aria-first-rule';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Use aria-label on everything', false, NULL
+from public.quiz_questions where slug = 'q-aria-first-rule';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Add ARIA before writing HTML', false, NULL
+from public.quiz_questions where slug = 'q-aria-first-rule';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Do not use it if a native element will do', true, NULL
+from public.quiz_questions where slug = 'q-aria-first-rule';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'aria-fundamentals'), NULL, 'q-aria-behaviour', 2, 'single'::public.question_kind,
+        'Does `role="button"` make a `<div>` respond to the Enter key?', 'No. ARIA changes what is announced, never how an element behaves. You would have to add focus handling and key handling yourself.', (select id from public.skills where slug = 'aria'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Yes, the browser adds button behaviour', false, NULL
+from public.quiz_questions where slug = 'q-aria-behaviour';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Only if tabindex="0" is also set', false, NULL
+from public.quiz_questions where slug = 'q-aria-behaviour';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Only in screen readers', false, NULL
+from public.quiz_questions where slug = 'q-aria-behaviour';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'No — ARIA changes announcements, not behaviour', true, NULL
+from public.quiz_questions where slug = 'q-aria-behaviour';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'aria-fundamentals'), NULL, 'q-labelledby-vs-label', 3, 'single'::public.question_kind,
+        'A section has a visible `<h2>`. How should you name the section?', '`aria-labelledby` pointing at the heading, so the name and the visible text can never disagree.', (select id from public.skills where slug = 'aria'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It does not need a name', false, NULL
+from public.quiz_questions where slug = 'q-labelledby-vs-label';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'aria-labelledby pointing at the heading''s id', true, NULL
+from public.quiz_questions where slug = 'q-labelledby-vs-label';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'aria-label repeating the heading text', false, NULL
+from public.quiz_questions where slug = 'q-labelledby-vs-label';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A title attribute', false, NULL
+from public.quiz_questions where slug = 'q-labelledby-vs-label';
+-- lesson: Milestone: audit and repair an inaccessible site
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'accessibility-audit-milestone', 3, 'Milestone: audit and repair an inaccessible site', 'Fifteen deliberate failures, one page', 'The page in this milestone was written to fail. Your job is to find and fix everything.',
+       ARRAY['Audit a page systematically against WCAG principles', 'Repair every failure using correct HTML', 'Produce a page that passes a keyboard test']::text[], 30, 40, (select id from public.skills where slug = 'accessibility'), 0.85
+from public.modules m where m.slug = 'accessibility-foundations'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Run a systematic accessibility audit","Repair structural, media and form accessibility failures","Verify with a keyboard test"]}'::jsonb
+from public.lessons where slug = 'accessibility-audit-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'checklist'::public.block_type, 'Audit in this order — structure first', NULL,
+       NULL, NULL, NULL, '{"items":["Does `<html>` declare a `lang`?","Is there exactly one `<h1>`, and no skipped heading levels?","Are there landmarks — header, nav, main, footer?","Is there a skip link, and does it point at something real?","Does every image have an appropriate `alt`?","Does every form control have a `<label>`?","Does every link have text that makes sense alone?","Are buttons `<button>` and links `<a href>`?","Are all ids unique?","Does every `<iframe>` have a `title`?","Do videos have captions?","Are error messages connected with `aria-describedby`?"]}'::jsonb
+from public.lessons where slug = 'accessibility-audit-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'callout'::public.block_type, 'Fix in order of impact', 'A missing `<main>` affects every screen-reader user on every visit. A slightly wordy alt attribute affects almost nobody. When auditing a real site, deal with structure, names and keyboard access first — those are the things that make a page unusable rather than merely imperfect.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'accessibility-audit-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
 select id, 4, 'comparison'::public.block_type, 'A typical repair, before and after', NULL,
        NULL, NULL, NULL, '{"good":{"label":"After","code":"<label for=\"email\">Email address</label>\n<input type=\"email\" id=\"email\" name=\"email\"\n       autocomplete=\"email\" required>","why":"Announced as \"Email address, edit text\". Clicking the words focuses the field. Autofill works."},"bad":{"label":"Before","code":"<input type=\"text\" placeholder=\"Email\">","why":"Announced as \"edit text\" with no clue what it wants. The placeholder disappears on typing, and there is no autofill."}}'::jsonb
@@ -115,7 +1283,13 @@ select l.id, 'a11y-audit-milestone', 1, 'challenge'::public.exercise_kind, 'Mile
 </html>', ARRAY['Start at the top: the doctype is missing, and <html> has no lang.', 'There is no <title>. Every page needs one.', 'The divs should be landmarks: header, nav, main, footer. Add a skip link targeting main.', 'The "big-title" div is really the h1, which means the h3 below it should be an h2.', 'The image has no alt, the link says "click here", and both inputs share the id "name".', 'The submit div should be a <button type="submit">, and each input needs a real label.', 'The iframe has no title.']::text[],
        180, 5,
        (select id from public.skills where slug = 'accessibility'), false
-from public.lessons l where l.slug = 'accessibility-audit-milestone';
+from public.lessons l where l.slug = 'accessibility-audit-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 1, 'attribute_present'::public.requirement_kind, 'html', 'lang',
@@ -299,7 +1473,13 @@ select l.id, 'a11y-mission', 2, 'project_mission'::public.exercise_kind, 'Capsto
 </html>', ARRAY['Work down the audit checklist item by item.', 'Mark the current page with aria-current="page" in the nav.', 'Check every image has appropriate alt text and every link makes sense alone.']::text[],
        110, 4,
        (select id from public.skills where slug = 'accessibility'), false
-from public.lessons l where l.slug = 'accessibility-audit-milestone';
+from public.lessons l where l.slug = 'accessibility-audit-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 1, 'attribute_present'::public.requirement_kind, 'html', 'lang',
@@ -368,7 +1548,12 @@ select e.id, 11, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
 from public.exercises e where e.slug = 'a11y-mission';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'accessibility-audit-milestone'), NULL, 'q-audit-order', 1, 'single'::public.question_kind,
-        'Which failure has the greatest impact on a screen-reader user?', 'Missing landmarks force the user to read from the top of every page, every time. That is a structural failure affecting every visit.', (select id from public.skills where slug = 'accessibility'), 10);
+        'Which failure has the greatest impact on a screen-reader user?', 'Missing landmarks force the user to read from the top of every page, every time. That is a structural failure affecting every visit.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'No landmarks, so there is no way to skip to the content', true, NULL
 from public.quiz_questions where slug = 'q-audit-order';
@@ -383,7 +1568,12 @@ select id, 4, 'A heading styled at the wrong size', false, NULL
 from public.quiz_questions where slug = 'q-audit-order';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'accessibility-audit-milestone'), NULL, 'q-duplicate-id-impact', 2, 'single'::public.question_kind,
-        'Why do duplicate ids break accessibility?', 'Relationships like `for`, `aria-labelledby` and `aria-describedby` resolve to the first match, so a label may connect to the wrong control.', (select id from public.skills where slug = 'validation'), 10);
+        'Why do duplicate ids break accessibility?', 'Relationships like `for`, `aria-labelledby` and `aria-describedby` resolve to the first match, so a label may connect to the wrong control.', (select id from public.skills where slug = 'validation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'Screen readers skip both elements', false, NULL
 from public.quiz_questions where slug = 'q-duplicate-id-impact';
@@ -399,7 +1589,12 @@ from public.quiz_questions where slug = 'q-duplicate-id-impact';
 -- Level 8 milestone: Accessibility Champion questions
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values (NULL, (select id from public.assessments where slug = 'level-8-milestone'), 'a8-q1', 1, 'single'::public.question_kind,
-        'What are the four WCAG principles?', 'Perceivable, Operable, Understandable, Robust.', (select id from public.skills where slug = 'accessibility'), 10);
+        'What are the four WCAG principles?', 'Perceivable, Operable, Understandable, Robust.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'Semantic, Styled, Scripted, Secure', false, NULL
 from public.quiz_questions where slug = 'a8-q1';
@@ -414,7 +1609,12 @@ select id, 4, 'Visible, Clickable, Readable, Fast', false, NULL
 from public.quiz_questions where slug = 'a8-q1';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values (NULL, (select id from public.assessments where slug = 'level-8-milestone'), 'a8-q2', 2, 'single'::public.question_kind,
-        'Which gives a keyboard user the most benefit on a site with a large menu?', 'A skip link, letting them bypass the menu on every page.', (select id from public.skills where slug = 'accessibility'), 10);
+        'Which gives a keyboard user the most benefit on a site with a large menu?', 'A skip link, letting them bypass the menu on every page.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'A sitemap page', false, NULL
 from public.quiz_questions where slug = 'a8-q2';
@@ -429,7 +1629,12 @@ select id, 4, 'aria-label on every link', false, NULL
 from public.quiz_questions where slug = 'a8-q2';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values (NULL, (select id from public.assessments where slug = 'level-8-milestone'), 'a8-q3', 3, 'single'::public.question_kind,
-        'What does `aria-describedby` do?', 'It attaches additional descriptive text, announced after the element''s name — ideal for format hints and error messages.', (select id from public.skills where slug = 'aria'), 10);
+        'What does `aria-describedby` do?', 'It attaches additional descriptive text, announced after the element''s name — ideal for format hints and error messages.', (select id from public.skills where slug = 'aria'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'Attaches extra description read after the name', true, NULL
 from public.quiz_questions where slug = 'a8-q3';
@@ -444,7 +1649,12 @@ select id, 4, 'Marks the element as invalid', false, NULL
 from public.quiz_questions where slug = 'a8-q3';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values (NULL, (select id from public.assessments where slug = 'level-8-milestone'), 'a8-q4', 4, 'single'::public.question_kind,
-        'When should you use `aria-hidden="true"`?', 'Only on genuinely decorative content that adds nothing — never on anything a user might need.', (select id from public.skills where slug = 'aria'), 10);
+        'When should you use `aria-hidden="true"`?', 'Only on genuinely decorative content that adds nothing — never on anything a user might need.', (select id from public.skills where slug = 'aria'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'On content that is visually hidden but still needed', false, NULL
 from public.quiz_questions where slug = 'a8-q4';
@@ -459,7 +1669,12 @@ select id, 4, 'On purely decorative content', true, NULL
 from public.quiz_questions where slug = 'a8-q4';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values (NULL, (select id from public.assessments where slug = 'level-8-milestone'), 'a8-q5', 5, 'single'::public.question_kind,
-        'An icon-only button contains an `<img>`. Where should the accessible name come from?', '`aria-label` on the button, with `alt=""` on the image so the name is not announced twice.', (select id from public.skills where slug = 'aria'), 10);
+        'An icon-only button contains an `<img>`. Where should the accessible name come from?', '`aria-label` on the button, with `alt=""` on the image so the name is not announced twice.', (select id from public.skills where slug = 'aria'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'A title attribute on the button', false, NULL
 from public.quiz_questions where slug = 'a8-q5';
@@ -474,7 +1689,12 @@ select id, 4, 'Alt text on the image, with no aria-label', false, NULL
 from public.quiz_questions where slug = 'a8-q5';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values (NULL, (select id from public.assessments where slug = 'level-8-milestone'), 'a8-q6', 6, 'single'::public.question_kind,
-        'What makes an error message accessible?', 'Plain words, a stated fix, connection to the field with `aria-describedby`, and an announcement when it appears.', (select id from public.skills where slug = 'accessibility'), 10);
+        'What makes an error message accessible?', 'Plain words, a stated fix, connection to the field with `aria-describedby`, and an announcement when it appears.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'A summary at the bottom of the page', false, NULL
 from public.quiz_questions where slug = 'a8-q6';
@@ -489,7 +1709,12 @@ select id, 4, 'A tooltip on the field', false, NULL
 from public.quiz_questions where slug = 'a8-q6';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values (NULL, (select id from public.assessments where slug = 'level-8-milestone'), 'a8-q7', 7, 'single'::public.question_kind,
-        'Does adding `role="navigation"` to a `<nav>` improve anything?', 'No — `<nav>` already has that role. The extra attribute is redundant noise.', (select id from public.skills where slug = 'aria'), 10);
+        'Does adding `role="navigation"` to a `<nav>` improve anything?', 'No — `<nav>` already has that role. The extra attribute is redundant noise.', (select id from public.skills where slug = 'aria'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'No — <nav> already has that role', true, NULL
 from public.quiz_questions where slug = 'a8-q7';
@@ -504,7 +1729,12 @@ select id, 4, 'Yes, it makes the landmark focusable', false, NULL
 from public.quiz_questions where slug = 'a8-q7';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values (NULL, (select id from public.assessments where slug = 'level-8-milestone'), 'a8-q8', 8, 'single'::public.question_kind,
-        'What determines keyboard focus order by default?', 'The order elements appear in the HTML source.', (select id from public.skills where slug = 'accessibility'), 10);
+        'What determines keyboard focus order by default?', 'The order elements appear in the HTML source.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'Their visual position on screen', false, NULL
 from public.quiz_questions where slug = 'a8-q8';
@@ -519,7 +1749,12 @@ select id, 4, 'The order of elements in the HTML source', true, NULL
 from public.quiz_questions where slug = 'a8-q8';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values (NULL, (select id from public.assessments where slug = 'level-8-milestone'), 'a8-q9', 9, 'single'::public.question_kind,
-        'A page has an `<a>` with no `href`. What is the problem?', 'Without an `href` it is not a link: it cannot be focused with a keyboard and is not announced as a link.', (select id from public.skills where slug = 'accessibility'), 10);
+        'A page has an `<a>` with no `href`. What is the problem?', 'Without an `href` it is not a link: it cannot be focused with a keyboard and is not announced as a link.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'It fails HTML validation', false, NULL
 from public.quiz_questions where slug = 'a8-q9';
@@ -539,16 +1774,28 @@ from public.quiz_questions where slug = 'a8-q9';
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
 select c.id, 'metadata-and-seo', 9, 'Metadata, SEO and Discoverability', 'Everything in the head, and what it can honestly do',
        'The head of a document is invisible to visitors and enormously important to everything else — search engines, social networks, browsers and screen readers. This level covers what to put there and, just as importantly, what HTML can and cannot promise.', 'You can optimise a multi-page site for search engines, social sharing and structured data.', 'orange'
-from public.courses c where c.slug = 'html-hero';
+from public.courses c where c.slug = 'html-hero'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
 insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
 select l.id, NULL, 'level-9-milestone', 'milestone'::public.assessment_kind, 'Level 9 milestone: Metadata, SEO and Discoverability', 'Eight questions on metadata, social sharing and structured data. Pass mark 75%.',
        0.75, 180, 9
-from public.levels l where l.slug = 'metadata-and-seo';
+from public.levels l where l.slug = 'metadata-and-seo'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
 -- module: Page metadata
 insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
 select l.id, 'page-metadata', 1, 'Page metadata', 'Titles, descriptions, canonical URLs, favicons, language and robots directives.',
        45, false
-from public.levels l where l.slug = 'metadata-and-seo';
+from public.levels l where l.slug = 'metadata-and-seo'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
 insert into public.module_prerequisites (module_id, prerequisite_module_id)
 select m.id, p.id from public.modules m, public.modules p
 where m.slug = 'page-metadata' and p.slug = 'accessibility-foundations';
@@ -561,7 +1808,12 @@ insert into public.lessons
   (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
 select m.id, 'titles-descriptions-canonicals', 1, 'Titles, descriptions and canonical URLs', 'The three things every page needs and most pages get wrong', 'Your title is the most-read sentence you will write. It appears in tabs, bookmarks, search results and shared links.',
        ARRAY['Write a page title that works in all four places it appears', 'Write a meta description that earns a click', 'Use a canonical URL to prevent duplicate-content problems']::text[], 15, 40, (select id from public.skills where slug = 'metadata'), 0.7
-from public.modules m where m.slug = 'page-metadata';
+from public.modules m where m.slug = 'page-metadata'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
 select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
        NULL, NULL, NULL, '{"items":["Write unique, descriptive titles for every page","Write meta descriptions of a useful length","Explain when a canonical URL is needed"]}'::jsonb
@@ -630,7 +1882,13 @@ select l.id, 'metadata-guided', 1, 'guided'::public.exercise_kind, 'Complete a p
 </head>', ARRAY['The title should name this page first, then the site.', 'The description goes in a <meta name="description" content="…"> tag.', 'The canonical is a <link rel="canonical" href="…">.']::text[],
        45, 2,
        (select id from public.skills where slug = 'metadata'), false
-from public.lessons l where l.slug = 'titles-descriptions-canonicals';
+from public.lessons l where l.slug = 'titles-descriptions-canonicals'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 1, 'unique_element'::public.requirement_kind, 'title', NULL,
@@ -679,7 +1937,13 @@ select l.id, 'metadata-debug', 2, 'debug'::public.exercise_kind, 'Metadata that 
 </head>', ARRAY['The charset meta tag must come first in the head.', 'Make the title specific to this page, not just the company name.', 'Cut the description to roughly 150 characters of useful, readable prose.', 'Delete the robots noindex — this page should be indexed.']::text[],
        55, 3,
        (select id from public.skills where slug = 'metadata'), false
-from public.lessons l where l.slug = 'titles-descriptions-canonicals';
+from public.lessons l where l.slug = 'titles-descriptions-canonicals'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 1, 'direct_child'::public.requirement_kind, 'meta[charset]', NULL,
@@ -712,7 +1976,12 @@ select e.id, 5, 'attribute_matches'::public.requirement_kind, 'meta[name="descri
 from public.exercises e where e.slug = 'metadata-debug';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'titles-descriptions-canonicals'), NULL, 'q-title-length', 1, 'single'::public.question_kind,
-        'Roughly how long should a page title be?', 'About 50–60 characters, before search engines truncate it. Put the distinctive part first.', (select id from public.skills where slug = 'seo'), 10);
+        'Roughly how long should a page title be?', 'About 50–60 characters, before search engines truncate it. Put the distinctive part first.', (select id from public.skills where slug = 'seo'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'Exactly 160 characters', false, NULL
 from public.quiz_questions where slug = 'q-title-length';
@@ -727,7 +1996,12 @@ select id, 4, 'Under 20 characters', false, NULL
 from public.quiz_questions where slug = 'q-title-length';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'titles-descriptions-canonicals'), NULL, 'q-canonical', 2, 'single'::public.question_kind,
-        'What does `<link rel="canonical">` do?', 'It states the preferred URL for a page, resolving ambiguity when the same content is reachable at several addresses.', (select id from public.skills where slug = 'seo'), 10);
+        'What does `<link rel="canonical">` do?', 'It states the preferred URL for a page, resolving ambiguity when the same content is reachable at several addresses.', (select id from public.skills where slug = 'seo'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'States the one preferred URL for this content', true, NULL
 from public.quiz_questions where slug = 'q-canonical';
@@ -742,7 +2016,12 @@ select id, 4, 'Sets the page language', false, NULL
 from public.quiz_questions where slug = 'q-canonical';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'titles-descriptions-canonicals'), NULL, 'q-noindex-security', 3, 'single'::public.question_kind,
-        'Does `<meta name="robots" content="noindex">` hide a page?', 'No. It asks well-behaved crawlers not to index it. The page remains fully public to anyone with the URL.', (select id from public.skills where slug = 'security'), 10);
+        'Does `<meta name="robots" content="noindex">` hide a page?', 'No. It asks well-behaved crawlers not to index it. The page remains fully public to anyone with the URL.', (select id from public.skills where slug = 'security'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'No — the page is still public to anyone with the URL', true, NULL
 from public.quiz_questions where slug = 'q-noindex-security';
@@ -760,7 +2039,12 @@ insert into public.lessons
   (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
 select m.id, 'social-and-structured-data', 2, 'Social sharing and structured data', 'Open Graph, and describing your content to machines with JSON-LD', 'What appears when someone pastes your link into a message, and how to tell a search engine what your page actually is.',
        ARRAY['Add Open Graph metadata for social sharing', 'Write a basic JSON-LD structured-data block', 'State honestly what structured data can and cannot achieve']::text[], 15, 40, (select id from public.skills where slug = 'structured-data'), 0.7
-from public.modules m where m.slug = 'page-metadata';
+from public.modules m where m.slug = 'page-metadata'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
 select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
        NULL, NULL, NULL, '{"items":["Add the four Open Graph properties that matter","Write valid JSON-LD for a common schema type","Explain the honest limits of SEO markup"]}'::jsonb
@@ -861,7 +2145,13 @@ select l.id, 'og-guided', 1, 'guided'::public.exercise_kind, 'Add social sharing
 </head>', ARRAY['Open Graph tags use property="og:…", not name.', 'The og:image must be a full absolute URL beginning https://.', 'The twitter:card tag uses name, not property.']::text[],
        50, 3,
        (select id from public.skills where slug = 'seo'), false
-from public.lessons l where l.slug = 'social-and-structured-data';
+from public.lessons l where l.slug = 'social-and-structured-data'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 1, 'element_present'::public.requirement_kind, 'meta[property="og:title"]', NULL,
@@ -929,7 +2219,13 @@ select l.id, 'jsonld-challenge', 2, 'challenge'::public.exercise_kind, 'Write st
 </head>', ARRAY['The block goes inside <script type="application/ld+json">…</script>.', 'Every JSON-LD block starts with "@context": "https://schema.org" and an "@type".', 'The address is a nested object with its own "@type": "PostalAddress".']::text[],
        60, 4,
        (select id from public.skills where slug = 'structured-data'), false
-from public.lessons l where l.slug = 'social-and-structured-data';
+from public.lessons l where l.slug = 'social-and-structured-data'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 1, 'attribute_value'::public.requirement_kind, 'script', 'type',
@@ -956,7 +2252,12 @@ select e.id, 4, 'text_content'::public.requirement_kind, 'script[type="applicati
 from public.exercises e where e.slug = 'jsonld-challenge';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'social-and-structured-data'), NULL, 'q-og-property', 1, 'single'::public.question_kind,
-        'Which attribute do Open Graph tags use?', '`property`, not `name`. Using `name` for `og:` tags is one of the commonest mistakes in this area.', (select id from public.skills where slug = 'seo'), 10);
+        'Which attribute do Open Graph tags use?', '`property`, not `name`. Using `name` for `og:` tags is one of the commonest mistakes in this area.', (select id from public.skills where slug = 'seo'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'rel', false, NULL
 from public.quiz_questions where slug = 'q-og-property';
@@ -971,7 +2272,12 @@ select id, 4, 'name', false, NULL
 from public.quiz_questions where slug = 'q-og-property';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'social-and-structured-data'), NULL, 'q-structured-data-ranking', 2, 'single'::public.question_kind,
-        'Does structured data improve your search ranking?', 'No. It can change how your result is *displayed* — rich snippets, star ratings, event dates — which affects clicks, not position.', (select id from public.skills where slug = 'structured-data'), 10);
+        'Does structured data improve your search ranking?', 'No. It can change how your result is *displayed* — rich snippets, star ratings, event dates — which affects clicks, not position.', (select id from public.skills where slug = 'structured-data'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'Only when combined with Open Graph', false, NULL
 from public.quiz_questions where slug = 'q-structured-data-ranking';
@@ -986,7 +2292,12 @@ select id, 4, 'Yes, but only for local businesses', false, NULL
 from public.quiz_questions where slug = 'q-structured-data-ranking';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'social-and-structured-data'), NULL, 'q-og-image-url', 3, 'single'::public.question_kind,
-        'Why must `og:image` be an absolute URL?', 'The software building the preview fetches the image without your page as context, so a relative path cannot be resolved.', (select id from public.skills where slug = 'seo'), 10);
+        'Why must `og:image` be an absolute URL?', 'The software building the preview fetches the image without your page as context, so a relative path cannot be resolved.', (select id from public.skills where slug = 'seo'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 1, 'The service fetching it has no page context to resolve a relative path', true, NULL
 from public.quiz_questions where slug = 'q-og-image-url';
@@ -1004,1288 +2315,11 @@ insert into public.lessons
   (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
 select m.id, 'seo-milestone', 3, 'Milestone: optimise a page for discovery', 'Every metadata decision on one page', 'A complete, discoverable, shareable page head plus a correctly structured body.',
        ARRAY['Build a complete production-quality document head', 'Add social metadata and structured data', 'Apply the same to your capstone site']::text[], 22, 40, (select id from public.skills where slug = 'seo'), 0.8
-from public.modules m where m.slug = 'page-metadata';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
-       NULL, NULL, NULL, '{"items":["Produce a head containing every piece of metadata a real page needs","Combine metadata with correct semantic body structure","Update your capstone pages to match"]}'::jsonb
-from public.lessons where slug = 'seo-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'checklist'::public.block_type, 'The milestone page head needs', NULL,
-       NULL, NULL, NULL, '{"items":["`<meta charset=\"utf-8\">` first","A viewport meta tag","A unique, specific `<title>` of about 50–60 characters","A `<meta name=\"description\">` of about 150 characters","A `<link rel=\"canonical\">`","A favicon","Open Graph title, description, image, image alt, url and type","A Twitter card tag","A JSON-LD structured-data block","`lang` on the `<html>` element"]}'::jsonb
-from public.lessons where slug = 'seo-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'callout'::public.block_type, 'Write the metadata after the content, not before', 'A description is a summary. Writing it before the page exists produces a vague sentence that could describe anything. Write the page, then read it back and describe it honestly in one sentence — that sentence is your description, and it is usually a good og:description too.',
-       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
-from public.lessons where slug = 'seo-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'code_example'::public.block_type, 'A complete head, in the order it should be written', NULL,
-       '<!-- Order matters: charset first, then viewport, then everything else -->
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Bike hire prices — Riverside Cycle Hire</title>
-<meta name="description" content="Hourly, daily and weekly hire from £6.">
-<link rel="canonical" href="https://riverside-cycles.example/prices.html">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-
-<meta property="og:title" content="Bike hire prices — Riverside Cycle Hire">
-<meta property="og:image" content="https://riverside-cycles.example/share-1200.jpg">
-<meta property="og:url" content="https://riverside-cycles.example/prices.html">', 'html', NULL, '{}'::jsonb
-from public.lessons where slug = 'seo-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'comparison'::public.block_type, 'What a shared link looks like', NULL,
-       NULL, NULL, NULL, '{"good":{"label":"With Open Graph tags","code":"<meta property=\"og:title\" content=\"Bike hire prices — Riverside\">\n<meta property=\"og:description\" content=\"Hire from £6 an hour.\">\n<meta property=\"og:image\" content=\"https://riverside-cycles.example/share-1200.jpg\">\n<meta property=\"og:image:alt\" content=\"A blue hybrid bike outside the workshop\">","why":"A card with a large image, your headline and your sentence — chosen by you."},"bad":{"label":"Without","code":"<title>Riverside Cycle Hire</title>","why":"The messaging app guesses: often just the bare URL, or the first stray sentence it finds on the page."}}'::jsonb
-from public.lessons where slug = 'seo-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'summary'::public.block_type, 'Lesson summary', NULL,
-       NULL, NULL, NULL, '{"points":["A complete head is roughly ten lines and takes five minutes.","Every page needs its own title and description.","Social metadata determines what a shared link looks like.","Structured data describes content that genuinely exists on the page."],"nextUp":"Level 10 next: performance and security."}'::jsonb
-from public.lessons where slug = 'seo-milestone';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'seo-milestone-build', 1, 'challenge'::public.exercise_kind, 'Milestone: a fully optimised page',
-       'Build a complete HTML document with everything on the checklist above in the head, plus a body containing header, nav, main with one h1, and footer.', '', '<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Bike hire prices — Riverside Cycle Hire</title>
-    <meta name="description"
-          content="Hourly, daily and weekly bike hire from £6. Helmet, lock and route map included with every hire.">
-    <link rel="canonical" href="https://riverside-cycles.example/prices.html">
-    <link rel="icon" href="/learning-media/favicon.svg" type="image/svg+xml">
-    <meta name="theme-color" content="#1d4ed8">
-
-    <meta property="og:title" content="Bike hire prices — Riverside Cycle Hire">
-    <meta property="og:description" content="Hourly, daily and weekly hire from £6, helmet and lock included.">
-    <meta property="og:image" content="https://riverside-cycles.example/images/hero-1200.jpg">
-    <meta property="og:image:alt" content="A blue hybrid bike outside the Mill Lane workshop">
-    <meta property="og:url" content="https://riverside-cycles.example/prices.html">
-    <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary_large_image">
-
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "name": "Riverside Cycle Hire",
-      "url": "https://riverside-cycles.example/",
-      "telephone": "+441632960123",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "14 Mill Lane",
-        "addressLocality": "Hexford",
-        "postalCode": "HX2 4PL",
-        "addressCountry": "GB"
-      }
-    }
-    </script>
-  </head>
-  <body>
-    <a class="skip-link" href="#main">Skip to main content</a>
-    <header>
-      <nav aria-label="Main">
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="prices.html" aria-current="page">Prices</a></li>
-          <li><a href="contact.html">Contact</a></li>
-        </ul>
-      </nav>
-    </header>
-    <main id="main">
-      <h1>Bike hire prices</h1>
-      <p>Every hire includes a helmet, a lock and a printed route map.</p>
-    </main>
-    <footer>
-      <p>© 2026 Riverside Cycle Hire</p>
-    </footer>
-  </body>
-</html>', ARRAY['Build the head in order: charset, viewport, title, description, canonical, icon, then the og: tags, then the JSON-LD.', 'og: tags use property="…"; twitter:card uses name="…".', 'The body needs the landmark structure from Level 5.']::text[],
-       150, 4,
-       (select id from public.skills where slug = 'seo'), false
-from public.lessons l where l.slug = 'seo-milestone';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'doctype'::public.requirement_kind, NULL, NULL,
-       NULL, NULL, NULL, NULL,
-       'The page starts with <!DOCTYPE html>', 'The very first line of an HTML file is <!DOCTYPE html>, before anything else.', 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'attribute_present'::public.requirement_kind, 'html', 'lang',
-       NULL, NULL, NULL, NULL,
-       'The html element declares a language', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'direct_child'::public.requirement_kind, 'meta[charset]', NULL,
-       NULL, 'head', NULL, NULL,
-       'The charset is declared in the head', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'element_present'::public.requirement_kind, 'meta[name="viewport"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'There is a viewport meta tag', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 5, 'unique_element'::public.requirement_kind, 'title', NULL,
-       NULL, NULL, NULL, NULL,
-       'There is exactly one title', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 6, 'attribute_present'::public.requirement_kind, 'meta[name="description"]', 'content',
-       NULL, NULL, NULL, NULL,
-       'There is a meta description', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 7, 'element_present'::public.requirement_kind, 'link[rel="canonical"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'There is a canonical link', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 8, 'element_present'::public.requirement_kind, 'link[rel="icon"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'There is a favicon', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 9, 'element_present'::public.requirement_kind, 'meta[property="og:title"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'Open Graph title is set', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 10, 'element_present'::public.requirement_kind, 'meta[property="og:image"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'Open Graph image is set', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 11, 'element_present'::public.requirement_kind, 'meta[property="og:image:alt"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'The Open Graph image has alt text', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 12, 'element_present'::public.requirement_kind, 'meta[property="og:url"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'Open Graph url is set', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 13, 'element_present'::public.requirement_kind, 'meta[name="twitter:card"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'A Twitter card is declared', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 14, 'attribute_value'::public.requirement_kind, 'script', 'type',
-       'application/ld+json', NULL, NULL, NULL,
-       'There is a JSON-LD block', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 15, 'element_present'::public.requirement_kind, 'header', NULL,
-       NULL, NULL, NULL, NULL,
-       'The body has a header landmark', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 16, 'unique_element'::public.requirement_kind, 'main', NULL,
-       NULL, NULL, NULL, NULL,
-       'There is exactly one main', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 17, 'element_present'::public.requirement_kind, 'footer', NULL,
-       NULL, NULL, NULL, NULL,
-       'There is a footer landmark', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 18, 'unique_element'::public.requirement_kind, 'h1', NULL,
-       NULL, NULL, NULL, NULL,
-       'There is exactly one h1', NULL, 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 19, 'heading_order'::public.requirement_kind, NULL, NULL,
-       NULL, NULL, NULL, NULL,
-       'The heading hierarchy is correct: one <h1>, and no skipped levels', 'Start with a single <h1>, then step down one level at a time — h2 before h3.', 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 20, 'valid_nesting'::public.requirement_kind, NULL, NULL,
-       NULL, NULL, NULL, NULL,
-       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
-from public.exercises e where e.slug = 'seo-milestone-build';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'seo-mission', 2, 'project_mission'::public.exercise_kind, 'Capstone mission: unique metadata on every page',
-       'Give every page of your capstone site its own title, its own description, a canonical URL, a favicon and Open Graph tags. Add a JSON-LD block to your homepage describing what your project actually is.', '<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- A title specific to THIS page -->
-  <!-- A description specific to THIS page -->
-  <!-- canonical, favicon -->
-  <!-- Open Graph tags -->
-  <!-- JSON-LD on the homepage -->
-</head>', '<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>About us — Riverside Cycle Hire</title>
-  <meta name="description"
-        content="Family-run bike hire on Mill Lane since 1998. Every bike serviced on site by our own mechanics.">
-  <link rel="canonical" href="https://riverside-cycles.example/about.html">
-  <link rel="icon" href="/learning-media/favicon.svg" type="image/svg+xml">
-
-  <meta property="og:title" content="About us — Riverside Cycle Hire">
-  <meta property="og:description" content="Family-run bike hire on Mill Lane since 1998.">
-  <meta property="og:image" content="https://riverside-cycles.example/images/workshop-1200.jpg">
-  <meta property="og:image:alt" content="Hand tools hanging above a workbench in the Mill Lane workshop">
-  <meta property="og:url" content="https://riverside-cycles.example/about.html">
-  <meta property="og:type" content="website">
-</head>', ARRAY['The title and description must describe this specific page, not the whole site.', 'The canonical URL is this page''s own address.', 'og:image must be an absolute URL.']::text[],
-       95, 3,
-       (select id from public.skills where slug = 'metadata'), false
-from public.lessons l where l.slug = 'seo-milestone';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'unique_element'::public.requirement_kind, 'title', NULL,
-       NULL, NULL, NULL, NULL,
-       'The page has its own title', NULL, 1, true
-from public.exercises e where e.slug = 'seo-mission';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'text_not_empty'::public.requirement_kind, 'title', NULL,
-       NULL, NULL, NULL, NULL,
-       'The title has text', NULL, 1, true
-from public.exercises e where e.slug = 'seo-mission';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'attribute_present'::public.requirement_kind, 'meta[name="description"]', 'content',
-       NULL, NULL, NULL, NULL,
-       'The page has its own description', NULL, 1, true
-from public.exercises e where e.slug = 'seo-mission';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'element_present'::public.requirement_kind, 'link[rel="canonical"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'A canonical URL is set', NULL, 1, true
-from public.exercises e where e.slug = 'seo-mission';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 5, 'element_present'::public.requirement_kind, 'link[rel="icon"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'A favicon is linked', NULL, 1, true
-from public.exercises e where e.slug = 'seo-mission';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 6, 'element_present'::public.requirement_kind, 'meta[property="og:title"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'Open Graph metadata is present', NULL, 1, true
-from public.exercises e where e.slug = 'seo-mission';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 7, 'attribute_matches'::public.requirement_kind, 'meta[property="og:image"]', 'content',
-       '^https?://', NULL, NULL, NULL,
-       'The og:image is an absolute URL', NULL, 1, true
-from public.exercises e where e.slug = 'seo-mission';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'seo-milestone'), NULL, 'q-metadata-order', 1, 'single'::public.question_kind,
-        'Why must `<meta charset>` come first in the head?', 'The browser must know the encoding within the first 1024 bytes. A late declaration forces it to restart parsing.', (select id from public.skills where slug = 'metadata'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'The browser needs it within the first 1024 bytes', true, NULL
-from public.quiz_questions where slug = 'q-metadata-order';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'It must come before the doctype', false, NULL
-from public.quiz_questions where slug = 'q-metadata-order';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Search engines only read the first meta tag', false, NULL
-from public.quiz_questions where slug = 'q-metadata-order';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'It has no effect on order', false, NULL
-from public.quiz_questions where slug = 'q-metadata-order';
--- Level 9 milestone: Metadata, SEO and Discoverability questions
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-9-milestone'), 'a9-q1', 1, 'single'::public.question_kind,
-        'Which appears in browser tabs, bookmarks and search results?', 'The `<title>` element.', (select id from public.skills where slug = 'metadata'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, '<h1>', false, NULL
-from public.quiz_questions where slug = 'a9-q1';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'meta description', false, NULL
-from public.quiz_questions where slug = 'a9-q1';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'og:title', false, NULL
-from public.quiz_questions where slug = 'a9-q1';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, '<title>', true, NULL
-from public.quiz_questions where slug = 'a9-q1';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-9-milestone'), 'a9-q2', 2, 'single'::public.question_kind,
-        'Is the meta description a ranking factor?', 'No, but it is usually the text shown under your result, which affects clicks.', (select id from public.skills where slug = 'seo'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Yes, for local searches only', false, NULL
-from public.quiz_questions where slug = 'a9-q2';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'It has no effect at all', false, NULL
-from public.quiz_questions where slug = 'a9-q2';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'No, but it is often the snippet shown in results', true, NULL
-from public.quiz_questions where slug = 'a9-q2';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Yes, it is the strongest ranking factor', false, NULL
-from public.quiz_questions where slug = 'a9-q2';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-9-milestone'), 'a9-q3', 3, 'single'::public.question_kind,
-        'Which format does Google recommend for structured data?', 'JSON-LD, in a `<script type="application/ld+json">` block.', (select id from public.skills where slug = 'structured-data'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'XML sitemaps', false, NULL
-from public.quiz_questions where slug = 'a9-q3';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'JSON-LD', true, NULL
-from public.quiz_questions where slug = 'a9-q3';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Microdata attributes', false, NULL
-from public.quiz_questions where slug = 'a9-q3';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'RDFa', false, NULL
-from public.quiz_questions where slug = 'a9-q3';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-9-milestone'), 'a9-q4', 4, 'single'::public.question_kind,
-        'What size should an Open Graph image be?', '1200 × 630 pixels is the accepted standard for a large preview card.', (select id from public.skills where slug = 'seo'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, '1200 × 630', true, NULL
-from public.quiz_questions where slug = 'a9-q4';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, '600 × 600', false, NULL
-from public.quiz_questions where slug = 'a9-q4';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, '320 × 240', false, NULL
-from public.quiz_questions where slug = 'a9-q4';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Any size — it is scaled automatically', false, NULL
-from public.quiz_questions where slug = 'a9-q4';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-9-milestone'), 'a9-q5', 5, 'single'::public.question_kind,
-        'What must structured data describe?', 'Content genuinely present on the page. Marking up things that do not exist is a policy violation.', (select id from public.skills where slug = 'structured-data'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Whatever keywords you want to rank for', false, NULL
-from public.quiz_questions where slug = 'a9-q5';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Only the page title', false, NULL
-from public.quiz_questions where slug = 'a9-q5';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Your competitors'' content', false, NULL
-from public.quiz_questions where slug = 'a9-q5';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Content that is genuinely on the page', true, NULL
-from public.quiz_questions where slug = 'a9-q5';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-9-milestone'), 'a9-q6', 6, 'single'::public.question_kind,
-        'Why give every page its own title?', 'So visitors can tell tabs and bookmarks apart, and so search engines have something distinguishing to display.', (select id from public.skills where slug = 'seo'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'To increase keyword density', false, NULL
-from public.quiz_questions where slug = 'a9-q6';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'To speed up rendering', false, NULL
-from public.quiz_questions where slug = 'a9-q6';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'So tabs, bookmarks and results are distinguishable', true, NULL
-from public.quiz_questions where slug = 'a9-q6';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Because duplicate titles are invalid HTML', false, NULL
-from public.quiz_questions where slug = 'a9-q6';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-9-milestone'), 'a9-q7', 7, 'single'::public.question_kind,
-        'What does `lang="fr"` on a `<span>` achieve?', 'A screen reader switches to French pronunciation for that phrase, instead of reading French words with English phonetics.', (select id from public.skills where slug = 'accessibility'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'It sets a different character encoding', false, NULL
-from public.quiz_questions where slug = 'a9-q7';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Screen readers pronounce that phrase in French', true, NULL
-from public.quiz_questions where slug = 'a9-q7';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'It translates the text', false, NULL
-from public.quiz_questions where slug = 'a9-q7';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'It changes the font', false, NULL
-from public.quiz_questions where slug = 'a9-q7';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-9-milestone'), 'a9-q8', 8, 'single'::public.question_kind,
-        'What can HTML alone honestly guarantee about search rankings?', 'Nothing. HTML makes content crawlable, understandable and shareable; ranking depends on content quality, links and page experience.', (select id from public.skills where slug = 'seo'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Nothing — it makes content crawlable and understandable, not high-ranking', true, NULL
-from public.quiz_questions where slug = 'a9-q8';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'A first-page position with the right meta tags', false, NULL
-from public.quiz_questions where slug = 'a9-q8';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'A rich snippet in every result', false, NULL
-from public.quiz_questions where slug = 'a9-q8';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Higher ranking than sites without structured data', false, NULL
-from public.quiz_questions where slug = 'a9-q8';
--- --------------------------------------------------------------------------
--- Level 10: HTML Performance and Security
--- --------------------------------------------------------------------------
-
-insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
-select c.id, 'performance-and-security', 10, 'HTML Performance and Security', 'The markup decisions that make pages fast and safe',
-       'HTML cannot secure an application and cannot make a slow server fast. What it can do is avoid a surprising number of self-inflicted wounds — and this level is about those.', 'You can take a slow, unsafe, bloated page and measurably improve all three.', 'slate'
-from public.courses c where c.slug = 'html-hero';
-insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
-select l.id, NULL, 'level-10-milestone', 'milestone'::public.assessment_kind, 'Level 10 milestone: Performance and Security', 'Eight questions on loading strategy and markup-level security. Pass mark 75%.',
-       0.75, 190, 10
-from public.levels l where l.slug = 'performance-and-security';
--- module: Performance-aware HTML
-insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
-select l.id, 'html-performance', 1, 'Performance-aware HTML', 'Dimensions, loading strategy, script loading, resource hints — and the honest limits of what markup controls.',
-       45, false
-from public.levels l where l.slug = 'performance-and-security';
-insert into public.module_prerequisites (module_id, prerequisite_module_id)
-select m.id, p.id from public.modules m, public.modules p
-where m.slug = 'html-performance' and p.slug = 'page-metadata';
-insert into public.module_skills (module_id, skill_id, mastery_required)
-select m.id, s.id, 0
-from public.modules m, public.skills s
-where m.slug = 'html-performance' and s.slug = 'performance';
--- lesson: Loading strategy
-insert into public.lessons
-  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'loading-strategy', 1, 'Loading strategy', 'Layout shift, lazy loading, preload and the critical path', 'A handful of attributes decide whether a page feels instant or feels broken while it settles.',
-       ARRAY['Prevent layout shift with dimensions', 'Choose loading and fetchpriority correctly', 'Use resource hints without overusing them']::text[], 15, 40, (select id from public.skills where slug = 'performance'), 0.7
-from public.modules m where m.slug = 'html-performance';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
-       NULL, NULL, NULL, '{"items":["Explain and prevent cumulative layout shift","Choose the right loading strategy for each asset","Use preload, preconnect and dns-prefetch appropriately"]}'::jsonb
-from public.lessons where slug = 'loading-strategy';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'term'::public.block_type, 'Layout shift', 'Content jumping around as the page loads, because the browser did not know how much space something would need until it arrived. It is measured as Cumulative Layout Shift, and it is one of the three Core Web Vitals.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'loading-strategy';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'comparison'::public.block_type, 'The same image, with and without dimensions', NULL,
-       NULL, NULL, NULL, '{"good":{"label":"Space reserved","code":"<img src=\"/learning-media/images/city-dusk-1200.jpg\"\n     alt=\"A city skyline at dusk\"\n     width=\"1200\" height=\"800\">","why":"The browser reserves a 3:2 box immediately. Nothing below it moves when the file arrives."},"bad":{"label":"No dimensions","code":"<img src=\"/learning-media/images/city-dusk-1200.jpg\"\n     alt=\"A city skyline at dusk\">","why":"The image occupies zero height until it loads, then suddenly pushes everything below it down the page — often just as someone is about to tap a link."}}'::jsonb
-from public.lessons where slug = 'loading-strategy';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'callout'::public.block_type, 'Dimensions do not fix the size, they fix the ratio', 'A common worry is that `width` and `height` will stop an image being responsive. They will not: CSS still controls the displayed size, and modern browsers use the two attributes purely to compute an aspect ratio. Set them on every image, every video and every iframe.',
-       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
-from public.lessons where slug = 'loading-strategy';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'code_example'::public.block_type, 'The loading attributes', NULL,
-       'loading="lazy"          Do not download until near the viewport.
-                        Use below the fold. Never on the hero image.
-
-fetchpriority="high"    This is the most important asset on the page.
-                        Use on exactly one thing, usually the hero image.
-
-fetchpriority="low"     Deprioritise something incidental.
-
-decoding="async"        Decode the image off the main thread. Safe default
-                        for images that are not the hero.
-
-preload="metadata"      For video and audio: fetch just the duration.
-preload="none"          Fetch nothing until the user presses play.
-preload="auto"          Fetch the whole file. Almost never justified.', 'text', NULL, '{}'::jsonb
-from public.lessons where slug = 'loading-strategy';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'prose'::public.block_type, NULL, 'Scripts are the other half of loading strategy. Even though this course does not teach JavaScript, you need to know how a script tag affects your page, because writing it wrongly blocks rendering entirely.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'loading-strategy';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'annotated_code'::public.block_type, 'Line by line', NULL,
-       '<script src="analytics.js" defer></script>
-<script src="widget.js" async></script>
-<script src="critical.js"></script>', 'html', NULL, '{"annotations":[{"line":"1","text":"`defer` downloads in parallel with parsing, then runs after the document is parsed, in source order. This is the right default for almost every script."},{"line":"2","text":"`async` downloads in parallel and runs the moment it arrives, interrupting parsing. Order is unpredictable. Only suitable for genuinely independent scripts."},{"line":"3","text":"With neither attribute, parsing *stops* while the script downloads and runs. A slow script here freezes the page. This is the single most damaging thing you can put in a `<head>`."}]}'::jsonb
-from public.lessons where slug = 'loading-strategy';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'term'::public.block_type, 'Resource hint', 'A `<link>` telling the browser to prepare for something before it is needed.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'loading-strategy';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'code_example'::public.block_type, 'Resource hints', NULL,
-       '<link rel="preconnect" href="https://fonts.example.com">
-      Open the connection early. Use for one or two critical third-party origins.
-
-<link rel="dns-prefetch" href="https://analytics.example.com">
-      Cheaper than preconnect — resolves the domain name only.
-
-<link rel="preload" href="/fonts/body.woff2" as="font" type="font/woff2" crossorigin>
-      Fetch this now, at high priority. Powerful and easy to misuse.
-
-<link rel="prefetch" href="/prices.html">
-      Fetch during idle time, for a page the user will probably visit next.', 'text', NULL, '{}'::jsonb
-from public.lessons where slug = 'loading-strategy';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'callout'::public.block_type, 'Preloading everything preloads nothing', 'A resource hint works by changing priority relative to everything else. Preload five things and you have simply restated the original order while consuming bandwidth earlier. Preload is for one or two genuinely critical assets the browser would otherwise discover late — typically a font, or a hero image referenced from CSS.',
-       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
-from public.lessons where slug = 'loading-strategy';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'progressive_detail'::public.block_type, 'What HTML cannot do for performance', 'Markup cannot compress your images, cannot speed up a slow database query, cannot add caching headers, and cannot fix a 2MB JavaScript bundle. The biggest performance wins are usually elsewhere: image formats and sizes, server response time, caching, and how much JavaScript you ship. What HTML gives you is the difference between a page that renders progressively and pleasantly and one that blocks, jumps and reflows — which is what users actually perceive as "fast".',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'loading-strategy';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
-       NULL, NULL, NULL, '{"points":["Set `width` and `height` on every image, video and iframe — it fixes the ratio, not the size.","`loading=\"lazy\"` below the fold; `fetchpriority=\"high\"` on one hero asset.","`defer` is the right default for scripts; a bare `<script>` in the head blocks rendering.","Resource hints are for one or two genuinely critical assets."],"nextUp":"Next: the security decisions HTML actually controls."}'::jsonb
-from public.lessons where slug = 'loading-strategy';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'perf-guided', 1, 'guided'::public.exercise_kind, 'Fix a page that jumps as it loads',
-       'Add dimensions to all three images, lazy-load the two below the fold, mark the hero as high priority, and change the render-blocking script to use `defer`.', '<script src="analytics.js"></script>
-
-<img src="/learning-media/images/coast-sunrise-1200.jpg" alt="Sunrise over a calm sea">
-<p>Twenty-four miles, mostly flat.</p>
-<img src="/learning-media/images/forest-path-1200.jpg" alt="A sandy path between tall trees">
-<img src="/learning-media/images/city-dusk-1200.jpg" alt="A city skyline at dusk">', '<script src="analytics.js" defer></script>
-
-<img src="/learning-media/images/coast-sunrise-1200.jpg"
-     alt="Sunrise over a calm sea"
-     fetchpriority="high" width="1200" height="800">
-<p>Twenty-four miles, mostly flat.</p>
-<img src="/learning-media/images/forest-path-1200.jpg"
-     alt="A sandy path between tall trees"
-     loading="lazy" width="1200" height="800">
-<img src="/learning-media/images/city-dusk-1200.jpg"
-     alt="A city skyline at dusk"
-     loading="lazy" width="1200" height="800">', ARRAY['Every image needs width="1200" and height="800".', 'The first image is the hero — fetchpriority="high" and no lazy loading.', 'The other two get loading="lazy".', 'Add defer to the script so it stops blocking the parser.']::text[],
-       55, 3,
-       (select id from public.skills where slug = 'performance'), false
-from public.lessons l where l.slug = 'loading-strategy';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'attribute_present'::public.requirement_kind, 'img', 'width',
-       NULL, NULL, NULL, NULL,
-       'Every image declares its width', NULL, 1, true
-from public.exercises e where e.slug = 'perf-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'attribute_present'::public.requirement_kind, 'img', 'height',
-       NULL, NULL, NULL, NULL,
-       'Every image declares its height', NULL, 1, true
-from public.exercises e where e.slug = 'perf-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'element_count'::public.requirement_kind, 'img[loading="lazy"]', NULL,
-       NULL, NULL, 2, 2,
-       'The two below-the-fold images are lazy-loaded', NULL, 1, true
-from public.exercises e where e.slug = 'perf-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'attribute_value'::public.requirement_kind, 'img', 'fetchpriority',
-       'high', NULL, NULL, NULL,
-       'The hero image is marked high priority', NULL, 1, true
-from public.exercises e where e.slug = 'perf-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 5, 'element_count'::public.requirement_kind, 'img[fetchpriority="high"][loading="lazy"]', NULL,
-       NULL, NULL, 0, 0,
-       'The hero image is not lazy-loaded', NULL, 1, true
-from public.exercises e where e.slug = 'perf-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 6, 'attribute_present'::public.requirement_kind, 'script', 'defer',
-       NULL, NULL, NULL, NULL,
-       'The script no longer blocks rendering', NULL, 1, true
-from public.exercises e where e.slug = 'perf-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 7, 'local_media_path'::public.requirement_kind, 'img', NULL,
-       NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
-from public.exercises e where e.slug = 'perf-guided';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'loading-strategy'), NULL, 'q-layout-shift', 1, 'single'::public.question_kind,
-        'What causes layout shift when images load?', 'Without dimensions the browser cannot reserve space, so content below jumps when the image arrives.', (select id from public.skills where slug = 'performance'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'The alt text is rendered first', false, NULL
-from public.quiz_questions where slug = 'q-layout-shift';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'The browser cannot reserve space without dimensions', true, NULL
-from public.quiz_questions where slug = 'q-layout-shift';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Images always load after text', false, NULL
-from public.quiz_questions where slug = 'q-layout-shift';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Lazy loading delays them', false, NULL
-from public.quiz_questions where slug = 'q-layout-shift';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'loading-strategy'), NULL, 'q-defer-async', 2, 'single'::public.question_kind,
-        'What is the difference between `defer` and `async`?', '`defer` runs after parsing, in source order. `async` runs as soon as it downloads, in unpredictable order.', (select id from public.skills where slug = 'performance'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'They are identical', false, NULL
-from public.quiz_questions where slug = 'q-defer-async';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'defer downloads first, async downloads last', false, NULL
-from public.quiz_questions where slug = 'q-defer-async';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'async is for modules; defer is for classic scripts', false, NULL
-from public.quiz_questions where slug = 'q-defer-async';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'defer runs after parsing in order; async runs on arrival, out of order', true, NULL
-from public.quiz_questions where slug = 'q-defer-async';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'loading-strategy'), NULL, 'q-preload-overuse', 3, 'single'::public.question_kind,
-        'What happens if you preload ten resources?', 'Preload works by changing relative priority. Preloading everything restates the original order while pulling bandwidth forward.', (select id from public.skills where slug = 'performance'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'It causes a validation error', false, NULL
-from public.quiz_questions where slug = 'q-preload-overuse';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Nothing is genuinely prioritised, and bandwidth is consumed earlier', true, NULL
-from public.quiz_questions where slug = 'q-preload-overuse';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'The page loads ten times faster', false, NULL
-from public.quiz_questions where slug = 'q-preload-overuse';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'The browser ignores all of them', false, NULL
-from public.quiz_questions where slug = 'q-preload-overuse';
--- lesson: Security decisions in markup
-insert into public.lessons
-  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'html-security', 2, 'Security decisions in markup', 'What HTML controls, and the much larger part it does not', 'External links, iframe sandboxing, referrer policy and CSP — plus a clear statement of HTML''s limits.',
-       ARRAY['Open external links safely', 'Sandbox embedded content and set a referrer policy', 'Explain why HTML alone secures nothing']::text[], 15, 40, (select id from public.skills where slug = 'security'), 0.7
-from public.modules m where m.slug = 'html-performance';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
-       NULL, NULL, NULL, '{"items":["Apply rel=\"noopener noreferrer\" correctly","Choose sandbox tokens and a referrer policy","Explain the boundary between markup and real security"]}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'code_example'::public.block_type, 'A safe external link', NULL,
-       '<a href="https://example.org/report"
-   target="_blank"
-   rel="noopener noreferrer">
-  The 2026 report (opens in a new tab)
-</a>', 'html', NULL, '{}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'code_example'::public.block_type, 'The rel values worth knowing', NULL,
-       'rel="noopener"    The new page gets no reference back to yours.
-rel="noreferrer"  Your page''s address is not sent to the destination.
-                  Implies noopener.
-rel="nofollow"    Tells search engines not to pass ranking credit.
-                  Use on user-submitted links.
-rel="ugc"         Marks a link as user-generated content.
-rel="sponsored"   Marks a paid or affiliate link.', 'text', NULL, '{}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'term'::public.block_type, 'Referrer policy', 'Controls how much of your page''s address is sent when a visitor follows a link or your page loads a resource. Set per-link with `referrerpolicy`, or page-wide with a meta tag.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'code_example'::public.block_type, 'A sensible page-wide default — and the modern browser default too', NULL,
-       '<meta name="referrer" content="strict-origin-when-cross-origin">', 'html', NULL, '{}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'callout'::public.block_type, 'Why referrer policy matters in practice', 'If a URL contains a password-reset token, an order number or a customer identifier, the full address is sent to every third party your page links to or loads a resource from. `strict-origin-when-cross-origin` sends the full path to your own origin and only the bare origin to others — which is almost always the behaviour you want.',
-       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'prose'::public.block_type, NULL, 'Iframes deserve particular care, because an embed runs someone else''s code inside your page.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'annotated_code'::public.block_type, 'Line by line', NULL,
-       '<iframe
-  src="https://example.org/booking-widget"
-  title="Booking widget"
-  sandbox="allow-scripts allow-forms"
-  referrerpolicy="no-referrer"
-  loading="lazy"
-  width="600" height="480"></iframe>', 'html', NULL, '{"annotations":[{"line":"4","text":"Start from nothing and add back only what the embed genuinely needs."},{"line":"4","text":"Note what is *not* granted: no `allow-top-navigation`, so the embed cannot redirect your whole page; no `allow-popups`; no `allow-same-origin`."},{"line":"5","text":"`no-referrer` sends the third party nothing about where the visitor came from."}]}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'term'::public.block_type, 'Content Security Policy', 'A rule set telling the browser which sources of script, style, image and frame content are allowed. It is the strongest defence against cross-site scripting available to a web page.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'code_example'::public.block_type, 'A very restrictive CSP, declared in HTML', NULL,
-       '<meta http-equiv="Content-Security-Policy"
-      content="default-src ''self''; img-src ''self'' data:; script-src ''self''">', 'html', NULL, '{}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'callout'::public.block_type, 'A CSP meta tag is the weaker option', 'CSP is properly delivered as an HTTP response header, set by the server. The meta-tag form exists, but it cannot use some directives, it arrives later than a header, and anything before it in the document is unprotected. Use the meta tag only when you cannot control the server.',
-       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'callout'::public.block_type, 'The honest boundary', 'HTML cannot authenticate a user, cannot authorise an action, cannot validate input in any way that survives an attacker, cannot encrypt anything, and cannot keep a secret. Every `required`, `pattern`, `maxlength` and `type="email"` on your page is a convenience for honest users and is trivially bypassed. Real security lives on the server: validate every input, authenticate every request, authorise every action, and never trust anything that arrives from a browser. What HTML *can* do is avoid handing an attacker an easy opening — which is exactly what this lesson is about.',
-       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'checklist'::public.block_type, 'The markup-level security checklist', NULL,
-       NULL, NULL, NULL, '{"items":["`rel=\"noopener noreferrer\"` on every `target=\"_blank\"`","`sandbox` on every iframe, granting the minimum","`title` on every iframe","A referrer policy set page-wide","`rel=\"nofollow ugc\"` on user-submitted links","No secrets in hidden inputs, comments or data attributes","Forms served and submitted over HTTPS"]}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 14, 'progressive_detail'::public.block_type, 'What about `integrity`?', 'Subresource Integrity lets you pin the exact contents of a third-party file: `<script src="https://cdn.example/lib.js" integrity="sha384-…" crossorigin="anonymous"></script>`. If the file changes by so much as a byte, the browser refuses to run it. It is genuinely useful when loading code from a CDN you do not control. It is also a good illustration of HTML''s role in security: it does not make the code safe, it just guarantees you got the code you agreed to.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
-       NULL, NULL, NULL, '{"points":["`rel=\"noopener noreferrer\"` on every external link opened in a new tab.","Sandbox every iframe, granting the minimum it needs.","Set a referrer policy so URLs do not leak to third parties.","HTML avoids self-inflicted wounds; it does not provide security."],"nextUp":"Next: the Level 10 milestone."}'::jsonb
-from public.lessons where slug = 'html-security';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'security-debug', 1, 'debug'::public.exercise_kind, 'Four unsafe patterns',
-       'Fix each problem: the external link has no `rel`, the iframe has no sandbox or title, the referrer policy is missing, and a secret has been left in a hidden input.', '<head>
-  <meta charset="utf-8">
-</head>
-<body>
-  <a href="https://example.org/report" target="_blank">The 2026 report</a>
-
-  <iframe src="https://example.org/widget" width="600" height="400"></iframe>
-
-  <form action="/booking" method="post">
-    <input type="hidden" name="api_key" value="sk_live_51H8xQ2eZvKYlo2C">
-    <button type="submit">Book</button>
-  </form>
-</body>', '<head>
-  <meta charset="utf-8">
-  <meta name="referrer" content="strict-origin-when-cross-origin">
-</head>
-<body>
-  <a href="https://example.org/report" target="_blank" rel="noopener noreferrer">
-    The 2026 report (opens in a new tab)
-  </a>
-
-  <iframe src="https://example.org/widget"
-          title="Booking widget"
-          sandbox="allow-scripts allow-forms"
-          referrerpolicy="no-referrer"
-          loading="lazy"
-          width="600" height="400"></iframe>
-
-  <form action="/booking" method="post">
-    <button type="submit">Book</button>
-  </form>
-</body>', ARRAY['Add rel="noopener noreferrer" to the external link, and warn about the new tab in the text.', 'The iframe needs a title and a sandbox granting only what it needs.', 'Add <meta name="referrer" content="strict-origin-when-cross-origin"> to the head.', 'Delete the hidden input entirely — an API key must never appear in a page.']::text[],
-       65, 4,
-       (select id from public.skills where slug = 'security'), false
-from public.lessons l where l.slug = 'html-security';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'attribute_matches'::public.requirement_kind, 'a[target="_blank"]', 'rel',
-       'noopener', NULL, NULL, NULL,
-       'External links opened in a new tab use rel="noopener"', NULL, 1, true
-from public.exercises e where e.slug = 'security-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'attribute_present'::public.requirement_kind, 'iframe', 'title',
-       NULL, NULL, NULL, NULL,
-       'The iframe has a title', NULL, 1, true
-from public.exercises e where e.slug = 'security-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'attribute_present'::public.requirement_kind, 'iframe', 'sandbox',
-       NULL, NULL, NULL, NULL,
-       'The iframe is sandboxed', NULL, 1, true
-from public.exercises e where e.slug = 'security-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'element_present'::public.requirement_kind, 'meta[name="referrer"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'A referrer policy is set', NULL, 1, true
-from public.exercises e where e.slug = 'security-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 5, 'element_count'::public.requirement_kind, 'input[type="hidden"]', NULL,
-       NULL, NULL, 0, 0,
-       'No secret is left in a hidden input', 'A hidden input is visible to anyone who views the page source.', 1, true
-from public.exercises e where e.slug = 'security-debug';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'html-security'), NULL, 'q-noopener-why', 1, 'single'::public.question_kind,
-        'What can a page opened with `target="_blank"` do without `noopener`?', 'It gets a reference back to the opening window and, in older browsers, can navigate it elsewhere — a phishing technique.', (select id from public.skills where slug = 'security'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Nothing — the attribute is purely decorative', false, NULL
-from public.quiz_questions where slug = 'q-noopener-why';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Navigate your original tab to another address', true, NULL
-from public.quiz_questions where slug = 'q-noopener-why';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Read your cookies', false, NULL
-from public.quiz_questions where slug = 'q-noopener-why';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Submit your forms', false, NULL
-from public.quiz_questions where slug = 'q-noopener-why';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'html-security'), NULL, 'q-hidden-input', 2, 'single'::public.question_kind,
-        'Why must an API key never go in `<input type="hidden">`?', 'Its value is in the page source, visible to every visitor.', (select id from public.skills where slug = 'security'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Browsers strip hidden values', false, NULL
-from public.quiz_questions where slug = 'q-hidden-input';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'The value is visible in the page source', true, NULL
-from public.quiz_questions where slug = 'q-hidden-input';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Hidden inputs are not submitted', false, NULL
-from public.quiz_questions where slug = 'q-hidden-input';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'It fails validation', false, NULL
-from public.quiz_questions where slug = 'q-hidden-input';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'html-security'), NULL, 'q-csp-header', 3, 'single'::public.question_kind,
-        'Where is a Content Security Policy best delivered?', 'As an HTTP response header from the server. The meta-tag form is a weaker fallback.', (select id from public.skills where slug = 'security'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'In a rel attribute on links', false, NULL
-from public.quiz_questions where slug = 'q-csp-header';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'In a sandbox attribute', false, NULL
-from public.quiz_questions where slug = 'q-csp-header';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'As an HTTP response header', true, NULL
-from public.quiz_questions where slug = 'q-csp-header';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'As a meta tag, always', false, NULL
-from public.quiz_questions where slug = 'q-csp-header';
--- lesson: Milestone: repair a slow, unsafe page
-insert into public.lessons
-  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'performance-milestone', 3, 'Milestone: repair a slow, unsafe page', 'Every problem from this level, on one page', 'The page in this milestone is slow, jumps as it loads, and hands data to third parties.',
-       ARRAY['Diagnose performance and security problems from markup alone', 'Apply the correct fix for each', 'Improve your own capstone site the same way']::text[], 25, 40, (select id from public.skills where slug = 'performance'), 0.8
-from public.modules m where m.slug = 'html-performance';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
-       NULL, NULL, NULL, '{"items":["Repair layout shift, render blocking and unsafe embeds together","Justify each change you make","Apply the same review to your own project"]}'::jsonb
-from public.lessons where slug = 'performance-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'prose'::public.block_type, NULL, 'Every fault in the exercise below is one you have already met. What is new is meeting them together, on a page that looks fine until you measure it.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'performance-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'comparison'::public.block_type, 'The two changes that matter most', NULL,
-       NULL, NULL, NULL, '{"good":{"label":"Fast","code":"<script src=\"analytics.js\" defer></script>\n<img src=\"hero-1200.jpg\" alt=\"…\"\n     fetchpriority=\"high\" width=\"1200\" height=\"800\">\n<img src=\"below.jpg\" alt=\"…\"\n     loading=\"lazy\" width=\"1200\" height=\"800\">","why":"Nothing blocks the parser, the hero arrives first, and no content jumps as images load."},"bad":{"label":"Slow","code":"<script src=\"analytics.js\"></script>\n<img src=\"hero-1200.jpg\" alt=\"…\" loading=\"lazy\">\n<img src=\"below.jpg\" alt=\"…\">","why":"The script freezes rendering, the hero is deprioritised, and both images shift the page when they arrive."}}'::jsonb
-from public.lessons where slug = 'performance-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'callout'::public.block_type, 'Measure, do not guess', 'Open the Network panel and reload with the cache disabled. What arrives first? What blocks? A five-second look answers questions that are otherwise pure speculation.',
-       NULL, NULL, NULL, '{"tone":"note"}'::jsonb
-from public.lessons where slug = 'performance-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'checklist'::public.block_type, 'Review any page against these', NULL,
-       NULL, NULL, NULL, '{"items":["Every image, video and iframe has `width` and `height`","Below-the-fold images and iframes are lazy-loaded","The hero image is not lazy-loaded, and is `fetchpriority=\"high\"`","Scripts use `defer` unless there is a specific reason not to","Video uses `preload=\"metadata\"` or `none`, never `auto`","External links opened in a new tab carry `rel=\"noopener noreferrer\"`","Every iframe has a `title` and a `sandbox`","A referrer policy is set","No secrets anywhere in the markup"]}'::jsonb
-from public.lessons where slug = 'performance-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'summary'::public.block_type, 'Lesson summary', NULL,
-       NULL, NULL, NULL, '{"points":["Most HTML performance work is about not making things worse.","Most HTML security work is about not handing over an opening.","Both take minutes and both are checkable from the markup alone."],"nextUp":"Level 11 next: validation and debugging."}'::jsonb
-from public.lessons where slug = 'performance-milestone';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'performance-milestone-build', 1, 'challenge'::public.exercise_kind, 'Milestone: repair the page',
-       'This page has around ten performance and security problems. Fix them all. Keep the content identical.', '<head>
-  <meta charset="utf-8">
-  <script src="analytics.js"></script>
-  <link rel="preload" href="/a.js" as="script">
-  <link rel="preload" href="/b.js" as="script">
-  <link rel="preload" href="/c.js" as="script">
-</head>
-<body>
-  <h1>The valley route</h1>
-
-  <img src="/learning-media/images/coast-sunrise-1200.jpg" alt="Sunrise over a calm sea" loading="lazy">
-
-  <p>Twenty-four miles, mostly flat.</p>
-
-  <img src="/learning-media/images/forest-path-1200.jpg" alt="A sandy path between tall trees">
-
-  <video src="/learning-media/video/page-anatomy.mp4" preload="auto" autoplay></video>
-
-  <iframe src="https://example.org/map" width="600" height="400"></iframe>
-
-  <p><a href="https://example.org/report" target="_blank">The 2026 report</a></p>
-</body>', '<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="referrer" content="strict-origin-when-cross-origin">
-  <script src="analytics.js" defer></script>
-</head>
-<body>
-  <h1>The valley route</h1>
-
-  <img src="/learning-media/images/coast-sunrise-1200.jpg"
-       alt="Sunrise over a calm sea"
-       fetchpriority="high" width="1200" height="800">
-
-  <p>Twenty-four miles, mostly flat.</p>
-
-  <img src="/learning-media/images/forest-path-1200.jpg"
-       alt="A sandy path between tall trees"
-       loading="lazy" width="1200" height="800">
-
-  <video controls preload="metadata"
-         poster="/learning-media/posters/page-anatomy.jpg"
-         width="1280" height="720">
-    <source src="/learning-media/video/page-anatomy.webm" type="video/webm">
-    <source src="/learning-media/video/page-anatomy.mp4" type="video/mp4">
-    <track kind="captions" src="/learning-media/captions/page-anatomy.en.vtt"
-           srclang="en" label="English" default>
-    <p><a href="/learning-media/video/page-anatomy.mp4">Download the MP4</a></p>
-  </video>
-
-  <iframe src="https://example.org/map"
-          title="Map showing the workshop on Mill Lane"
-          sandbox="allow-scripts"
-          referrerpolicy="no-referrer"
-          loading="lazy"
-          width="600" height="400"></iframe>
-
-  <p>
-    <a href="https://example.org/report" target="_blank" rel="noopener noreferrer">
-      The 2026 report (opens in a new tab)
-    </a>
-  </p>
-</body>', ARRAY['The script blocks rendering — add defer. The three preloads are pointless; delete them.', 'The hero image is lazy-loaded, which is backwards. Swap it for fetchpriority="high" and give every image dimensions.', 'The video autoplays with preload="auto" and no controls. Fix all three, add a poster and captions.', 'The iframe needs a title, a sandbox and lazy loading. The external link needs rel="noopener noreferrer".', 'Add a referrer policy and a viewport meta tag to the head.']::text[],
-       170, 5,
-       (select id from public.skills where slug = 'performance'), false
-from public.lessons l where l.slug = 'performance-milestone';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'attribute_present'::public.requirement_kind, 'script', 'defer',
-       NULL, NULL, NULL, NULL,
-       'The script no longer blocks rendering', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'element_count'::public.requirement_kind, 'link[rel="preload"]', NULL,
-       NULL, NULL, 0, 1,
-       'The unnecessary preloads are removed', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'attribute_present'::public.requirement_kind, 'img', 'width',
-       NULL, NULL, NULL, NULL,
-       'Every image declares its width', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'attribute_present'::public.requirement_kind, 'img', 'height',
-       NULL, NULL, NULL, NULL,
-       'Every image declares its height', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 5, 'element_count'::public.requirement_kind, 'img[fetchpriority="high"][loading="lazy"]', NULL,
-       NULL, NULL, 0, 0,
-       'The hero image is not lazy-loaded', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 6, 'element_count'::public.requirement_kind, 'img[loading="lazy"]', NULL,
-       NULL, NULL, 1, NULL,
-       'Below-the-fold images are lazy-loaded', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 7, 'attribute_absent'::public.requirement_kind, 'video', 'autoplay',
-       NULL, NULL, NULL, NULL,
-       'The video no longer autoplays', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 8, 'attribute_present'::public.requirement_kind, 'video', 'controls',
-       NULL, NULL, NULL, NULL,
-       'The video has controls', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 9, 'element_count'::public.requirement_kind, 'video[preload="auto"]', NULL,
-       NULL, NULL, 0, 0,
-       'The video no longer preloads its whole file', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 10, 'element_present'::public.requirement_kind, 'track[kind="captions"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'The video has captions', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 11, 'attribute_present'::public.requirement_kind, 'iframe', 'title',
-       NULL, NULL, NULL, NULL,
-       'The iframe has a title', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 12, 'attribute_present'::public.requirement_kind, 'iframe', 'sandbox',
-       NULL, NULL, NULL, NULL,
-       'The iframe is sandboxed', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 13, 'attribute_value'::public.requirement_kind, 'iframe', 'loading',
-       'lazy', NULL, NULL, NULL,
-       'The iframe is lazy-loaded', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 14, 'attribute_matches'::public.requirement_kind, 'a[target="_blank"]', 'rel',
-       'noopener', NULL, NULL, NULL,
-       'The external link is opened safely', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 15, 'element_present'::public.requirement_kind, 'meta[name="referrer"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'A referrer policy is set', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 16, 'element_present'::public.requirement_kind, 'meta[name="viewport"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'A viewport meta tag is present', NULL, 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 17, 'local_media_path'::public.requirement_kind, 'img, source, track, video', NULL,
-       NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 18, 'alt_quality'::public.requirement_kind, 'img', NULL,
-       NULL, NULL, NULL, NULL,
-       'Every image has meaningful alternative text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
-from public.exercises e where e.slug = 'performance-milestone-build';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'performance-mission', 2, 'project_mission'::public.exercise_kind, 'Capstone mission: performance and security review',
-       'Review every page of your capstone site against the checklist. Add dimensions everywhere, lazy-load what should be lazy, add a referrer policy, and make every external link safe.', '<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Add a referrer policy -->
-</head>
-<body>
-  <!-- Check: dimensions on every image? -->
-  <!-- Check: lazy loading below the fold, but not the hero? -->
-  <!-- Check: rel="noopener noreferrer" on external links? -->
-</body>', '<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="referrer" content="strict-origin-when-cross-origin">
-</head>
-<body>
-  <img src="/learning-media/images/coast-sunrise-1200.jpg"
-       alt="Sunrise over the estuary"
-       fetchpriority="high" width="1200" height="800">
-
-  <img src="/learning-media/images/workshop-tools-1200.jpg"
-       alt="Hand tools hanging above a workbench"
-       loading="lazy" width="1200" height="800">
-
-  <p>
-    <a href="https://example.org/cycling-map" target="_blank" rel="noopener noreferrer">
-      The national cycle map (opens in a new tab)
-    </a>
-  </p>
-</body>', ARRAY['Every image needs both width and height.', 'Only the first visible image should have fetchpriority="high".', 'Any link with target="_blank" needs rel="noopener noreferrer".']::text[],
-       100, 4,
-       (select id from public.skills where slug = 'performance'), false
-from public.lessons l where l.slug = 'performance-milestone';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'element_present'::public.requirement_kind, 'meta[name="referrer"]', NULL,
-       NULL, NULL, NULL, NULL,
-       'A referrer policy is set', NULL, 1, true
-from public.exercises e where e.slug = 'performance-mission';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'attribute_present'::public.requirement_kind, 'img', 'width',
-       NULL, NULL, NULL, NULL,
-       'Images declare their width', NULL, 1, true
-from public.exercises e where e.slug = 'performance-mission';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'attribute_present'::public.requirement_kind, 'img', 'height',
-       NULL, NULL, NULL, NULL,
-       'Images declare their height', NULL, 1, true
-from public.exercises e where e.slug = 'performance-mission';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'element_count'::public.requirement_kind, 'img[loading="lazy"]', NULL,
-       NULL, NULL, 1, NULL,
-       'At least one image is lazy-loaded', NULL, 1, true
-from public.exercises e where e.slug = 'performance-mission';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 5, 'element_count'::public.requirement_kind, 'a[target="_blank"]:not([rel])', NULL,
-       NULL, NULL, 0, 0,
-       'Every new-tab link has a rel attribute', NULL, 1, true
-from public.exercises e where e.slug = 'performance-mission';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 6, 'local_media_path'::public.requirement_kind, 'img', NULL,
-       NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
-from public.exercises e where e.slug = 'performance-mission';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'performance-milestone'), NULL, 'q-preload-auto', 1, 'single'::public.question_kind,
-        'Why is `preload="auto"` on a video usually wrong?', 'It downloads the whole file before anyone presses play — potentially megabytes of a visitor''s mobile data for a video they never watch.', (select id from public.skills where slug = 'performance'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'It is invalid HTML', false, NULL
-from public.quiz_questions where slug = 'q-preload-auto';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'It downloads the whole file whether or not anyone watches', true, NULL
-from public.quiz_questions where slug = 'q-preload-auto';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'It disables the controls', false, NULL
-from public.quiz_questions where slug = 'q-preload-auto';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'It prevents captions loading', false, NULL
-from public.quiz_questions where slug = 'q-preload-auto';
--- Level 10 milestone: Performance and Security questions
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-10-milestone'), 'a10-q1', 1, 'single'::public.question_kind,
-        'What do `width` and `height` on an `<img>` prevent?', 'Layout shift — content jumping as the image arrives.', (select id from public.skills where slug = 'performance'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'The image being resized by CSS', false, NULL
-from public.quiz_questions where slug = 'a10-q1';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'The image being lazy-loaded', false, NULL
-from public.quiz_questions where slug = 'a10-q1';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'The image being cached', false, NULL
-from public.quiz_questions where slug = 'a10-q1';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Layout shift as the image loads', true, NULL
-from public.quiz_questions where slug = 'a10-q1';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-10-milestone'), 'a10-q2', 2, 'single'::public.question_kind,
-        'Which script attribute is the right default?', '`defer`: downloads in parallel, runs after parsing, in source order.', (select id from public.skills where slug = 'performance'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Neither — a bare script tag', false, NULL
-from public.quiz_questions where slug = 'a10-q2';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'type="module" only', false, NULL
-from public.quiz_questions where slug = 'a10-q2';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'defer', true, NULL
-from public.quiz_questions where slug = 'a10-q2';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'async', false, NULL
-from public.quiz_questions where slug = 'a10-q2';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-10-milestone'), 'a10-q3', 3, 'single'::public.question_kind,
-        'What does `sandbox` with no value do to an iframe?', 'It removes essentially every capability; each `allow-` token restores one.', (select id from public.skills where slug = 'security'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Has no effect', false, NULL
-from public.quiz_questions where slug = 'a10-q3';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Removes nearly all capabilities', true, NULL
-from public.quiz_questions where slug = 'a10-q3';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Grants all capabilities', false, NULL
-from public.quiz_questions where slug = 'a10-q3';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Blocks the iframe from loading', false, NULL
-from public.quiz_questions where slug = 'a10-q3';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-10-milestone'), 'a10-q4', 4, 'single'::public.question_kind,
-        'Which referrer policy is a sensible default?', '`strict-origin-when-cross-origin` sends the full path to your own origin and only the bare origin to others.', (select id from public.skills where slug = 'security'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'strict-origin-when-cross-origin', true, NULL
-from public.quiz_questions where slug = 'a10-q4';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'unsafe-url', false, NULL
-from public.quiz_questions where slug = 'a10-q4';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'no-referrer, always', false, NULL
-from public.quiz_questions where slug = 'a10-q4';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'origin-when-downgrade', false, NULL
-from public.quiz_questions where slug = 'a10-q4';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-10-milestone'), 'a10-q5', 5, 'single'::public.question_kind,
-        'Can HTML validation attributes secure a form?', 'No. They are removable in two clicks, and a request can be sent without loading your page at all.', (select id from public.skills where slug = 'security'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Yes, if you also use pattern', false, NULL
-from public.quiz_questions where slug = 'a10-q5';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Yes, over HTTPS', false, NULL
-from public.quiz_questions where slug = 'a10-q5';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Yes, when the form uses POST', false, NULL
-from public.quiz_questions where slug = 'a10-q5';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'No — the server must revalidate everything', true, NULL
-from public.quiz_questions where slug = 'a10-q5';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-10-milestone'), 'a10-q6', 6, 'single'::public.question_kind,
-        'When should you use `fetchpriority="high"`?', 'On the single most important asset, usually the hero image.', (select id from public.skills where slug = 'performance'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'On all third-party scripts', false, NULL
-from public.quiz_questions where slug = 'a10-q6';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'On anything below the fold', false, NULL
-from public.quiz_questions where slug = 'a10-q6';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'On one asset — usually the hero image', true, NULL
-from public.quiz_questions where slug = 'a10-q6';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'On every image on the page', false, NULL
-from public.quiz_questions where slug = 'a10-q6';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-10-milestone'), 'a10-q7', 7, 'single'::public.question_kind,
-        'What is Subresource Integrity for?', 'It pins the exact contents of a third-party file, so the browser refuses to run it if it has changed.', (select id from public.skills where slug = 'security'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Validating HTML structure', false, NULL
-from public.quiz_questions where slug = 'a10-q7';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Guaranteeing a third-party file has not been altered', true, NULL
-from public.quiz_questions where slug = 'a10-q7';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Compressing external scripts', false, NULL
-from public.quiz_questions where slug = 'a10-q7';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Blocking cross-origin requests', false, NULL
-from public.quiz_questions where slug = 'a10-q7';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-10-milestone'), 'a10-q8', 8, 'single'::public.question_kind,
-        'What is the biggest limitation of HTML for performance?', 'It cannot compress images, speed up a server, set caching headers or shrink a JavaScript bundle — the largest wins are elsewhere.', (select id from public.skills where slug = 'performance'), 10);
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'It cannot fix image sizes, server speed, caching or JavaScript weight', true, NULL
-from public.quiz_questions where slug = 'a10-q8';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'It cannot set image dimensions', false, NULL
-from public.quiz_questions where slug = 'a10-q8';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'It cannot lazy-load anything', false, NULL
-from public.quiz_questions where slug = 'a10-q8';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'It cannot express loading priority', false, NULL
-from public.quiz_questions where slug = 'a10-q8';
--- --------------------------------------------------------------------------
--- Level 11: Debugging and Validation Master
--- --------------------------------------------------------------------------
-
-insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
-select c.id, 'debugging-and-validation', 11, 'Debugging and Validation Master', 'Find the problem, fix the problem, prove it is fixed',
-       'Every developer writes broken markup. What separates the professionals is how quickly they find it. This level is about validators, developer tools, and a debugging method that works.', 'You can take a broken multi-page site and repair every fault methodically.', 'red'
-from public.courses c where c.slug = 'html-hero';
-insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
-select l.id, NULL, 'level-11-milestone', 'milestone'::public.assessment_kind, 'Level 11 milestone: Debugging and Validation Master', 'Seven questions on validation and debugging method. Pass mark 75%.',
-       0.75, 180, 11
-from public.levels l where l.slug = 'debugging-and-validation';
--- module: Validation and developer tools
-insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
-select l.id, 'validation-and-tools', 1, 'Validation and developer tools', 'What a validator checks, what it cannot check, and how to use the tools already in your browser.',
-       45, false
-from public.levels l where l.slug = 'debugging-and-validation';
-insert into public.module_prerequisites (module_id, prerequisite_module_id)
-select m.id, p.id from public.modules m, public.modules p
-where m.slug = 'validation-and-tools' and p.slug = 'html-performance';
-insert into public.module_skills (module_id, skill_id, mastery_required)
-select m.id, s.id, 0
-from public.modules m, public.skills s
-where m.slug = 'validation-and-tools' and s.slug = 'validation';
--- lesson: Reading validation output
-insert into public.lessons
-  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'reading-validation-output', 1, 'Reading validation output', 'Errors, warnings, and the ones that are not really problems', 'A validator is a spell-checker for markup. Learning to read its output is a twenty-minute skill that pays back forever.',
-       ARRAY['Interpret common validator messages', 'Fix invalid nesting, unclosed tags and duplicate ids', 'Explain what a validator cannot tell you']::text[], 15, 40, (select id from public.skills where slug = 'validation'), 0.7
-from public.modules m where m.slug = 'validation-and-tools';
+from public.modules m where m.slug = 'page-metadata'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
 
 commit;
