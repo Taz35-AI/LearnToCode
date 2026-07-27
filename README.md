@@ -56,7 +56,7 @@ learner has actually completed.
 | Capstone project types | 10 |
 | Learning-media assets | 38 (136 files) |
 | Estimated learner time | ~1,900 minutes (~32 hours, ≈64 min/day over 30 days) |
-| Automated tests | 403 |
+| Automated tests | 464 |
 
 ### The twelve levels
 
@@ -110,8 +110,8 @@ progress.
 `auth.uid() = user_id` for select, insert, update and delete. A learner cannot
 read or write another learner's rows even with a crafted request. This is
 verified end-to-end against a real PostgreSQL server by `npm run test:rls`,
-which asserts 21 properties including cross-user isolation, catalogue
-read-only-ness and the append-only XP ledger.
+which asserts 29 properties including cross-user isolation, catalogue
+read-only-ness and the append-only XP and review ledgers.
 
 **2. Answer keys never reach the browser.** `quiz_options.is_correct` and
 `exercises.reference_solution` are stripped in the data layer before a page
@@ -221,7 +221,7 @@ the lessons actually completed to produce a live completion estimate.
 │       ├── preview/               Sanitising and the starter stylesheet
 │       ├── progress/              XP, mastery, pace, achievements
 │       └── project/               Capstone checklist and export
-└── tests/                         403 tests across 6 files
+└── tests/                         464 tests across 7 files
 ```
 
 ---
@@ -301,6 +301,8 @@ supabase db push
 | `0003_learner.sql` | 14 learner-owned tables and the new-user bootstrap |
 | `0004_rls.sql` | Row Level Security on every table |
 | `0005_views.sql` | Reporting views with `security_invoker` |
+| `0006_review_engine.sql` | Spaced repetition, review history, calibration |
+| `0007_deferrable_ordinals.sql` | Ordering constraints checked at commit, not per statement |
 
 ---
 
@@ -324,8 +326,25 @@ Load it into your project:
 psql "$SUPABASE_DB_URL" -f supabase/seed.sql
 ```
 
-The seed is idempotent — re-running it updates existing rows in place rather
-than duplicating them, and it never touches learner data.
+The seed is idempotent, and re-running it preserves learner progress.
+
+That is worth spelling out, because it is easy to get wrong and expensive when
+you do. Learner progress hangs off the catalogue by foreign key, and those keys
+cascade: deleting a lesson to re-insert it deletes every learner's progress
+through it, along with their quiz attempts, exercise attempts, saved code and
+review schedule. So every row a learner can reference — levels, modules,
+lessons, exercises, questions, assessments, skills, achievements and project
+templates — is matched on its slug and **updated in place**, never dropped and
+rebuilt. Only rows nothing owns are replaced wholesale: lesson blocks,
+exercise requirements, quiz options and the join tables.
+
+Content genuinely removed from `src/content/` is deleted at the end of the
+seed. That is the one place learner data is lost, and it is correct: progress
+through a lesson that no longer exists has nowhere to live.
+
+Ordering constraints are deferrable so that inserting a lesson in the middle of
+a module — which renumbers everything after it — does not transiently violate
+`(module_id, ordinal)` part-way through the transaction.
 
 ### Without a terminal
 
@@ -434,7 +453,7 @@ Do not add anything whose licensing is unclear.
 ## Testing
 
 ```bash
-npm test          # 403 tests
+npm test          # 464 tests
 npm run test:rls  # 21 database-level assertions (needs PostgreSQL)
 ```
 

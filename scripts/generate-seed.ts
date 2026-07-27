@@ -231,23 +231,19 @@ function emitHeader(): void {
     '',
     'begin;',
     '',
-    '-- Content is replaced wholesale; learner data is untouched because every',
-    '-- learner table references the catalogue rather than being part of it.',
+    '-- Learner progress hangs off the catalogue by foreign key, and those keys',
+    '-- cascade. Deleting a lesson therefore deletes every learner\'s progress',
+    '-- through it, so rows a learner can reference are UPDATED IN PLACE by slug',
+    '-- and never dropped and rebuilt. Only child rows nothing owns are replaced',
+    '-- wholesale: blocks, requirements, options and join tables.',
     'delete from public.lesson_blocks;',
     'delete from public.exercise_requirements;',
     'delete from public.quiz_options;',
-    'delete from public.quiz_questions;',
-    'delete from public.exercises;',
-    'delete from public.lessons;',
     'delete from public.module_skills;',
     'delete from public.module_prerequisites;',
-    'delete from public.assessments;',
-    'delete from public.modules;',
-    'delete from public.levels;',
     'delete from public.skill_prerequisites;',
     'delete from public.media_attributions;',
     'delete from public.learning_media;',
-    'delete from public.project_templates;',
   );
 }
 
@@ -383,7 +379,12 @@ function emitQuestion(
   sql.push(
     `insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values (${lessonRef}, ${assessmentRef}, ${q(question.slug)}, ${ordinal}, ${q(question.kind ?? 'single')}::public.question_kind,
-        ${q(question.prompt)}, ${q(question.explanation)}, ${skillRef}, ${question.xp ?? 10});`,
+        ${q(question.prompt)}, ${q(question.explanation)}, ${skillRef}, ${question.xp ?? 10})
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;`,
   );
 
   // Rotated so the correct answer is not always in the same position.
@@ -406,7 +407,12 @@ function emitLesson(lesson: LessonSpec, moduleSlug: string, ordinal: number): vo
   (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
 select m.id, ${q(lesson.slug)}, ${ordinal}, ${q(lesson.title)}, ${q(lesson.subtitle)}, ${q(lesson.summary)},
        ${arr(lesson.objectives)}, ${lesson.estimatedMinutes}, ${lesson.xp ?? 40}, ${skillRef}, ${lesson.masteryThreshold ?? 0.7}
-from public.modules m where m.slug = ${q(moduleSlug)};`,
+from public.modules m where m.slug = ${q(moduleSlug)}
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;`,
   );
 
   lesson.blocks.forEach((block, index) => {
@@ -428,7 +434,13 @@ select l.id, ${q(exercise.slug)}, ${index + 1}, ${q(exercise.kind)}::public.exer
        ${q(exercise.brief)}, ${q(exercise.starterCode ?? '')}, ${q(exercise.referenceSolution)}, ${arr(exercise.hints)},
        ${exercise.xp ?? 30}, ${exercise.difficulty ?? 2},
        (select id from public.skills where slug = ${q(exerciseSkill)}), ${b(exercise.optional)}
-from public.lessons l where l.slug = ${q(lesson.slug)};`,
+from public.lessons l where l.slug = ${q(lesson.slug)}
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;`,
     );
     exercise.requirements.forEach((req, reqIndex) => {
       emitRequirement(exercise.slug, req, reqIndex + 1);
@@ -447,7 +459,11 @@ function emitModule(mod: ModuleSpec, levelSlug: string, ordinal: number): void {
     `insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
 select l.id, ${q(mod.slug)}, ${ordinal}, ${q(mod.title)}, ${q(mod.summary)},
        ${mod.estimatedMinutes ?? 45}, ${b(mod.isMilestone)}
-from public.levels l where l.slug = ${q(levelSlug)};`,
+from public.levels l where l.slug = ${q(levelSlug)}
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;`,
   );
 
   for (const prerequisite of mod.prerequisites ?? []) {
@@ -477,7 +493,11 @@ function emitLevels(): void {
       `insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
 select c.id, ${q(level.slug)}, ${levelIndex + 1}, ${q(level.title)}, ${q(level.subtitle)},
        ${q(level.summary)}, ${q(level.outcome)}, ${q(level.accent)}
-from public.courses c where c.slug = ${q(COURSE.slug)};`,
+from public.courses c where c.slug = ${q(COURSE.slug)}
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;`,
     );
 
     if (level.assessment) {
@@ -488,7 +508,11 @@ from public.courses c where c.slug = ${q(COURSE.slug)};`,
         `insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
 select l.id, ${courseRef}, ${q(a.slug)}, ${q(a.kind)}::public.assessment_kind, ${q(a.title)}, ${q(a.description)},
        ${a.passScore ?? 0.75}, ${a.xp ?? 150}, ${levelIndex + 1}
-from public.levels l where l.slug = ${q(level.slug)};`,
+from public.levels l where l.slug = ${q(level.slug)}
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;`,
       );
     }
 
@@ -501,6 +525,55 @@ from public.levels l where l.slug = ${q(level.slug)};`,
       });
     }
   });
+}
+
+/**
+ * Removes catalogue rows that are no longer part of the curriculum.
+ *
+ * Now that content is updated in place rather than rebuilt, a lesson deleted
+ * from `src/content/` would otherwise linger in the database forever. This is
+ * the one place the seed does destroy learner data, and it is correct that it
+ * does: progress through a lesson that no longer exists has nowhere to live.
+ * The deletes are ordered children-first so a cascade never does the work
+ * silently.
+ */
+function emitStaleCleanup(): void {
+  section('Remove content deleted from the curriculum');
+
+  const levelSlugs: string[] = [];
+  const moduleSlugs: string[] = [];
+  const lessonSlugs: string[] = [];
+  const exerciseSlugs: string[] = [];
+  const questionSlugs: string[] = [];
+  const assessmentSlugs: string[] = [];
+
+  for (const level of LEVELS) {
+    levelSlugs.push(level.slug);
+    if (level.assessment) {
+      assessmentSlugs.push(level.assessment.slug);
+      for (const question of level.assessment.questions) questionSlugs.push(question.slug);
+    }
+    for (const mod of level.modules) {
+      moduleSlugs.push(mod.slug);
+      for (const lesson of mod.lessons) {
+        lessonSlugs.push(lesson.slug);
+        for (const exercise of lesson.exercises) exerciseSlugs.push(exercise.slug);
+        for (const question of lesson.quiz) questionSlugs.push(question.slug);
+      }
+    }
+  }
+
+  const notIn = (table: string, slugs: string[]) =>
+    `delete from public.${table} where slug not in (${slugs.map((slug) => q(slug)).join(', ')});`;
+
+  sql.push(
+    notIn('quiz_questions', questionSlugs),
+    notIn('exercises', exerciseSlugs),
+    notIn('lessons', lessonSlugs),
+    notIn('assessments', assessmentSlugs),
+    notIn('modules', moduleSlugs),
+    notIn('levels', levelSlugs),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -521,6 +594,7 @@ async function main(): Promise<void> {
   emitAchievements();
   emitCourse();
   emitLevels();
+  emitStaleCleanup();
 
   sql.push('', 'commit;', '');
   await writeFile(OUT, sql.join('\n'), 'utf8');
