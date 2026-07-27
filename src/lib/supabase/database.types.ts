@@ -332,7 +332,55 @@ export type QuizAttemptRow = {
   question_id: string;
   selected_option_ids: string[];
   is_correct: boolean;
+  /** Stated before the answer was revealed. Null when not asked. */
+  confidence: number | null;
   answered_at: string;
+}
+
+// --- Review engine (0006) ---------------------------------------------------
+
+export type ReviewItemKind = 'question' | 'exercise' | 'recall_prompt';
+export type ReviewCardStateName = 'new' | 'learning' | 'review' | 'relearning';
+
+export type ReviewItemRow = {
+  id: string;
+  slug: string;
+  kind: ReviewItemKind;
+  skill_id: string;
+  lesson_id: string | null;
+  question_id: string | null;
+  exercise_id: string | null;
+  prompt: string | null;
+  expected_points: string[];
+  difficulty: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ReviewStateRow = {
+  id: string;
+  user_id: string;
+  review_item_id: string;
+  stability: number;
+  difficulty: number;
+  reps: number;
+  lapses: number;
+  state: ReviewCardStateName;
+  last_reviewed_on: string | null;
+  due_on: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ReviewLogRow = {
+  id: string;
+  user_id: string;
+  review_item_id: string;
+  grade: number;
+  confidence: number | null;
+  retrievability: number | null;
+  interval_days: number;
+  reviewed_at: string;
 }
 
 export type AssessmentAttemptRow = {
@@ -490,6 +538,9 @@ export interface Database {
       xp_transactions: Table<XpTransactionRow>;
       study_sessions: Table<StudySessionRow>;
       certificates: Table<CertificateRow>;
+      review_items: Table<ReviewItemRow>;
+      review_states: Table<ReviewStateRow>;
+      review_logs: Table<ReviewLogRow>;
     };
     Views: {
       course_outline: { Row: CourseOutlineRow; Relationships: [] };

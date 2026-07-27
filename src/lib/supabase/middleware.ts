@@ -9,6 +9,7 @@ const PROTECTED_PREFIXES = [
   '/lesson',
   '/level',
   '/practice',
+  '/review',
   '/project',
   '/achievements',
   '/settings',

@@ -5,11 +5,12 @@ import { createClient, getCurrentUser } from '@/lib/supabase/server';
 import { getExerciseForGrading, getQuestionForGrading, getAchievements, getRoadmap, getSkills } from '@/lib/data/catalogue';
 import { evaluateSubmission } from '@/lib/evaluator/evaluate';
 import type { Requirement } from '@/lib/evaluator/types';
-import { applyEvidence, EMPTY_MASTERY, isMastered, type EvidenceKind } from '@/lib/progress/mastery';
+import { isMastered, type EvidenceKind } from '@/lib/progress/mastery';
 import { assessmentXp, exerciseXp, lessonXp, quizXp, streakXp, type XpAward } from '@/lib/progress/xp';
 import { computeStreak, isoDate } from '@/lib/progress/pace';
 import { newlyUnlocked, type AchievementSnapshot } from '@/lib/progress/achievements';
 import { isSubstantialPage } from '@/lib/project/checklist';
+import { recordMasteryEvidence } from '@/lib/data/mastery';
 import {
   answerQuestionSchema,
   completeLessonSchema,
@@ -20,7 +21,7 @@ import {
   type ActionResult,
 } from './schemas';
 import type { EvaluationResult } from '@/lib/evaluator/types';
-import type { ExerciseRequirementRow, Json, MasteryState, XpSource } from '@/lib/supabase/database.types';
+import type { ExerciseRequirementRow, Json, XpSource } from '@/lib/supabase/database.types';
 
 /**
  * Progress actions.
@@ -118,54 +119,14 @@ async function recordStudyActivity(
   });
 }
 
-/** Applies one piece of evidence to a skill's mastery record. */
-async function updateMastery(
-  userId: string,
-  skillId: string | null,
-  kind: EvidenceKind,
-  score: number,
-  hintsUsed = 0,
-  priorAttempts = 0,
-): Promise<void> {
-  if (!skillId) return;
-  const supabase = await createClient();
-
-  const { data: existing } = await supabase
-    .from('user_skill_mastery')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('skill_id', skillId)
-    .maybeSingle();
-
-  const current = existing
-    ? {
-        mastery: Number(existing.mastery),
-        evidenceCount: existing.evidence_count,
-        correctCount: existing.correct_count,
-        state: existing.state,
-        needsPractice: existing.needs_practice,
-      }
-    : EMPTY_MASTERY;
-
-  const updated = applyEvidence(current, { kind, score, hintsUsed, priorAttempts });
-
-  const row = {
-    user_id: userId,
-    skill_id: skillId,
-    mastery: updated.mastery,
-    state: updated.state as MasteryState,
-    evidence_count: updated.evidenceCount,
-    correct_count: updated.correctCount,
-    needs_practice: updated.needsPractice,
-    last_practised_at: new Date().toISOString(),
-  };
-
-  if (existing) {
-    await supabase.from('user_skill_mastery').update(row).eq('id', existing.id);
-  } else {
-    await supabase.from('user_skill_mastery').insert(row);
-  }
-}
+/**
+ * Records evidence against a skill.
+ *
+ * Thin wrapper over the shared server-only writer, which the review actions
+ * use too. Keeping the implementation out of this `'use server'` module means
+ * it never becomes a client-callable endpoint.
+ */
+const updateMastery = recordMasteryEvidence;
 
 /**
  * Re-evaluates every achievement and unlocks whatever the learner has earned.

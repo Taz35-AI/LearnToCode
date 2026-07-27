@@ -32,6 +32,7 @@ import {
 const NAV = [
   { href: '/dashboard', label: 'Dashboard', Icon: HomeIcon },
   { href: '/roadmap', label: 'Roadmap', Icon: MapIcon },
+  { href: '/review', label: 'Review', Icon: SparkIcon },
   { href: '/practice', label: 'Practice', Icon: TargetIcon },
   { href: '/project', label: 'My project', Icon: FolderIcon },
   { href: '/achievements', label: 'Achievements', Icon: TrophyIcon },
