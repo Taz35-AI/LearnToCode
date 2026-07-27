@@ -21,6 +21,24 @@ insert into public.user_projects (id, user_id, name)
 values ('33333333-3333-3333-3333-333333333333',
         '11111111-1111-1111-1111-111111111111', 'alice project');
 
+-- Review engine fixtures: one reviewable item, scheduled for each learner.
+insert into public.review_items (id, slug, kind, skill_id, lesson_id, question_id, difficulty)
+select '44444444-4444-4444-4444-444444444444', 'rls-item', 'question',
+       q.skill_id, q.lesson_id, q.id, 3
+from public.quiz_questions q
+where q.skill_id is not null and q.lesson_id is not null
+limit 1;
+
+insert into public.review_states (user_id, review_item_id, stability, difficulty, reps, state, due_on)
+values ('11111111-1111-1111-1111-111111111111', '44444444-4444-4444-4444-444444444444',
+        10, 5, 2, 'review', current_date),
+       ('22222222-2222-2222-2222-222222222222', '44444444-4444-4444-4444-444444444444',
+        20, 4, 3, 'review', current_date);
+
+insert into public.review_logs (user_id, review_item_id, grade, confidence, interval_days)
+values ('11111111-1111-1111-1111-111111111111', '44444444-4444-4444-4444-444444444444', 3, 4, 10),
+       ('22222222-2222-2222-2222-222222222222', '44444444-4444-4444-4444-444444444444', 2, 2, 5);
+
 select case when count(*) = 2 then 'PASS' else 'FAIL' end || '  profiles auto-created for new users'
 from public.profiles;
 
@@ -37,6 +55,50 @@ from public.xp_transactions;
 
 select case when count(*) = 1 then 'PASS' else 'FAIL' end || '  alice sees only her own profile'
 from public.profiles;
+
+select case when count(*) = 1 then 'PASS' else 'FAIL' end || '  alice sees only her own review schedule'
+from public.review_states;
+
+select case when count(*) = 1 then 'PASS' else 'FAIL' end || '  alice sees only her own review history'
+from public.review_logs;
+
+select case when count(*) >= 1 then 'PASS' else 'FAIL' end || '  alice can read the reviewable-item catalogue'
+from public.review_items;
+
+do $$
+begin
+  update public.review_logs set grade = 4
+  where user_id = '11111111-1111-1111-1111-111111111111';
+  if found then
+    raise warning 'FAIL  alice rewrote her own review history';
+  else
+    raise notice 'PASS  review history is append-only, even for its owner';
+  end if;
+exception when insufficient_privilege then
+  raise notice 'PASS  review history is append-only, even for its owner';
+end $$;
+
+do $$
+begin
+  update public.review_states set stability = 9999
+  where user_id = '22222222-2222-2222-2222-222222222222';
+  if found then
+    raise warning 'FAIL  alice altered another learner''s review schedule';
+  else
+    raise notice 'PASS  alice cannot alter another learner''s review schedule';
+  end if;
+exception when insufficient_privilege then
+  raise notice 'PASS  alice cannot alter another learner''s review schedule';
+end $$;
+
+do $$
+begin
+  insert into public.review_items (slug, kind, skill_id, prompt)
+  select 'injected', 'recall_prompt', id, 'made up' from public.skills limit 1;
+  raise warning 'FAIL  alice wrote to the reviewable-item catalogue';
+exception when insufficient_privilege then
+  raise notice 'PASS  alice cannot write to the reviewable-item catalogue';
+end $$;
 
 select case when count(*) = 48 then 'PASS' else 'FAIL' end || '  alice can read the whole catalogue'
 from public.lessons;
@@ -139,4 +201,10 @@ from public.exercise_requirements;
 
 select case when count(*) = 0 then 'PASS' else 'FAIL' end || '  anon cannot read XP ledgers'
 from public.xp_transactions;
+
+select case when count(*) = 0 then 'PASS' else 'FAIL' end || '  anon cannot read review schedules'
+from public.review_states;
+
+select case when count(*) = 0 then 'PASS' else 'FAIL' end || '  anon cannot read recall-prompt answers'
+from public.review_items;
 commit;
