@@ -14,6 +14,10 @@ learner has actually completed.
 
 ---
 
+> **Continuing this project?** Read [`HANDOVER.md`](HANDOVER.md) first — it
+> records the approved plan, what is and is not finished, and the decisions
+> that are load-bearing.
+
 ## Contents
 
 - [What is in the box](#what-is-in-the-box)
