@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" role="img" aria-label="A diagram showing one image served at three different widths to phone, tablet and desktop screens.">
+  <title>One image, several sizes</title>
+  <rect width="720" height="300" fill="#0b1120"/>
+  <g font-family="system-ui, sans-serif" fill="#e2e8f0">
+    <rect x="40" y="90" width="80" height="140" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+    <rect x="48" y="104" width="64" height="46" rx="4" fill="#38bdf8"/><text x="80" y="252" font-size="14" text-anchor="middle">480w</text>
+    <rect x="180" y="70" width="150" height="180" rx="12" fill="#1e293b" stroke="#818cf8" stroke-width="2"/>
+    <rect x="192" y="84" width="126" height="76" rx="4" fill="#818cf8"/><text x="255" y="272" font-size="14" text-anchor="middle">800w</text>
+    <rect x="390" y="60" width="290" height="190" rx="12" fill="#1e293b" stroke="#f472b6" stroke-width="2"/>
+    <rect x="404" y="74" width="262" height="120" rx="4" fill="#f472b6"/><text x="535" y="272" font-size="14" text-anchor="middle">1600w</text>
+    <text x="360" y="34" font-size="16" text-anchor="middle" fill="#94a3b8">srcset lets the browser choose the smallest file that still looks sharp</text>
+  </g>
+</svg>

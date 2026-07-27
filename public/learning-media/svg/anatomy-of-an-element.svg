@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" role="img" aria-label="A labelled diagram of an HTML element showing the opening tag, attribute, content and closing tag.">
+  <title>Anatomy of an HTML element</title>
+  <rect width="720" height="300" fill="#0f172a"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="34">
+    <text x="46" y="150" fill="#38bdf8">&lt;a</text>
+    <text x="96" y="150" fill="#fbbf24"> href="about.html"</text>
+    <text x="392" y="150" fill="#38bdf8">&gt;</text>
+    <text x="412" y="150" fill="#e2e8f0">About us</text>
+    <text x="572" y="150" fill="#38bdf8">&lt;/a&gt;</text>
+  </g>
+  <g stroke="#64748b" stroke-width="2" fill="none">
+    <path d="M62 166 V206 H120"/><path d="M240 166 V228"/><path d="M470 166 V206 H430"/><path d="M606 166 V228"/>
+  </g>
+  <g font-family="system-ui, sans-serif" font-size="15" fill="#cbd5e1">
+    <text x="126" y="212">opening tag</text>
+    <text x="176" y="250">attribute (name="value")</text>
+    <text x="252" y="212" text-anchor="end">content</text>
+    <text x="546" y="250" text-anchor="middle">closing tag</text>
+  </g>
+</svg>
