@@ -193,7 +193,7 @@ the lessons actually completed to produce a live completion estimate.
 │   ├── seed.sql                   Generated — do not edit by hand
 │   └── seed-parts/                The same seed split into pasteable files
 ├── src/
-│   ├── proxy.ts                   Session refresh + route protection
+│   ├── middleware.ts              Session refresh + route protection
 │   ├── app/
 │   │   ├── (auth)/                Sign in, register, password reset
 │   │   ├── (learn)/               Protected learner routes
@@ -445,7 +445,7 @@ npm run test:rls  # 21 database-level assertions (needs PostgreSQL)
 | `curriculum.test.ts` | Every reference solution passes its own requirements; no starter code already passes; media, skills and prerequisites all resolve; no graph cycles; quiz integrity; the 30-day calibration |
 | `preview-and-export.test.ts` | Preview sanitising and CSP, ZIP export and CRC-32, the capstone checklist |
 | `components.test.tsx` | Accessible names, ARIA on progress bars, field associations, lesson-block rendering, quiz behaviour |
-| `auth-and-validation.test.ts` | Route protection through the real proxy handler, and every Zod schema |
+| `auth-and-validation.test.ts` | Route protection through the real middleware, and every Zod schema |
 | `supabase/tests/rls.sql` | Cross-user isolation, read-only catalogue, append-only XP, anonymous access limits |
 
 Two of these deserve a mention because they are the ones that stop the course
