@@ -1370,19 +1370,43 @@ on conflict (slug) do update set
   tier = excluded.tier, criteria = excluded.criteria, xp_award = excluded.xp_award,
   ordinal = excluded.ordinal;
 -- --------------------------------------------------------------------------
--- Course
+-- Courses
 -- --------------------------------------------------------------------------
 
-insert into public.courses (slug, title, subtitle, description, recommended_days, recommended_minutes_per_day, version)
+insert into public.courses
+  (slug, title, subtitle, description, outcome, ordinal, accent, is_published,
+   recommended_days, recommended_minutes_per_day, version)
 values ('html-hero', 'HTML Hero', 'From complete beginner to production-quality HTML', 'A mastery-based journey through modern HTML. Twelve levels, each unlocked by demonstrated understanding rather than elapsed time. You build one real website throughout, and finish able to build, validate, improve, export and publish a professional multi-page site.',
+        'You can build, validate, improve, export and publish a professional multi-page website in modern HTML.', 1, 'blue', true,
         30, 60, '1.0.0')
 on conflict (slug) do update set
   title = excluded.title, subtitle = excluded.subtitle, description = excluded.description,
+  outcome = excluded.outcome, ordinal = excluded.ordinal, accent = excluded.accent,
+  is_published = excluded.is_published,
   recommended_days = excluded.recommended_days,
   recommended_minutes_per_day = excluded.recommended_minutes_per_day,
   version = excluded.version;
+insert into public.courses
+  (slug, title, subtitle, description, outcome, ordinal, accent, is_published,
+   recommended_days, recommended_minutes_per_day, version)
+values ('css-architect', 'CSS Architect', 'From "why is this not working" to layouts you can reason about', 'A mastery-based journey through modern CSS. It starts with the cascade rather than ending with it, because almost every hour lost to CSS is really a cascade misunderstanding. You style the site you built in the HTML course, and finish able to build responsive, maintainable layouts and explain exactly why each rule applies.',
+        'You can style a complete multi-page site with modern CSS, and explain why every rule in it wins or loses.', 2, 'violet', false,
+        30, 60, '0.1.0')
+on conflict (slug) do update set
+  title = excluded.title, subtitle = excluded.subtitle, description = excluded.description,
+  outcome = excluded.outcome, ordinal = excluded.ordinal, accent = excluded.accent,
+  is_published = excluded.is_published,
+  recommended_days = excluded.recommended_days,
+  recommended_minutes_per_day = excluded.recommended_minutes_per_day,
+  version = excluded.version;
+-- Cross-course prerequisites: CSS rests on HTML.
+delete from public.course_prerequisites;
+insert into public.course_prerequisites (course_id, prerequisite_course_id)
+select c.id, p.id from public.courses c, public.courses p
+where c.slug = 'css-architect' and p.slug = 'html-hero'
+on conflict do nothing;
 -- --------------------------------------------------------------------------
--- Level 1: HTML Explorer
+-- HTML Hero — Level 1: HTML Explorer
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -1871,24 +1895,5 @@ from public.quiz_questions where slug = 'q-void-elements';
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 4, 'It is a shorthand that older browsers required', false, NULL
 from public.quiz_questions where slug = 'q-void-elements';
--- lesson: Nesting and the document tree
-insert into public.lessons
-  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'nesting-and-the-document-tree', 3, 'Nesting and the document tree', 'Why order matters, and how to keep it readable', 'Elements go inside other elements. Getting the order right is the single biggest thing that separates markup that works from markup that mysteriously does not.',
-       ARRAY['Nest elements in the correct order', 'Read an HTML document as a tree', 'Indent your code so mistakes become visible']::text[], 14, 40, (select id from public.skills where slug = 'syntax'), 0.7
-from public.modules m where m.slug = 'how-the-web-works'
-on conflict (slug) do update set
-  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
-  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
-  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
-  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
-       NULL, NULL, NULL, '{"items":["Nest elements correctly and spot when they overlap","Describe a page as a tree of parents and children","Use indentation and comments to keep markup readable"]}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'prose'::public.block_type, NULL, 'Elements can contain other elements. When they do, they must be closed in the reverse of the order they were opened — like closing a set of brackets. Think of it as boxes inside boxes: you cannot close the outer box before the inner one.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
 
 commit;

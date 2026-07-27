@@ -10,6 +10,29 @@
 -- Run part 5 first.
 
 begin;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'search', false, NULL
+from public.quiz_questions where slug = 'a6-q5';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-6-milestone'), 'a6-q6', 6, 'single'::public.question_kind,
+        'Which form method should be used for a search box?', 'GET, so results appear in the URL and can be bookmarked and shared. It only reads data.', (select id from public.skills where slug = 'forms'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'POST', false, NULL
+from public.quiz_questions where slug = 'a6-q6';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Either, but POST is safer', false, NULL
+from public.quiz_questions where slug = 'a6-q6';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It depends on the number of fields', false, NULL
+from public.quiz_questions where slug = 'a6-q6';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'GET', true, NULL
+from public.quiz_questions where slug = 'a6-q6';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values (NULL, (select id from public.assessments where slug = 'level-6-milestone'), 'a6-q7', 7, 'single'::public.question_kind,
         'What must accompany a `pattern` attribute?', 'A visible, plain-language description of the required format, connected with `aria-describedby`.', (select id from public.skills where slug = 'accessibility'), 10)
@@ -91,7 +114,7 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'Browsers strip it before sending', false, NULL
 from public.quiz_questions where slug = 'a6-q10';
 -- --------------------------------------------------------------------------
--- Level 7: Native Interaction Expert
+-- HTML Hero — Level 7: Native Interaction Expert
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -1095,7 +1118,7 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'It is a live region, so changes are announced', true, NULL
 from public.quiz_questions where slug = 'a7-q7';
 -- --------------------------------------------------------------------------
--- Level 8: Accessibility Champion
+-- HTML Hero — Level 8: Accessibility Champion
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)

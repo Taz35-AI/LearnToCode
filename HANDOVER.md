@@ -30,7 +30,7 @@ more here than usual: they will discover any gap by walking into it.
 |---|---|---|
 | **A** | Rebuild the learning engine on evidence | **Done and verified against the live database** |
 | **B** | Fix the HTML course's known gaps | **Done** |
-| **C** | Complete CSS course | Not started |
+| **C** | Complete CSS course | **Foundation done**, content not started |
 | **D** | Complete JavaScript course | Not started |
 
 Order matters and was agreed: the engine changes how every later lesson is
@@ -61,7 +61,7 @@ Tailwind 4, Supabase auth + Postgres with RLS on every table.
 | Reviewable items | 236 (both questions and exercises served) |
 | Tracked skills | 26 |
 | Media assets | 38 (136 files, all CC0, self-generated) |
-| Automated tests | 539 across 8 files |
+| Automated tests | 582 across 9 files |
 | RLS assertions | 29, against real PostgreSQL |
 
 Live at `learn-to-code-nine.vercel.app`, Supabase project `fulazwoiwhtwumerjiex`.
@@ -315,11 +315,48 @@ prerequisite cycles all fail the build with a specific message.
 
 ## 5. Part C — CSS course
 
-Zero to professional: the cascade, specificity and inheritance; the box model;
-Flexbox and Grid taught until fluent; responsive design and container queries;
-custom properties; typography and colour systems; transitions and animation;
-architecture and naming that scales; developer tools; and how CSS and HTML
-relate. A graduate must be able to make their site *look* finished.
+### Foundation — done
+
+Both engineering prerequisites this section warned about are built and tested.
+
+**Multi-course programme.** `supabase/migrations/0008_multi_course.sql` adds
+`courses.ordinal`, `accent`, `outcome` and `is_published`, plus a
+`course_prerequisites` table. Nothing was dropped or rebuilt: every column has a
+default that leaves the HTML course where it was, because a learner's plan and
+certificate cascade from `courses.id`.
+
+Content is now a programme. `CourseSpec` in `src/content/types.ts`, courses in
+`src/content/courses/`, and `course.ts` exposes `COURSES`, `publishedCourses()`,
+`programmeStats()` and per-course `courseStats(course)`. The seed generator
+emits every course and reports each one separately, marking unpublished ones.
+
+**`isPublished: false` is the mechanism that matters.** The CSS course is
+seeded, loadable and testable while being invisible to learners and absent from
+every statistic. The alternative — a long-lived branch — means content that is
+never seeded and never actually run until it all lands at once.
+
+**The CSS evaluator.** `src/lib/evaluator/css-parse.ts` and `css-cascade.ts`,
+with 43 tests in `tests/css-evaluator.test.ts`. It resolves specificity,
+`!important`, source order, inline styles, inheritance, `@media` conditions and
+`var()` substitution — then requirements ask about the *resolved* value.
+
+Nothing matches source text, which is what keeps the HTML evaluator's promise
+intact for CSS: `tests/css-evaluator.test.ts` asserts that four genuinely
+different stylesheets reaching the same colour all grade identically.
+
+Three real bugs were found by those tests and fixed: `:root` never matched (the
+HTML parser has no such selector, so every `var()` resolved empty), media
+queries compared with significant whitespace, and a stray `}` silently discarded
+the rest of a stylesheet — which would have let broken CSS pass.
+
+### Still to build
+
+The twelve levels. The planned order is in `src/content/courses/css.ts` and
+starts with the cascade rather than ending with it, because nearly every hour
+lost to CSS is a cascade misunderstanding. The capstone styles the site the
+learner already built in the HTML course.
+
+### The original Part C assessment, for reference
 
 **Technical work this requires:**
 

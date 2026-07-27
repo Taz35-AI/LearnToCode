@@ -15,13 +15,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
-import { COURSE, LEVELS, allLessons, courseStats, totalCourseMinutes } from '../src/content/course';
+import { COURSES, allLessons, allProgrammeLessons, courseStats, programmeStats, totalCourseMinutes } from '../src/content/course';
 import { SKILLS } from '../src/content/skills';
 import { ACHIEVEMENTS } from '../src/content/achievements';
 import { PROJECT_TEMPLATES } from '../src/content/projects';
 import { MEDIA_ASSETS, getMedia } from '../src/content/media/manifest';
 import { blockProblems, orderedOptions } from '../src/content/types';
-import type { BlockSpec, LessonSpec, ModuleSpec, QuestionSpec, RequirementSpec } from '../src/content/types';
+import type { BlockSpec, CourseSpec, LessonSpec, ModuleSpec, QuestionSpec, RequirementSpec } from '../src/content/types';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUT = join(ROOT, 'supabase', 'seed.sql');
@@ -67,7 +67,8 @@ function validate(): void {
   const lessonSlugs = new Set<string>();
   const exerciseSlugs = new Set<string>();
   const questionSlugs = new Set<string>();
-  const moduleSlugs = new Set(LEVELS.flatMap((l) => l.modules.map((m) => m.slug)));
+  const allLevels = COURSES.flatMap((c) => c.levels);
+  const moduleSlugs = new Set(allLevels.flatMap((l) => l.modules.map((m) => m.slug)));
 
   for (const skill of SKILLS) {
     for (const prerequisite of skill.prerequisites ?? []) {
@@ -77,7 +78,7 @@ function validate(): void {
     }
   }
 
-  for (const level of LEVELS) {
+  for (const level of allLevels) {
     for (const mod of level.modules) {
       for (const prerequisite of mod.prerequisites ?? []) {
         if (!moduleSlugs.has(prerequisite)) {
@@ -344,18 +345,47 @@ on conflict (slug) do update set
   });
 }
 
-function emitCourse(): void {
-  section('Course');
-  sql.push(
-    `insert into public.courses (slug, title, subtitle, description, recommended_days, recommended_minutes_per_day, version)
-values (${q(COURSE.slug)}, ${q(COURSE.title)}, ${q(COURSE.subtitle)}, ${q(COURSE.description)},
-        ${COURSE.recommendedDays}, ${COURSE.recommendedMinutesPerDay}, ${q(COURSE.version)})
+/**
+ * Every course in the programme, and the order they unlock in.
+ *
+ * Upserted by slug and never deleted, for the same reason lessons are: a
+ * learner's plan, certificate and every level hang off `courses.id` by a
+ * cascading foreign key, so dropping and rebuilding a course row would take
+ * their progress with it.
+ */
+function emitCourses(): void {
+  section('Courses');
+
+  for (const course of COURSES) {
+    sql.push(
+      `insert into public.courses
+  (slug, title, subtitle, description, outcome, ordinal, accent, is_published,
+   recommended_days, recommended_minutes_per_day, version)
+values (${q(course.slug)}, ${q(course.title)}, ${q(course.subtitle)}, ${q(course.description)},
+        ${q(course.outcome)}, ${course.ordinal}, ${q(course.accent)}, ${b(course.isPublished)},
+        ${course.recommendedDays}, ${course.recommendedMinutesPerDay}, ${q(course.version)})
 on conflict (slug) do update set
   title = excluded.title, subtitle = excluded.subtitle, description = excluded.description,
+  outcome = excluded.outcome, ordinal = excluded.ordinal, accent = excluded.accent,
+  is_published = excluded.is_published,
   recommended_days = excluded.recommended_days,
   recommended_minutes_per_day = excluded.recommended_minutes_per_day,
   version = excluded.version;`,
-  );
+    );
+  }
+
+  sql.push('', '-- Cross-course prerequisites: CSS rests on HTML.');
+  sql.push('delete from public.course_prerequisites;');
+  for (const course of COURSES) {
+    for (const prerequisite of course.prerequisites ?? []) {
+      sql.push(
+        `insert into public.course_prerequisites (course_id, prerequisite_course_id)
+select c.id, p.id from public.courses c, public.courses p
+where c.slug = ${q(course.slug)} and p.slug = ${q(prerequisite)}
+on conflict do nothing;`,
+      );
+    }
+  }
 }
 
 function emitRequirement(exerciseSlug: string, req: RequirementSpec, ordinal: number): void {
@@ -495,13 +525,17 @@ where m.slug = ${q(mod.slug)} and s.slug = ${q(skill.slug)};`,
 }
 
 function emitLevels(): void {
-  LEVELS.forEach((level, levelIndex) => {
-    section(`Level ${levelIndex + 1}: ${level.title}`);
+  for (const course of COURSES) emitCourseLevels(course);
+}
+
+function emitCourseLevels(course: CourseSpec): void {
+  course.levels.forEach((level, levelIndex) => {
+    section(`${course.title} — Level ${levelIndex + 1}: ${level.title}`);
     sql.push(
       `insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
 select c.id, ${q(level.slug)}, ${levelIndex + 1}, ${q(level.title)}, ${q(level.subtitle)},
        ${q(level.summary)}, ${q(level.outcome)}, ${q(level.accent)}
-from public.courses c where c.slug = ${q(COURSE.slug)}
+from public.courses c where c.slug = ${q(course.slug)}
 on conflict (course_id, slug) do update set
   ordinal = excluded.ordinal, title = excluded.title,
   subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
@@ -511,7 +545,7 @@ on conflict (course_id, slug) do update set
     if (level.assessment) {
       const a = level.assessment;
       const courseRef =
-        a.kind === 'final' ? `(select id from public.courses where slug = ${q(COURSE.slug)})` : 'NULL';
+        a.kind === 'final' ? `(select id from public.courses where slug = ${q(course.slug)})` : 'NULL';
       sql.push(
         `insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
 select l.id, ${courseRef}, ${q(a.slug)}, ${q(a.kind)}::public.assessment_kind, ${q(a.title)}, ${q(a.description)},
@@ -563,7 +597,7 @@ function emitReviewItems(): void {
 
   const slugs: string[] = [];
 
-  for (const level of LEVELS) {
+  for (const level of COURSES.flatMap((c) => c.levels)) {
     for (const mod of level.modules) {
       for (const lesson of mod.lessons) {
         for (const question of lesson.quiz) {
@@ -624,7 +658,7 @@ function emitStaleCleanup(): void {
   const questionSlugs: string[] = [];
   const assessmentSlugs: string[] = [];
 
-  for (const level of LEVELS) {
+  for (const level of COURSES.flatMap((c) => c.levels)) {
     levelSlugs.push(level.slug);
     if (level.assessment) {
       assessmentSlugs.push(level.assessment.slug);
@@ -716,7 +750,7 @@ async function main(): Promise<void> {
   emitMedia();
   emitProjects();
   emitAchievements();
-  emitCourse();
+  emitCourses();
   emitLevels();
   emitStaleCleanup();
   emitReviewItems();
@@ -725,11 +759,25 @@ async function main(): Promise<void> {
   await writeFile(OUT, sql.join('\n'), 'utf8');
   await syncHealthCheck();
 
-  const lessons = allLessons();
+  const lessons = allProgrammeLessons();
+  const programme = programmeStats();
+
   console.log('✓ supabase/seed.sql written');
+
+  // Reported per course as well as in total: an unpublished course contributes
+  // rows to the seed and nothing to what a learner is shown, and conflating the
+  // two is how a half-written course ends up quoted as a headline figure.
+  for (const course of COURSES) {
+    const s = courseStats(course);
+    const state = course.isPublished ? 'published' : 'UNPUBLISHED';
+    console.log(
+      `  ${course.title} (${state}): ${s.levels} levels · ${s.modules} modules · ` +
+        `${s.lessons} lessons · ${s.exercises} exercises · ${s.quizQuestions} questions`,
+    );
+  }
   console.log(
-    `  ${stats.levels} levels · ${stats.modules} modules · ${lessons.length} lessons · ` +
-      `${stats.blocks} blocks · ${stats.exercises} exercises · ${stats.quizQuestions} questions`,
+    `  programme total: ${programme.levels} levels · ${programme.lessons} lessons · ` +
+      `${programme.blocks} blocks · ${programme.exercises} exercises`,
   );
   console.log(
     `  ${stats.reviewItems} reviewable items for spaced repetition`,

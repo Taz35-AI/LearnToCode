@@ -1396,7 +1396,7 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'It will not be styled as a link', false, NULL
 from public.quiz_questions where slug = 'a8-q9';
 -- --------------------------------------------------------------------------
--- Level 9: Metadata, SEO and Discoverability
+-- HTML Hero — Level 9: Metadata, SEO and Discoverability
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)

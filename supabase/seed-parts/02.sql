@@ -10,6 +10,25 @@
 -- Run part 1 first.
 
 begin;
+-- lesson: Nesting and the document tree
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'nesting-and-the-document-tree', 3, 'Nesting and the document tree', 'Why order matters, and how to keep it readable', 'Elements go inside other elements. Getting the order right is the single biggest thing that separates markup that works from markup that mysteriously does not.',
+       ARRAY['Nest elements in the correct order', 'Read an HTML document as a tree', 'Indent your code so mistakes become visible']::text[], 14, 40, (select id from public.skills where slug = 'syntax'), 0.7
+from public.modules m where m.slug = 'how-the-web-works'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Nest elements correctly and spot when they overlap","Describe a page as a tree of parents and children","Use indentation and comments to keep markup readable"]}'::jsonb
+from public.lessons where slug = 'nesting-and-the-document-tree';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'prose'::public.block_type, NULL, 'Elements can contain other elements. When they do, they must be closed in the reverse of the order they were opened — like closing a set of brackets. Think of it as boxes inside boxes: you cannot close the outer box before the inner one.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'nesting-and-the-document-tree';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
 select id, 3, 'comparison'::public.block_type, 'Nesting: correct and overlapping', NULL,
        NULL, NULL, NULL, '{"good":{"label":"Correct","code":"<p>Open <strong>every morning</strong> at six.</p>","why":"`<strong>` is opened and closed entirely inside the paragraph."},"bad":{"label":"Overlapping — never valid","code":"<p>Open <strong>every morning</p></strong> at six.","why":"The paragraph is closed while `<strong>` is still open. Browsers guess at a repair, and every browser guesses differently."}}'::jsonb
@@ -1030,7 +1049,7 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'A rule about which elements are allowed', false, NULL
 from public.quiz_questions where slug = 'a1-q10';
 -- --------------------------------------------------------------------------
--- Level 2: Content Builder
+-- HTML Hero — Level 2: Content Builder
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -2098,40 +2117,5 @@ select e.id, 5, 'valid_nesting'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
        'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
 from public.exercises e where e.slug = 'lists-guided';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'entities-debug', 2, 'debug'::public.exercise_kind, 'The page that swallowed itself',
-       'This page tries to show some HTML but typed the angle brackets directly, so the browser read them as real tags and the text vanished. Replace them with entities so the code shows on the page as text.', '<h2>The title element</h2>
-<p>Every page needs a <code><title></code> element in its head.</p>
-<p>Ampersands must be written as & too.</p>', '<h2>The title element</h2>
-<p>Every page needs a <code>&lt;title&gt;</code> element in its head.</p>
-<p>Ampersands must be written as &amp; too.</p>', ARRAY['Replace the < you want to *display* with &lt; and the > with &gt;.', 'A bare & should be written &amp;.', 'The <code> tags themselves stay as real tags — only the ones inside it become entities.']::text[],
-       40, 3,
-       (select id from public.skills where slug = 'validation'), false
-from public.lessons l where l.slug = 'code-entities-and-lists'
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
-  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
-  reference_solution = excluded.reference_solution, hints = excluded.hints,
-  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
-  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'element_present'::public.requirement_kind, 'code', NULL,
-       NULL, NULL, NULL, NULL,
-       'The <code> element is still there', NULL, 1, true
-from public.exercises e where e.slug = 'entities-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'text_content'::public.requirement_kind, 'code', NULL,
-       '<title>', NULL, NULL, NULL,
-       'The code element displays the text "<title>"', NULL, 1, true
-from public.exercises e where e.slug = 'entities-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'element_count'::public.requirement_kind, 'title', NULL,
-       NULL, NULL, 0, 0,
-       'No accidental real <title> element was created', NULL, 1, true
-from public.exercises e where e.slug = 'entities-debug';
 
 commit;

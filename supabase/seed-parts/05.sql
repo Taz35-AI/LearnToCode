@@ -12,6 +12,30 @@
 begin;
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'element_present'::public.requirement_kind, 'section', NULL,
+       NULL, NULL, NULL, NULL,
+       'The themed group uses a section', NULL, 1, true
+from public.exercises e where e.slug = 'section-article-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'element_present'::public.requirement_kind, 'aside', NULL,
+       NULL, NULL, NULL, NULL,
+       'The tangential content uses an aside', NULL, 1, true
+from public.exercises e where e.slug = 'section-article-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'element_count'::public.requirement_kind, 'main > div, section > div', NULL,
+       NULL, NULL, 0, 0,
+       'No meaningless divs remain', NULL, 1, true
+from public.exercises e where e.slug = 'section-article-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'heading_order'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'The heading hierarchy is correct: one <h1>, and no skipped levels', 'Start with a single <h1>, then step down one level at a time — h2 before h3.', 1, true
+from public.exercises e where e.slug = 'section-article-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 6, 'valid_nesting'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
        'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
@@ -837,7 +861,7 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'Any content that is visually to one side', false, NULL
 from public.quiz_questions where slug = 'a5-q8';
 -- --------------------------------------------------------------------------
--- Level 6: Data and Forms Builder
+-- HTML Hero — Level 6: Data and Forms Builder
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -2300,28 +2324,5 @@ from public.quiz_questions where slug = 'a6-q5';
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 3, 'tel', false, NULL
 from public.quiz_questions where slug = 'a6-q5';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'search', false, NULL
-from public.quiz_questions where slug = 'a6-q5';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-6-milestone'), 'a6-q6', 6, 'single'::public.question_kind,
-        'Which form method should be used for a search box?', 'GET, so results appear in the URL and can be bookmarked and shared. It only reads data.', (select id from public.skills where slug = 'forms'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'POST', false, NULL
-from public.quiz_questions where slug = 'a6-q6';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Either, but POST is safer', false, NULL
-from public.quiz_questions where slug = 'a6-q6';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'It depends on the number of fields', false, NULL
-from public.quiz_questions where slug = 'a6-q6';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'GET', true, NULL
-from public.quiz_questions where slug = 'a6-q6';
 
 commit;

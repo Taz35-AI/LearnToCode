@@ -749,6 +749,40 @@ export interface LevelSpec {
   assessment?: AssessmentSpec;
 }
 
+/**
+ * One course in the programme.
+ *
+ * The application began with a single course and a hard-coded slug in the data
+ * layer. That is now data: a course knows its own position, what must be
+ * finished before it opens, and whether it is ready to be seen at all.
+ *
+ * `isPublished: false` is the important one. Authoring a course the size of the
+ * HTML one takes many sessions, and the alternative to an unpublished flag is a
+ * long-lived branch — which means the content is never seeded, never rendered,
+ * and never actually verified until the day it all lands at once. An
+ * unpublished course is seeded and testable and simply not offered to a
+ * learner.
+ */
+export interface CourseSpec {
+  slug: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  /** One sentence naming what a graduate can do. */
+  outcome: string;
+  /** Position in the programme: HTML is 1, CSS is 2, JavaScript is 3. */
+  ordinal: number;
+  accent: string;
+  recommendedDays: number;
+  recommendedMinutesPerDay: number;
+  version: string;
+  /** Slugs of courses that must be finished first. */
+  prerequisites?: string[];
+  /** False while the course is still being written. */
+  isPublished: boolean;
+  levels: LevelSpec[];
+}
+
 export interface SkillSpec {
   slug: string;
   name: string;

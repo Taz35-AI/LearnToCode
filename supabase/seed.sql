@@ -1403,20 +1403,45 @@ on conflict (slug) do update set
   ordinal = excluded.ordinal;
 
 -- --------------------------------------------------------------------------
--- Course
+-- Courses
 -- --------------------------------------------------------------------------
 
-insert into public.courses (slug, title, subtitle, description, recommended_days, recommended_minutes_per_day, version)
+insert into public.courses
+  (slug, title, subtitle, description, outcome, ordinal, accent, is_published,
+   recommended_days, recommended_minutes_per_day, version)
 values ('html-hero', 'HTML Hero', 'From complete beginner to production-quality HTML', 'A mastery-based journey through modern HTML. Twelve levels, each unlocked by demonstrated understanding rather than elapsed time. You build one real website throughout, and finish able to build, validate, improve, export and publish a professional multi-page site.',
+        'You can build, validate, improve, export and publish a professional multi-page website in modern HTML.', 1, 'blue', true,
         30, 60, '1.0.0')
 on conflict (slug) do update set
   title = excluded.title, subtitle = excluded.subtitle, description = excluded.description,
+  outcome = excluded.outcome, ordinal = excluded.ordinal, accent = excluded.accent,
+  is_published = excluded.is_published,
+  recommended_days = excluded.recommended_days,
+  recommended_minutes_per_day = excluded.recommended_minutes_per_day,
+  version = excluded.version;
+insert into public.courses
+  (slug, title, subtitle, description, outcome, ordinal, accent, is_published,
+   recommended_days, recommended_minutes_per_day, version)
+values ('css-architect', 'CSS Architect', 'From "why is this not working" to layouts you can reason about', 'A mastery-based journey through modern CSS. It starts with the cascade rather than ending with it, because almost every hour lost to CSS is really a cascade misunderstanding. You style the site you built in the HTML course, and finish able to build responsive, maintainable layouts and explain exactly why each rule applies.',
+        'You can style a complete multi-page site with modern CSS, and explain why every rule in it wins or loses.', 2, 'violet', false,
+        30, 60, '0.1.0')
+on conflict (slug) do update set
+  title = excluded.title, subtitle = excluded.subtitle, description = excluded.description,
+  outcome = excluded.outcome, ordinal = excluded.ordinal, accent = excluded.accent,
+  is_published = excluded.is_published,
   recommended_days = excluded.recommended_days,
   recommended_minutes_per_day = excluded.recommended_minutes_per_day,
   version = excluded.version;
 
+-- Cross-course prerequisites: CSS rests on HTML.
+delete from public.course_prerequisites;
+insert into public.course_prerequisites (course_id, prerequisite_course_id)
+select c.id, p.id from public.courses c, public.courses p
+where c.slug = 'css-architect' and p.slug = 'html-hero'
+on conflict do nothing;
+
 -- --------------------------------------------------------------------------
--- Level 1: HTML Explorer
+-- HTML Hero — Level 1: HTML Explorer
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -2964,7 +2989,7 @@ select id, 4, 'A rule about which elements are allowed', false, NULL
 from public.quiz_questions where slug = 'a1-q10';
 
 -- --------------------------------------------------------------------------
--- Level 2: Content Builder
+-- HTML Hero — Level 2: Content Builder
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -4636,7 +4661,7 @@ select id, 4, 'Prevents the text being copied', false, NULL
 from public.quiz_questions where slug = 'a2-q8';
 
 -- --------------------------------------------------------------------------
--- Level 3: Navigation Architect
+-- HTML Hero — Level 3: Navigation Architect
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -6189,7 +6214,7 @@ select id, 4, 'Mobile users on slow connections', false, NULL
 from public.quiz_questions where slug = 'a3-q8';
 
 -- --------------------------------------------------------------------------
--- Level 4: Media Specialist
+-- HTML Hero — Level 4: Media Specialist
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -8086,7 +8111,7 @@ select id, 4, 'In an alt attribute', false, NULL
 from public.quiz_questions where slug = 'a4-q9';
 
 -- --------------------------------------------------------------------------
--- Level 5: Structure Professional
+-- HTML Hero — Level 5: Structure Professional
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -9326,7 +9351,7 @@ select id, 4, 'Any content that is visually to one side', false, NULL
 from public.quiz_questions where slug = 'a5-q8';
 
 -- --------------------------------------------------------------------------
--- Level 6: Data and Forms Builder
+-- HTML Hero — Level 6: Data and Forms Builder
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -10910,7 +10935,7 @@ select id, 4, 'Browsers strip it before sending', false, NULL
 from public.quiz_questions where slug = 'a6-q10';
 
 -- --------------------------------------------------------------------------
--- Level 7: Native Interaction Expert
+-- HTML Hero — Level 7: Native Interaction Expert
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -11926,7 +11951,7 @@ select id, 4, 'It is a live region, so changes are announced', true, NULL
 from public.quiz_questions where slug = 'a7-q7';
 
 -- --------------------------------------------------------------------------
--- Level 8: Accessibility Champion
+-- HTML Hero — Level 8: Accessibility Champion
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -14284,7 +14309,7 @@ select id, 4, 'It will not be styled as a link', false, NULL
 from public.quiz_questions where slug = 'a8-q9';
 
 -- --------------------------------------------------------------------------
--- Level 9: Metadata, SEO and Discoverability
+-- HTML Hero — Level 9: Metadata, SEO and Discoverability
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -15635,7 +15660,7 @@ select id, 4, 'Higher ranking than sites without structured data', false, NULL
 from public.quiz_questions where slug = 'a9-q8';
 
 -- --------------------------------------------------------------------------
--- Level 10: HTML Performance and Security
+-- HTML Hero — Level 10: HTML Performance and Security
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -16882,7 +16907,7 @@ select id, 4, 'It cannot express loading priority', false, NULL
 from public.quiz_questions where slug = 'a10-q8';
 
 -- --------------------------------------------------------------------------
--- Level 11: Debugging and Validation Master
+-- HTML Hero — Level 11: Debugging and Validation Master
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -18172,7 +18197,7 @@ select id, 4, 'Rewrite the page from scratch', false, NULL
 from public.quiz_questions where slug = 'a11-q7';
 
 -- --------------------------------------------------------------------------
--- Level 12: HTML Hero Capstone
+-- HTML Hero — Level 12: HTML Hero Capstone
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)

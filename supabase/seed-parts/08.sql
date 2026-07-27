@@ -639,7 +639,7 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'Higher ranking than sites without structured data', false, NULL
 from public.quiz_questions where slug = 'a9-q8';
 -- --------------------------------------------------------------------------
--- Level 10: HTML Performance and Security
+-- HTML Hero — Level 10: HTML Performance and Security
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -1873,7 +1873,7 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'It cannot express loading priority', false, NULL
 from public.quiz_questions where slug = 'a10-q8';
 -- --------------------------------------------------------------------------
--- Level 11: Debugging and Validation Master
+-- HTML Hero — Level 11: Debugging and Validation Master
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)

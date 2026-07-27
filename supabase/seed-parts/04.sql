@@ -10,6 +10,30 @@
 -- Run part 3 first.
 
 begin;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'alt_quality'::public.requirement_kind, 'img', NULL,
+       NULL, NULL, NULL, NULL,
+       'The alt text describes what the image shows', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+from public.exercises e where e.slug = 'img-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'attribute_present'::public.requirement_kind, 'img', 'width',
+       NULL, NULL, NULL, NULL,
+       'The image declares its width', NULL, 1, true
+from public.exercises e where e.slug = 'img-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'attribute_present'::public.requirement_kind, 'img', 'height',
+       NULL, NULL, NULL, NULL,
+       'The image declares its height', NULL, 1, true
+from public.exercises e where e.slug = 'img-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 7, 'local_media_path'::public.requirement_kind, 'img', NULL,
+       NULL, NULL, NULL, NULL,
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+from public.exercises e where e.slug = 'img-guided';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
 select l.id, 'img-debug', 2, 'debug'::public.exercise_kind, 'Three broken images',
@@ -1728,7 +1752,7 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'In an alt attribute', false, NULL
 from public.quiz_questions where slug = 'a4-q9';
 -- --------------------------------------------------------------------------
--- Level 5: Structure Professional
+-- HTML Hero — Level 5: Structure Professional
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -2102,30 +2126,6 @@ insert into public.exercise_requirements
 select e.id, 1, 'element_count'::public.requirement_kind, 'article', NULL,
        NULL, NULL, 2, 2,
        'The two routes are articles', NULL, 1, true
-from public.exercises e where e.slug = 'section-article-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'element_present'::public.requirement_kind, 'section', NULL,
-       NULL, NULL, NULL, NULL,
-       'The themed group uses a section', NULL, 1, true
-from public.exercises e where e.slug = 'section-article-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'element_present'::public.requirement_kind, 'aside', NULL,
-       NULL, NULL, NULL, NULL,
-       'The tangential content uses an aside', NULL, 1, true
-from public.exercises e where e.slug = 'section-article-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'element_count'::public.requirement_kind, 'main > div, section > div', NULL,
-       NULL, NULL, 0, 0,
-       'No meaningless divs remain', NULL, 1, true
-from public.exercises e where e.slug = 'section-article-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 5, 'heading_order'::public.requirement_kind, NULL, NULL,
-       NULL, NULL, NULL, NULL,
-       'The heading hierarchy is correct: one <h1>, and no skipped levels', 'Start with a single <h1>, then step down one level at a time — h2 before h3.', 1, true
 from public.exercises e where e.slug = 'section-article-guided';
 
 commit;

@@ -10,6 +10,41 @@
 -- Run part 2 first.
 
 begin;
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'entities-debug', 2, 'debug'::public.exercise_kind, 'The page that swallowed itself',
+       'This page tries to show some HTML but typed the angle brackets directly, so the browser read them as real tags and the text vanished. Replace them with entities so the code shows on the page as text.', '<h2>The title element</h2>
+<p>Every page needs a <code><title></code> element in its head.</p>
+<p>Ampersands must be written as & too.</p>', '<h2>The title element</h2>
+<p>Every page needs a <code>&lt;title&gt;</code> element in its head.</p>
+<p>Ampersands must be written as &amp; too.</p>', ARRAY['Replace the < you want to *display* with &lt; and the > with &gt;.', 'A bare & should be written &amp;.', 'The <code> tags themselves stay as real tags — only the ones inside it become entities.']::text[],
+       40, 3,
+       (select id from public.skills where slug = 'validation'), false
+from public.lessons l where l.slug = 'code-entities-and-lists'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_present'::public.requirement_kind, 'code', NULL,
+       NULL, NULL, NULL, NULL,
+       'The <code> element is still there', NULL, 1, true
+from public.exercises e where e.slug = 'entities-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'text_content'::public.requirement_kind, 'code', NULL,
+       '<title>', NULL, NULL, NULL,
+       'The code element displays the text "<title>"', NULL, 1, true
+from public.exercises e where e.slug = 'entities-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'element_count'::public.requirement_kind, 'title', NULL,
+       NULL, NULL, 0, 0,
+       'No accidental real <title> element was created', NULL, 1, true
+from public.exercises e where e.slug = 'entities-debug';
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 4, 'text_content'::public.requirement_kind, 'p', NULL,
@@ -557,7 +592,7 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'Prevents the text being copied', false, NULL
 from public.quiz_questions where slug = 'a2-q8';
 -- --------------------------------------------------------------------------
--- Level 3: Navigation Architect
+-- HTML Hero — Level 3: Navigation Architect
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -2090,7 +2125,7 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'Mobile users on slow connections', false, NULL
 from public.quiz_questions where slug = 'a3-q8';
 -- --------------------------------------------------------------------------
--- Level 4: Media Specialist
+-- HTML Hero — Level 4: Media Specialist
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
@@ -2220,30 +2255,6 @@ insert into public.exercise_requirements
 select e.id, 3, 'attribute_present'::public.requirement_kind, 'img', 'alt',
        NULL, NULL, NULL, NULL,
        'The image has an alt attribute', NULL, 1, true
-from public.exercises e where e.slug = 'img-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'alt_quality'::public.requirement_kind, 'img', NULL,
-       NULL, NULL, NULL, NULL,
-       'The alt text describes what the image shows', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
-from public.exercises e where e.slug = 'img-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 5, 'attribute_present'::public.requirement_kind, 'img', 'width',
-       NULL, NULL, NULL, NULL,
-       'The image declares its width', NULL, 1, true
-from public.exercises e where e.slug = 'img-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 6, 'attribute_present'::public.requirement_kind, 'img', 'height',
-       NULL, NULL, NULL, NULL,
-       'The image declares its height', NULL, 1, true
-from public.exercises e where e.slug = 'img-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 7, 'local_media_path'::public.requirement_kind, 'img', NULL,
-       NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
 from public.exercises e where e.slug = 'img-guided';
 
 commit;

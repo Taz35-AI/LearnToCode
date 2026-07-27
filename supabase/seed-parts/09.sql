@@ -1002,7 +1002,7 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'Rewrite the page from scratch', false, NULL
 from public.quiz_questions where slug = 'a11-q7';
 -- --------------------------------------------------------------------------
--- Level 12: HTML Hero Capstone
+-- HTML Hero — Level 12: HTML Hero Capstone
 -- --------------------------------------------------------------------------
 
 insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)

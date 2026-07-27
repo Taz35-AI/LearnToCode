@@ -1,57 +1,55 @@
-import { LEVEL_01 } from './levels/level-01';
-import { LEVEL_02 } from './levels/level-02';
-import { LEVEL_03 } from './levels/level-03';
-import { LEVEL_04 } from './levels/level-04';
-import { LEVEL_05 } from './levels/level-05';
-import { LEVEL_06 } from './levels/level-06';
-import { LEVEL_07 } from './levels/level-07';
-import { LEVEL_08 } from './levels/level-08';
-import { LEVEL_09 } from './levels/level-09';
-import { LEVEL_10 } from './levels/level-10';
-import { LEVEL_11 } from './levels/level-11';
-import { LEVEL_12 } from './levels/level-12';
+import { HTML_COURSE } from './courses/html';
+import { CSS_COURSE } from './courses/css';
 import { RETRIEVAL_BLOCK_TYPES } from './types';
-import type { LessonSpec, LevelSpec, ModuleSpec } from './types';
+import type { CourseSpec, LessonSpec, LevelSpec, ModuleSpec } from './types';
 
 /**
- * The complete HTML Hero curriculum.
+ * The programme: HTML, then CSS, then JavaScript.
  *
- * Twelve mastery levels, not thirty days. The recommended pace is derived from
- * the total teaching time below and the learner's own answers during
- * onboarding — the curriculum itself contains no calendar at all.
+ * Order and gating are data here rather than a hard-coded slug in the data
+ * layer, so adding a course is a content change. Every statistic below takes an
+ * optional course argument and defaults to *published* courses only — a course
+ * still being written must not inflate the figures on the marketing page or the
+ * pace estimate a learner is held to.
  */
-export const COURSE = {
-  slug: 'html-hero',
-  title: 'HTML Hero',
-  subtitle: 'From complete beginner to production-quality HTML',
-  description:
-    'A mastery-based journey through modern HTML. Twelve levels, each unlocked by demonstrated understanding rather than elapsed time. You build one real website throughout, and finish able to build, validate, improve, export and publish a professional multi-page site.',
-  recommendedDays: 30,
-  recommendedMinutesPerDay: 60,
-  version: '1.0.0',
-} as const;
+export const COURSES: CourseSpec[] = [HTML_COURSE, CSS_COURSE];
 
-export const LEVELS: LevelSpec[] = [
-  LEVEL_01,
-  LEVEL_02,
-  LEVEL_03,
-  LEVEL_04,
-  LEVEL_05,
-  LEVEL_06,
-  LEVEL_07,
-  LEVEL_08,
-  LEVEL_09,
-  LEVEL_10,
-  LEVEL_11,
-  LEVEL_12,
-];
-
-export function allModules(): ModuleSpec[] {
-  return LEVELS.flatMap((level) => level.modules);
+/** Courses a learner may actually see, in programme order. */
+export function publishedCourses(): CourseSpec[] {
+  return COURSES.filter((course) => course.isPublished).sort((a, b) => a.ordinal - b.ordinal);
 }
 
-export function allLessons(): LessonSpec[] {
-  return allModules().flatMap((module) => module.lessons);
+export function courseBySlug(slug: string): CourseSpec | undefined {
+  return COURSES.find((course) => course.slug === slug);
+}
+
+/**
+ * The first course, and the one every statistic defaults to.
+ *
+ * Retained under its original name because a great deal of the application —
+ * onboarding, the pace model, the certificate — is still single-course, and
+ * pretending otherwise would be a bigger and riskier change than this one.
+ */
+export const COURSE = HTML_COURSE;
+
+/** Levels of one course; the HTML course by default. */
+export function levelsOf(course: CourseSpec = COURSE): LevelSpec[] {
+  return course.levels;
+}
+
+export const LEVELS: LevelSpec[] = HTML_COURSE.levels;
+
+export function allModules(course: CourseSpec = COURSE): ModuleSpec[] {
+  return course.levels.flatMap((level) => level.modules);
+}
+
+export function allLessons(course: CourseSpec = COURSE): LessonSpec[] {
+  return allModules(course).flatMap((module) => module.lessons);
+}
+
+/** Every lesson in every published course — used by the seed and by tests. */
+export function allProgrammeLessons(): LessonSpec[] {
+  return COURSES.flatMap((course) => allLessons(course));
 }
 
 /**
@@ -62,35 +60,36 @@ export function allLessons(): LessonSpec[] {
 const EXERCISE_MINUTES: Record<number, number> = { 1: 3, 2: 5, 3: 7, 4: 11, 5: 18 };
 
 /**
- * Total learner time across the whole course: reading plus doing.
+ * Total learner time across one course: reading plus doing.
  *
  * This is the basis of every pace calculation, so it must include practice
  * rather than only the lesson text — a plan built on reading time alone would
  * tell every learner they were behind from the first week.
  */
-export function totalCourseMinutes(): number {
-  const reading = allLessons().reduce((sum, lesson) => sum + lesson.estimatedMinutes, 0);
-  const practice = allLessons()
+export function totalCourseMinutes(course: CourseSpec = COURSE): number {
+  const lessons = allLessons(course);
+  const reading = lessons.reduce((sum, lesson) => sum + lesson.estimatedMinutes, 0);
+  const practice = lessons
     .flatMap((lesson) => lesson.exercises)
     .filter((exercise) => !exercise.optional)
     .reduce((sum, exercise) => sum + (EXERCISE_MINUTES[exercise.difficulty ?? 2] ?? 10), 0);
-  const quizzes = allLessons().reduce((sum, lesson) => sum + lesson.quiz.length * 1.5, 0);
-  const assessments = LEVELS.reduce(
+  const quizzes = lessons.reduce((sum, lesson) => sum + lesson.quiz.length * 1.5, 0);
+  const assessments = course.levels.reduce(
     (sum, level) => sum + (level.assessment ? level.assessment.questions.length * 1.5 : 0),
     0,
   );
   return Math.round(reading + practice + quizzes + assessments);
 }
 
-export function courseStats() {
-  const lessons = allLessons();
+export function courseStats(course: CourseSpec = COURSE) {
+  const lessons = allLessons(course);
   const exercises = lessons.flatMap((l) => l.exercises);
   const questions = lessons.flatMap((l) => l.quiz);
-  const assessmentQuestions = LEVELS.flatMap((l) => l.assessment?.questions ?? []);
+  const assessmentQuestions = course.levels.flatMap((l) => l.assessment?.questions ?? []);
 
   return {
-    levels: LEVELS.length,
-    modules: allModules().length,
+    levels: course.levels.length,
+    modules: allModules(course).length,
     lessons: lessons.length,
     blocks: lessons.reduce((sum, l) => sum + l.blocks.length, 0),
     retrievalBlocks: lessons.reduce(
@@ -104,7 +103,27 @@ export function courseStats() {
     debugChallenges: exercises.filter((e) => e.kind === 'debug').length,
     projectMissions: exercises.filter((e) => e.kind === 'project_mission').length,
     quizQuestions: questions.length + assessmentQuestions.length,
-    assessments: LEVELS.filter((l) => l.assessment).length,
-    totalMinutes: totalCourseMinutes(),
+    assessments: course.levels.filter((l) => l.assessment).length,
+    totalMinutes: totalCourseMinutes(course),
+  };
+}
+
+/** The same figures summed across every course the seed will emit. */
+export function programmeStats() {
+  const perCourse = COURSES.map((course) => courseStats(course));
+  const sum = (pick: (s: ReturnType<typeof courseStats>) => number) =>
+    perCourse.reduce((total, s) => total + pick(s), 0);
+
+  return {
+    courses: COURSES.length,
+    publishedCourses: publishedCourses().length,
+    levels: sum((s) => s.levels),
+    modules: sum((s) => s.modules),
+    lessons: sum((s) => s.lessons),
+    blocks: sum((s) => s.blocks),
+    retrievalBlocks: sum((s) => s.retrievalBlocks),
+    exercises: sum((s) => s.exercises),
+    quizQuestions: sum((s) => s.quizQuestions),
+    totalMinutes: sum((s) => s.totalMinutes),
   };
 }
