@@ -320,11 +320,32 @@ Load it into your project:
 
 ```bash
 psql "$SUPABASE_DB_URL" -f supabase/seed.sql
-# or paste the file into the Supabase SQL editor
 ```
 
 The seed is idempotent — re-running it updates existing rows in place rather
 than duplicating them, and it never touches learner data.
+
+### Without a terminal
+
+`seed.sql` is about 1.2 MB, which is too much to paste into the SQL editor in
+one go. `supabase/seed-parts/` holds the same statements split into seven
+files of roughly 175 KB, so the whole course can be loaded from the browser
+with nothing installed:
+
+```bash
+npm run seed:split   # regenerates the parts from seed.sql
+```
+
+Open each part, copy it, paste it into the Supabase SQL editor and run it —
+**in order**, 01 through 07. Part 01 clears the catalogue and later parts
+insert rows referencing earlier ones, so order matters; if a part fails, start
+again from 01.
+
+The split happens on statement boundaries found by scanning for quoting and
+dollar-quoted blocks, not by counting lines, so lesson text containing
+semicolons cannot break a file. Loading the parts produces a byte-identical
+catalogue to loading `seed.sql` — verified by comparing content hashes of
+lesson blocks, exercise requirements, quiz options and the lesson tree.
 
 ---
 
@@ -403,6 +424,7 @@ Do not add anything whose licensing is unclear.
 | `npm run media:generate` | Regenerates every media asset |
 | `npm run media:verify` | Checks every declared asset exists |
 | `npm run seed:generate` | Validates the curriculum and writes `seed.sql` |
+| `npm run seed:split` | Splits `seed.sql` into browser-pasteable parts |
 | `npm run check` | lint → typecheck → test → build |
 
 ---
