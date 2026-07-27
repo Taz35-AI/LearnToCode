@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 8 of 8
+-- HTML Hero — course seed, part 8 of 9
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -1628,5 +1628,1071 @@ delete from public.lessons where slug not in ('what-happens-when-you-open-a-page
 delete from public.assessments where slug not in ('level-1-milestone', 'level-2-milestone', 'level-3-milestone', 'level-4-milestone', 'level-5-milestone', 'level-6-milestone', 'level-7-milestone', 'level-8-milestone', 'level-9-milestone', 'level-10-milestone', 'level-11-milestone', 'html-hero-final');
 delete from public.modules where slug not in ('how-the-web-works', 'the-html-skeleton', 'headings-and-paragraphs', 'text-level-semantics', 'links-and-paths', 'site-navigation', 'images-and-alt-text', 'responsive-images', 'video-audio-embeds', 'semantic-landmarks', 'organising-a-project', 'data-tables', 'form-foundations', 'disclosure-and-dialog', 'accessibility-foundations', 'page-metadata', 'html-performance', 'validation-and-tools', 'completing-the-site', 'review-and-publish');
 delete from public.levels where slug not in ('html-explorer', 'content-builder', 'navigation-architect', 'media-specialist', 'structure-professional', 'data-and-forms', 'native-interaction', 'accessibility-champion', 'metadata-and-seo', 'performance-and-security', 'debugging-and-validation', 'html-hero-capstone');
+-- --------------------------------------------------------------------------
+-- Reviewable items (spaced repetition)
+-- --------------------------------------------------------------------------
+
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-what-is-html', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'document-structure'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'what-happens-when-you-open-a-page' and qq.slug = 'q-what-is-html'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-html-purpose', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'document-structure'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'what-happens-when-you-open-a-page' and qq.slug = 'q-html-purpose'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-first-markup-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'syntax'),
+       l.id, e.id, 1
+from public.lessons l, public.exercises e
+where l.slug = 'what-happens-when-you-open-a-page' and e.slug = 'first-markup-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-first-markup-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'syntax'),
+       l.id, e.id, 1
+from public.lessons l, public.exercises e
+where l.slug = 'what-happens-when-you-open-a-page' and e.slug = 'first-markup-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-tag-vs-element', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'syntax'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'tags-elements-attributes' and qq.slug = 'q-tag-vs-element'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-attribute-syntax', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'syntax'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'tags-elements-attributes' and qq.slug = 'q-attribute-syntax'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-void-elements', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'syntax'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'tags-elements-attributes' and qq.slug = 'q-void-elements'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-attributes-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'syntax'),
+       l.id, e.id, 1
+from public.lessons l, public.exercises e
+where l.slug = 'tags-elements-attributes' and e.slug = 'attributes-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-attributes-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'syntax'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'tags-elements-attributes' and e.slug = 'attributes-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-attributes-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'validation'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'tags-elements-attributes' and e.slug = 'attributes-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-nesting-order', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'syntax'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'nesting-and-the-document-tree' and qq.slug = 'q-nesting-order'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-dom-meaning', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'syntax'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'nesting-and-the-document-tree' and qq.slug = 'q-dom-meaning'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-comments', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'syntax'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'nesting-and-the-document-tree' and qq.slug = 'q-comments'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-nesting-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'syntax'),
+       l.id, e.id, 1
+from public.lessons l, public.exercises e
+where l.slug = 'nesting-and-the-document-tree' and e.slug = 'nesting-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-nesting-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'validation'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'nesting-and-the-document-tree' and e.slug = 'nesting-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-doctype-purpose', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'document-structure'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'doctype-html-head-body' and qq.slug = 'q-doctype-purpose'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-head-vs-body', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'document-structure'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'doctype-html-head-body' and qq.slug = 'q-head-vs-body'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-viewport', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'document-structure'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'doctype-html-head-body' and qq.slug = 'q-viewport'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-charset', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'metadata'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'doctype-html-head-body' and qq.slug = 'q-charset'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-skeleton-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'document-structure'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'doctype-html-head-body' and e.slug = 'skeleton-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-skeleton-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'document-structure'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'doctype-html-head-body' and e.slug = 'skeleton-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-index-html', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'multi-page'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'your-first-complete-page' and qq.slug = 'q-index-html'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-one-h1', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'your-first-complete-page' and qq.slug = 'q-one-h1'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-first-page-milestone', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'document-structure'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'your-first-complete-page' and e.slug = 'first-page-milestone'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-heading-skip', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'heading-hierarchy' and qq.slug = 'q-heading-skip'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-heading-purpose', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'heading-hierarchy' and qq.slug = 'q-heading-purpose'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-headings-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'heading-hierarchy' and e.slug = 'headings-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-headings-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'heading-hierarchy' and e.slug = 'headings-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-whitespace', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'paragraphs-breaks-rules' and qq.slug = 'q-whitespace'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-br-use', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'paragraphs-breaks-rules' and qq.slug = 'q-br-use'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-hr-meaning', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'paragraphs-breaks-rules' and qq.slug = 'q-hr-meaning'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-paragraphs-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'paragraphs-breaks-rules' and e.slug = 'paragraphs-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-paragraphs-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'paragraphs-breaks-rules' and e.slug = 'paragraphs-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-strong-vs-em', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'emphasis-and-importance' and qq.slug = 'q-strong-vs-em'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-small-meaning', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'emphasis-and-importance' and qq.slug = 'q-small-meaning'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-emphasis-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'emphasis-and-importance' and e.slug = 'emphasis-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-emphasis-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'emphasis-and-importance' and e.slug = 'emphasis-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-cite-meaning', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'quotes-abbreviations-dates' and qq.slug = 'q-cite-meaning'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-datetime-format', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'quotes-abbreviations-dates' and qq.slug = 'q-datetime-format'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-q-quotes', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'quotes-abbreviations-dates' and qq.slug = 'q-q-quotes'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-quotes-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'quotes-abbreviations-dates' and e.slug = 'quotes-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-quotes-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'quotes-abbreviations-dates' and e.slug = 'quotes-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-entity-lt', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'code-entities-and-lists' and qq.slug = 'q-entity-lt'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-list-choice', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'lists'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'code-entities-and-lists' and qq.slug = 'q-list-choice'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-nested-list', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'lists'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'code-entities-and-lists' and qq.slug = 'q-nested-list'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-lists-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'lists'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'code-entities-and-lists' and e.slug = 'lists-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-entities-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'validation'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'code-entities-and-lists' and e.slug = 'entities-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-semantic-choice', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'article-milestone' and qq.slug = 'q-semantic-choice'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-article-milestone-build', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'text-semantics'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'article-milestone' and e.slug = 'article-milestone-build'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-link-text', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'anchors-and-link-text' and qq.slug = 'q-link-text'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-noopener', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'security'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'anchors-and-link-text' and qq.slug = 'q-noopener'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-links-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'links'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'anchors-and-link-text' and e.slug = 'links-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-links-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'links'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'anchors-and-link-text' and e.slug = 'links-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-dotdot', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'links'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'relative-and-absolute-paths' and qq.slug = 'q-dotdot'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-leading-slash', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'links'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'relative-and-absolute-paths' and qq.slug = 'q-leading-slash'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-fragment-case', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'links'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'relative-and-absolute-paths' and qq.slug = 'q-fragment-case'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-paths-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'links'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'relative-and-absolute-paths' and e.slug = 'paths-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-fragments-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'links'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'relative-and-absolute-paths' and e.slug = 'fragments-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-paths-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'links'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'relative-and-absolute-paths' and e.slug = 'paths-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-tel-format', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'links'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'special-links' and qq.slug = 'q-tel-format'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-download-attr', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'links'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'special-links' and qq.slug = 'q-download-attr'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-special-links-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'links'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'special-links' and e.slug = 'special-links-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-nav-list', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'navigation'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'navigation-menus' and qq.slug = 'q-nav-list'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-skip-link-position', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'navigation-menus' and qq.slug = 'q-skip-link-position'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-aria-current', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'navigation-menus' and qq.slug = 'q-aria-current'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-nav-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'navigation'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'navigation-menus' and e.slug = 'nav-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-skip-link-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'navigation'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'navigation-menus' and e.slug = 'skip-link-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-nav-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'navigation'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'navigation-menus' and e.slug = 'nav-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-filenames', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'multi-page'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'multi-page-milestone' and qq.slug = 'q-filenames'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-nav-consistency', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'navigation'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'multi-page-milestone' and qq.slug = 'q-nav-consistency'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-multipage-milestone-build', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'multi-page'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'multi-page-milestone' and e.slug = 'multipage-milestone-build'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-img-dimensions', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'images'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'the-img-element' and qq.slug = 'q-img-dimensions'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-hotlinking', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'images'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'the-img-element' and qq.slug = 'q-hotlinking'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-img-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'images'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'the-img-element' and e.slug = 'img-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-img-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'images'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'the-img-element' and e.slug = 'img-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-empty-alt', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'images'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'writing-alt-text' and qq.slug = 'q-empty-alt'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-alt-vs-caption', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'images'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'writing-alt-text' and qq.slug = 'q-alt-vs-caption'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-missing-alt', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'writing-alt-text' and qq.slug = 'q-missing-alt'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-alt-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'images'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'writing-alt-text' and e.slug = 'alt-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-figure-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'images'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'writing-alt-text' and e.slug = 'figure-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-srcset-w', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive-images'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'srcset-and-sizes' and qq.slug = 'q-srcset-w'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-sizes-purpose', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive-images'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'srcset-and-sizes' and qq.slug = 'q-sizes-purpose'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-srcset-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive-images'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'srcset-and-sizes' and e.slug = 'srcset-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-srcset-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive-images'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'srcset-and-sizes' and e.slug = 'srcset-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-picture-img', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive-images'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'picture-and-formats' and qq.slug = 'q-picture-img'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-lazy-hero', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'performance'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'picture-and-formats' and qq.slug = 'q-lazy-hero'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-picture-vs-srcset', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive-images'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'picture-and-formats' and qq.slug = 'q-picture-vs-srcset'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-picture-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive-images'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'picture-and-formats' and e.slug = 'picture-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-lazy-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'performance'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'picture-and-formats' and e.slug = 'lazy-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-video-controls', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'audio-video'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'video-and-audio' and qq.slug = 'q-video-controls'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-track-kind', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'audio-video'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'video-and-audio' and qq.slug = 'q-track-kind'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-fallback-placement', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'audio-video'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'video-and-audio' and qq.slug = 'q-fallback-placement'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-video-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'audio-video'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'video-and-audio' and e.slug = 'video-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-video-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'audio-video'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'video-and-audio' and e.slug = 'video-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-iframe-title', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'iframes-and-media-milestone' and qq.slug = 'q-iframe-title'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-sandbox', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'security'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'iframes-and-media-milestone' and qq.slug = 'q-sandbox'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-iframe-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'embedded-content'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'iframes-and-media-milestone' and e.slug = 'iframe-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-media-milestone', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'audio-video'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'iframes-and-media-milestone' and e.slug = 'media-milestone'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-semantic-meaning', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'semantic-html'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'semantic-vs-non-semantic' and qq.slug = 'q-semantic-meaning'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-main-count', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'semantic-html'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'semantic-vs-non-semantic' and qq.slug = 'q-main-count'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-landmarks-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'semantic-html'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'semantic-vs-non-semantic' and e.slug = 'landmarks-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-article-test', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'semantic-html'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'section-article-aside' and qq.slug = 'q-article-test'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-section-heading', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'semantic-html'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'section-article-aside' and qq.slug = 'q-section-heading'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-outline-algorithm', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'semantic-html'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'section-article-aside' and qq.slug = 'q-outline-algorithm'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-section-article-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'semantic-html'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'section-article-aside' and e.slug = 'section-article-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-section-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'semantic-html'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'section-article-aside' and e.slug = 'section-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-case-sensitivity', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'multi-page'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'file-organisation-and-patterns' and qq.slug = 'q-case-sensitivity'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-comments-value', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'maintainability'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'file-organisation-and-patterns' and qq.slug = 'q-comments-value'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-patterns-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'maintainability'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'file-organisation-and-patterns' and e.slug = 'patterns-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-footer-placement', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'semantic-html'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'semantic-rebuild-milestone' and qq.slug = 'q-footer-placement'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-semantic-rebuild', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'semantic-html'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'semantic-rebuild-milestone' and e.slug = 'semantic-rebuild'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-scope-col', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'tables'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'building-a-table' and qq.slug = 'q-scope-col'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-caption-position', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'tables'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'building-a-table' and qq.slug = 'q-caption-position'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-layout-tables', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'tables'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'building-a-table' and qq.slug = 'q-layout-tables'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-table-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'tables'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'building-a-table' and e.slug = 'table-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-table-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'tables'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'building-a-table' and e.slug = 'table-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-label-for', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'forms'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'labels-and-inputs' and qq.slug = 'q-label-for'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-placeholder', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'labels-and-inputs' and qq.slug = 'q-placeholder'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
 
 commit;

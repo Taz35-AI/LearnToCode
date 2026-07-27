@@ -208,7 +208,7 @@ function extractMediaPaths(html: string): string[] {
 // ---------------------------------------------------------------------------
 
 const sql: string[] = [];
-const stats = courseStats();
+const stats = { ...courseStats(), reviewItems: 0 };
 
 function section(title: string): void {
   sql.push('', `-- ${'-'.repeat(74)}`, `-- ${title}`, `-- ${'-'.repeat(74)}`, '');
@@ -537,6 +537,75 @@ on conflict (slug) do update set
  * The deletes are ordered children-first so a cascade never does the work
  * silently.
  */
+/**
+ * Creates the pool of things spaced repetition can bring back.
+ *
+ * Every lesson knowledge-check question and every non-project exercise becomes
+ * a review item. Milestone assessment questions are excluded on purpose: an
+ * assessment is a measurement, and recycling its questions as practice turns
+ * the measurement into a memory test of the measurement.
+ *
+ * Items are upserted by slug and never bulk-deleted, because review_states
+ * cascades from them — dropping and rebuilding the pool would silently erase
+ * every learner's schedule, which is the same trap the catalogue tables fell
+ * into.
+ */
+function emitReviewItems(): void {
+  section('Reviewable items (spaced repetition)');
+
+  const slugs: string[] = [];
+
+  for (const level of LEVELS) {
+    for (const mod of level.modules) {
+      for (const lesson of mod.lessons) {
+        for (const question of lesson.quiz) {
+          const slug = `rv-q-${question.slug}`;
+          slugs.push(slug);
+          sql.push(
+            `insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select ${q(slug)}, 'question'::public.review_item_kind,
+       (select id from public.skills where slug = ${q(question.skill ?? lesson.skill)}),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = ${q(lesson.slug)} and qq.slug = ${q(question.slug)}
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;`,
+          );
+        }
+
+        for (const exercise of lesson.exercises) {
+          // Project missions build the learner's own site; they are not
+          // repeatable practice and would be meaningless out of context.
+          if (exercise.kind === 'project_mission') continue;
+
+          const slug = `rv-e-${exercise.slug}`;
+          slugs.push(slug);
+          sql.push(
+            `insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select ${q(slug)}, 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = ${q(exercise.skill ?? lesson.skill)}),
+       l.id, e.id, ${Math.min(5, Math.max(1, exercise.difficulty ?? 2))}
+from public.lessons l, public.exercises e
+where l.slug = ${q(lesson.slug)} and e.slug = ${q(exercise.slug)}
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;`,
+          );
+        }
+      }
+    }
+  }
+
+  stats.reviewItems = slugs.length;
+
+  sql.push(
+    '',
+    '-- Items whose question or exercise has left the curriculum.',
+    `delete from public.review_items where slug not in (${slugs.map((slug) => q(slug)).join(', ')});`,
+  );
+}
+
 function emitStaleCleanup(): void {
   section('Remove content deleted from the curriculum');
 
@@ -595,6 +664,7 @@ async function main(): Promise<void> {
   emitCourse();
   emitLevels();
   emitStaleCleanup();
+  emitReviewItems();
 
   sql.push('', 'commit;', '');
   await writeFile(OUT, sql.join('\n'), 'utf8');
@@ -604,6 +674,9 @@ async function main(): Promise<void> {
   console.log(
     `  ${stats.levels} levels · ${stats.modules} modules · ${lessons.length} lessons · ` +
       `${stats.blocks} blocks · ${stats.exercises} exercises · ${stats.quizQuestions} questions`,
+  );
+  console.log(
+    `  ${stats.reviewItems} reviewable items for spaced repetition`,
   );
   console.log(
     `  ${MEDIA_ASSETS.length} media assets · ${ACHIEVEMENTS.length} achievements · ` +
