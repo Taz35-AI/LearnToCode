@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 2 of 9
+-- HTML Hero — course seed, part 2 of 10
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -10,6 +10,36 @@
 -- Run part 1 first.
 
 begin;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'comparison'::public.block_type, 'Nesting: correct and overlapping', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"Correct","code":"<p>Open <strong>every morning</strong> at six.</p>","why":"`<strong>` is opened and closed entirely inside the paragraph."},"bad":{"label":"Overlapping — never valid","code":"<p>Open <strong>every morning</p></strong> at six.","why":"The paragraph is closed while `<strong>` is still open. Browsers guess at a repair, and every browser guesses differently."}}'::jsonb
+from public.lessons where slug = 'nesting-and-the-document-tree';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'visual'::public.block_type, NULL, 'Every HTML page is a tree. One element at the root, branching downwards.',
+       NULL, NULL, 'document-tree', '{}'::jsonb
+from public.lessons where slug = 'nesting-and-the-document-tree';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'term'::public.block_type, 'Nesting', 'Placing one element inside another. The inside element is called a child; the outside one is its parent.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'nesting-and-the-document-tree';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'term'::public.block_type, 'The DOM', 'Document Object Model. It is simply the name for this tree once the browser has built it in memory. When people say "inspect the DOM", they mean "look at the live tree".',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'nesting-and-the-document-tree';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'prose'::public.block_type, NULL, 'Because the structure is a tree, the way you lay out your code should show that tree. Every time you go one level deeper, indent by two spaces. This is not decoration — it is how you spot a missing closing tag with your eyes instead of with a checker.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'nesting-and-the-document-tree';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'annotated_code'::public.block_type, 'Line by line', NULL,
+       '<article>
+  <h2>Sourdough workshop</h2>
+  <p>
+    A three-hour session covering
+    <strong>starter care</strong> and shaping.
+  </p>
+</article>', 'html', NULL, '{"annotations":[{"line":"1","text":"`<article>` opens at the far left — it is the outermost element here."},{"line":"2-5","text":"Its children are indented two spaces, showing they sit inside it."},{"line":"4","text":"The `<strong>` is a child of the paragraph, so it is indented again."},{"line":"6","text":"`</article>` lines up exactly with `<article>`. If the indentation of an opening and closing tag do not line up, something is wrong."}]}'::jsonb
+from public.lessons where slug = 'nesting-and-the-document-tree';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
 select id, 9, 'prose'::public.block_type, NULL, 'You can also leave notes for yourself in the file. Anything between `<!--` and `-->` is a comment: the browser ignores it completely, and it never appears on the page.',
        NULL, NULL, NULL, '{}'::jsonb
@@ -28,7 +58,11 @@ select id, 12, 'progressive_detail'::public.block_type, 'What browsers do with b
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'nesting-and-the-document-tree';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 13, 'interactive_demo'::public.block_type, 'Nesting, correct and crossed', 'The same four tags, opened in the same order and closed in different ones.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Nested correctly","code":"<p>Baked <strong>every <em>single</em> morning</strong>.</p>","note":"Each element closes inside the one that contains it. The tree is unambiguous, and every browser agrees on it."},{"label":"Crossed over","code":"<p>Baked <strong>every <em>single</strong> morning</em>.</p>","note":"The strong closes while the em is still open. The browser repairs this silently, and the structure it invents may not be the one you meant."},{"label":"Never closed","code":"<p>Baked <strong>every single morning.</p>\n<p>Open seven days.</p>","note":"The strong is never closed, so the browser keeps it open — and the second paragraph is bold too."}]}'::jsonb
+from public.lessons where slug = 'nesting-and-the-document-tree';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Elements nest inside one another and must close in reverse order.","The nested structure is a tree; the browser''s live copy of it is called the DOM.","Indent two spaces per level so a missing closing tag is visible at a glance.","Comments (`<!-- … -->`) are ignored by the browser but readable by anyone."],"nextUp":"Next: the skeleton every real HTML file needs."}'::jsonb
 from public.lessons where slug = 'nesting-and-the-document-tree';
 insert into public.exercises
@@ -524,7 +558,11 @@ select id, 8, 'progressive_detail'::public.block_type, 'Why "real content" matte
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'your-first-complete-page';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 9, 'interactive_demo'::public.block_type, 'What each part of the skeleton does', 'Remove one piece at a time and watch what changes.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Complete","code":"<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <title>Riverside Bakery</title>\n  </head>\n  <body>\n    <h1>Riverside Bakery</h1>\n    <p>Open seven days a week.</p>\n  </body>\n</html>","note":"Every required part present. The tab shows a title, the text is decoded correctly, and assistive technology knows the language."},{"label":"No charset","code":"<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <title>Riverside Bakery</title>\n  </head>\n  <body>\n    <h1>Café Riverside</h1>\n    <p>Open seven days — from £6.</p>\n  </body>\n</html>","note":"Accented characters, dashes and currency symbols are the first casualties. Often it happens to look fine until someone types an é."},{"label":"No title","code":"<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n  </head>\n  <body>\n    <h1>Riverside Bakery</h1>\n  </body>\n</html>","note":"The page still renders, but the tab shows the file name, a bookmark is meaningless, and a search result has nothing to display."}]}'::jsonb
+from public.lessons where slug = 'your-first-complete-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["You can now build a valid HTML document from an empty file.","The frame comes first; the content fills it in.","This page is the seed of your capstone website — you will return to it many times."],"nextUp":"Level 2 next: making the content itself meaningful."}'::jsonb
 from public.lessons where slug = 'your-first-complete-page';
 insert into public.exercises
@@ -1075,7 +1113,11 @@ select id, 9, 'progressive_detail'::public.block_type, 'Does an h1 have to be th
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'heading-hierarchy';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 10, 'visual'::public.block_type, NULL, 'A long article benefits from headings for the same reason a path benefits from signposts: you can tell where you are without reading everything.',
+       NULL, NULL, 'forest-path', '{}'::jsonb
+from public.lessons where slug = 'heading-hierarchy';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Six heading levels form the page outline.","Exactly one `<h1>`, naming what this page is about.","Never skip a level going down; going back up starts a new section.","Choose the level by meaning, never by how big the text looks."],"nextUp":"Next: paragraphs, and the difference between a line break and a new paragraph."}'::jsonb
 from public.lessons where slug = 'heading-hierarchy';
 insert into public.exercises
@@ -1284,7 +1326,11 @@ select id, 12, 'checklist'::public.block_type, 'Choosing between them', NULL,
        NULL, NULL, NULL, '{"items":["New topic or new block of prose → a new `<p>`","Line break that is part of the content itself → `<br>`","The subject genuinely changes → `<hr>`","You just want more space → neither; that is a styling job"]}'::jsonb
 from public.lessons where slug = 'paragraphs-breaks-rules';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 13, 'interactive_demo'::public.block_type, 'Three ways to break a line, one of them right', 'The same address, marked up three ways.',
+       NULL, NULL, NULL, '{"variants":[{"label":"One paragraph, real breaks","code":"<p>Riverside Bakery<br>12 Mill Lane<br>Hexford HX1 2AB</p>","note":"Correct. An address is one block of text whose line breaks are part of its meaning — exactly what <br> is for."},{"label":"Separate paragraphs","code":"<p>Riverside Bakery</p>\n<p>12 Mill Lane</p>\n<p>Hexford HX1 2AB</p>","note":"Wrong meaning: it claims these are three unrelated paragraphs, and screen readers announce three separate blocks."},{"label":"Empty paragraphs for spacing","code":"<p>Riverside Bakery</p>\n<p></p>\n<p>12 Mill Lane</p>","note":"Never do this. The empty paragraph is a spacing hack, it is announced as a blank paragraph, and CSS is the correct tool for space."}]}'::jsonb
+from public.lessons where slug = 'paragraphs-breaks-rules';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Whitespace in the file is collapsed; structure comes from elements.","`<p>` for each block of prose.","`<br>` only when the break belongs to the content, such as an address.","`<hr>` means a change of subject, not \"draw a line\"."],"nextUp":"Next: the elements that add meaning inside a sentence."}'::jsonb
 from public.lessons where slug = 'paragraphs-breaks-rules';
 insert into public.exercises
@@ -1721,7 +1767,11 @@ select id, 13, 'checklist'::public.block_type, 'Use these when', NULL,
        NULL, NULL, NULL, '{"items":["You quote a block of text from elsewhere → `<blockquote>` + `<figcaption>`","You quote a phrase inside a sentence → `<q>`","You name a book, film, study or article → `<cite>`","You use an abbreviation a reader may not know → `<abbr title=\"…\">`","You mention any date or time → `<time datetime=\"…\">`"]}'::jsonb
 from public.lessons where slug = 'quotes-abbreviations-dates';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 14, 'interactive_demo'::public.block_type, 'A quotation, marked up three ways', 'Only one of these tells software what it is looking at.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Marked up","code":"<blockquote cite=\"https://example.org/review\">\n  <p>The best sourdough in the county.</p>\n</blockquote>\n<p>— <cite>The Hexford Review</cite></p>","note":"The quotation is identifiable as a quotation, its source is recorded, and the publication is marked as a title."},{"label":"Typed quotation marks","code":"<p>\"The best sourdough in the county.\" — The Hexford Review</p>","note":"Looks nearly identical and means nothing to software. Nothing can find the quotations on this page, and nothing knows who said it."},{"label":"Italics for everything","code":"<p><i>\"The best sourdough in the county.\"</i> — <i>The Hexford Review</i></p>","note":"Two different things — a quotation and a publication title — flattened into the same purely visual instruction."}]}'::jsonb
+from public.lessons where slug = 'quotes-abbreviations-dates';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<blockquote>` for block quotations, `<q>` for inline ones — never type the quotation marks yourself.","`<cite>` names the *work*, not the author.","`<abbr title=\"…\">` expands an abbreviation, but spelling it out in full first is better still.","`<time datetime=\"…\">` makes a casual date machine-readable."],"nextUp":"Next: code, superscripts and the special characters that break pages."}'::jsonb
 from public.lessons where slug = 'quotes-abbreviations-dates';
 insert into public.exercises
@@ -1978,7 +2028,11 @@ select id, 13, 'code_example'::public.block_type, 'Correctly nested lists', NULL
 </ul>', 'html', NULL, '{}'::jsonb
 from public.lessons where slug = 'code-entities-and-lists';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 14, 'interactive_demo'::public.block_type, 'Showing code on a page', 'To display a tag rather than have the browser act on it, the angle brackets must be escaped.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Escaped correctly","code":"<p>Wrap a heading in <code>&lt;h1&gt;</code> tags.</p>","note":"The entities produce the characters < and >, so the reader sees the tag written out. Nothing is interpreted as markup."},{"label":"Not escaped","code":"<p>Wrap a heading in <code><h1></code> tags.</p>","note":"The browser reads <h1> as an instruction, not as text. An empty heading is created and the sentence falls apart."},{"label":"A preformatted block","code":"<pre><code>&lt;ul&gt;\n  &lt;li&gt;Sourdough&lt;/li&gt;\n&lt;/ul&gt;</code></pre>","note":"<pre> keeps the line breaks and indentation exactly as typed, which is what makes multi-line code readable."}]}'::jsonb
+from public.lessons where slug = 'code-entities-and-lists';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<code>` for code in a sentence; `<pre>` preserves spacing exactly.","`&lt;`, `&gt;` and `&amp;` are the entities you genuinely need.","`<ol>` when order matters, `<ul>` when it does not, `<dl>` for term-and-description pairs.","Nest a sub-list inside the `<li>` it belongs to."],"nextUp":"Next: the Level 2 milestone — a complete article page."}'::jsonb
 from public.lessons where slug = 'code-entities-and-lists';
 insert into public.exercises
@@ -2079,121 +2133,5 @@ select e.id, 3, 'element_count'::public.requirement_kind, 'title', NULL,
        NULL, NULL, 0, 0,
        'No accidental real <title> element was created', NULL, 1, true
 from public.exercises e where e.slug = 'entities-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'text_content'::public.requirement_kind, 'p', NULL,
-       '&', NULL, NULL, NULL,
-       'The ampersand displays as a character', NULL, 1, true
-from public.exercises e where e.slug = 'entities-debug';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'code-entities-and-lists'), NULL, 'q-entity-lt', 1, 'single'::public.question_kind,
-        'How do you display a `<` character on a page?', 'Write the entity `&lt;`. Typing the character directly makes the browser think a tag is starting.', (select id from public.skills where slug = 'text-semantics'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, '\<', false, NULL
-from public.quiz_questions where slug = 'q-entity-lt';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Just type < — browsers handle it', false, NULL
-from public.quiz_questions where slug = 'q-entity-lt';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, '&lt;', true, NULL
-from public.quiz_questions where slug = 'q-entity-lt';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, '&lessthan;', false, NULL
-from public.quiz_questions where slug = 'q-entity-lt';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'code-entities-and-lists'), NULL, 'q-list-choice', 2, 'single'::public.question_kind,
-        'Which list element suits a recipe''s method?', 'The steps of a method must happen in order, so `<ol>` is correct. `<ul>` would suit the ingredients.', (select id from public.skills where slug = 'lists'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, '<ol>', true, NULL
-from public.quiz_questions where slug = 'q-list-choice';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, '<ul>', false, NULL
-from public.quiz_questions where slug = 'q-list-choice';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, '<dl>', false, NULL
-from public.quiz_questions where slug = 'q-list-choice';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, '<pre>', false, NULL
-from public.quiz_questions where slug = 'q-list-choice';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'code-entities-and-lists'), NULL, 'q-nested-list', 3, 'single'::public.question_kind,
-        'Where does a nested sub-list belong?', 'Inside the `<li>` it relates to, before that item''s closing tag. Placing a list directly inside a `<ul>` is invalid.', (select id from public.skills where slug = 'lists'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Inside the <li> it belongs to', true, NULL
-from public.quiz_questions where slug = 'q-nested-list';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Directly inside the parent <ul>', false, NULL
-from public.quiz_questions where slug = 'q-nested-list';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'After the parent list closes', false, NULL
-from public.quiz_questions where slug = 'q-nested-list';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Inside a <dd> element', false, NULL
-from public.quiz_questions where slug = 'q-nested-list';
--- lesson: Milestone: a real information page
-insert into public.lessons
-  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'article-milestone', 4, 'Milestone: a real information page', 'Everything from Level 2, on one page', 'Build a complete article page with a correct heading hierarchy, precise text semantics, lists and a properly attributed quotation.',
-       ARRAY['Combine every Level 2 element on one realistic page', 'Make deliberate semantic choices and be able to justify them', 'Add an information page to your capstone project']::text[], 25, 40, (select id from public.skills where slug = 'text-semantics'), 0.8
-from public.modules m where m.slug = 'text-level-semantics'
-on conflict (slug) do update set
-  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
-  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
-  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
-  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
-       NULL, NULL, NULL, '{"items":["Produce a realistic article page with correct structure throughout","Use at least six different text-level elements appropriately","Add this page to your capstone website"]}'::jsonb
-from public.lessons where slug = 'article-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'prose'::public.block_type, NULL, 'This milestone is a single page of realistic content — the kind of page every site has: an article, a guide, a page explaining what you do. The checker looks at structure, not wording, so write about whatever your project is.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'article-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'checklist'::public.block_type, 'Your page must contain', NULL,
-       NULL, NULL, NULL, '{"items":["The full document skeleton, with a title of its own","One `<h1>` and at least two `<h2>` sections, in correct order","At least three paragraphs of genuine prose","A list — ordered or unordered, whichever fits","`<strong>` and `<em>`, each used for its real meaning","An `<abbr>` with a `title`, or a `<time>` with a `datetime`","A `<blockquote>` with a `<figcaption>` attributing it"]}'::jsonb
-from public.lessons where slug = 'article-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'callout'::public.block_type, 'Write the content first, in plain text', 'Decide what the page says before you mark it up. Then go through and ask of each piece: what *is* this? The element usually names itself once the question is asked that way round.',
-       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
-from public.lessons where slug = 'article-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'code_example'::public.block_type, 'The shape of a real information page', NULL,
-       '<h1>Getting started with river routes</h1>
-<p>The valley has around forty miles of traffic-free path.</p>
-
-<h2>Before you set off</h2>
-<p><strong>Check your brakes before every ride.</strong></p>
-<ol>
-  <li>Adjust the saddle</li>
-  <li>Squeeze both brakes firmly</li>
-</ol>
-
-<h2>The routes</h2>
-<p>Leave <em>before</em> noon for the longest one.</p>', 'html', NULL, '{}'::jsonb
-from public.lessons where slug = 'article-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'visual'::public.block_type, NULL, 'Your page should read as a clean outline like this one.',
-       NULL, NULL, 'heading-hierarchy', '{}'::jsonb
-from public.lessons where slug = 'article-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'progressive_detail'::public.block_type, 'How long should the page be?', 'Long enough to need two sections and short enough that you can still hold the whole structure in your head. Three or four hundred words is plenty. The exercise is about making accurate structural decisions, not about producing volume — a short page with precise markup demonstrates far more than a long one with vague markup.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'article-milestone';
 
 commit;

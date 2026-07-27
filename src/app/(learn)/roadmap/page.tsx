@@ -229,6 +229,20 @@ export default async function RoadmapPage() {
                               tone={complete ? 'success' : 'accent'}
                               size="sm"
                             />
+                            {complete ? (
+                              <p className="mt-2.5 text-sm">
+                                <Link
+                                  href={`/review/module/${module.slug}`}
+                                  className="font-medium text-accent underline underline-offset-2"
+                                >
+                                  Recall this module
+                                </Link>{' '}
+                                <span className="text-muted">
+                                  — finishing the lessons and being able to retrieve them a week
+                                  later are different things.
+                                </span>
+                              </p>
+                            ) : null}
                           </div>
                         ) : null}
                       </Card>
@@ -240,6 +254,21 @@ export default async function RoadmapPage() {
               {levelUnlocked && levelDone === levelLessons.length && levelLessons.length > 0 ? (
                 <p className="mt-3 text-sm font-medium text-[hsl(var(--success))]">
                   Level complete — {percent(levelDone, levelLessons.length)}% of {level.title}.
+                </p>
+              ) : null}
+
+              {levelDone > 0 ? (
+                <p className="mt-3 text-sm">
+                  <Link
+                    href={`/review/level/${level.slug}`}
+                    className="font-medium text-accent underline underline-offset-2"
+                  >
+                    Cumulative review of {level.title}
+                  </Link>{' '}
+                  <span className="text-muted">
+                    — mixed across every module, so you have to work out which idea applies before
+                    you can apply it.
+                  </span>
                 </p>
               ) : null}
             </li>

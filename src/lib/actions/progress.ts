@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
 import { getExerciseForGrading, getQuestionForGrading, getAchievements, getRoadmap, getSkills } from '@/lib/data/catalogue';
 import { evaluateSubmission } from '@/lib/evaluator/evaluate';
-import type { Requirement } from '@/lib/evaluator/types';
+import { requirementFromRow } from '@/lib/evaluator/types';
 import { isMastered, type EvidenceKind } from '@/lib/progress/mastery';
 import { assessmentXp, exerciseXp, lessonXp, quizXp, streakXp, type XpAward } from '@/lib/progress/xp';
 import { computeStreak, isoDate } from '@/lib/progress/pace';
@@ -21,7 +21,7 @@ import {
   type ActionResult,
 } from './schemas';
 import type { EvaluationResult } from '@/lib/evaluator/types';
-import type { ExerciseRequirementRow, Json, XpSource } from '@/lib/supabase/database.types';
+import type { Json, XpSource } from '@/lib/supabase/database.types';
 
 /**
  * Progress actions.
@@ -41,24 +41,6 @@ async function requireUser() {
   const user = await getCurrentUser();
   if (!user) throw new Error('Not signed in');
   return user;
-}
-
-function toRequirement(row: ExerciseRequirementRow): Requirement {
-  return {
-    id: row.id,
-    ordinal: row.ordinal,
-    kind: row.kind,
-    selector: row.selector,
-    attribute: row.attribute,
-    expectedValue: row.expected_value,
-    ancestorSelector: row.ancestor_selector,
-    minCount: row.min_count,
-    maxCount: row.max_count,
-    message: row.message,
-    hint: row.hint,
-    weight: Number(row.weight),
-    isCritical: row.is_critical,
-  };
 }
 
 /**
@@ -321,7 +303,7 @@ export async function evaluateExerciseAction(
   const { exercise, requirements } = loaded;
 
   // Grading uses the criteria from the database — nothing the client sent.
-  const result = evaluateSubmission(parsed.data.code, requirements.map(toRequirement));
+  const result = evaluateSubmission(parsed.data.code, requirements.map(requirementFromRow));
 
   const { data: priorAttempts } = await supabase
     .from('exercise_attempts')
@@ -475,11 +457,16 @@ export async function answerQuestionAction(input: unknown): Promise<ActionResult
   const isFirstAttempt = (priorAnswers ?? []).length === 0;
   const alreadyCorrect = (priorAnswers ?? []).some((a) => a.is_correct);
 
+  // Confidence is recorded here as well as in review, so calibration is
+  // measured on first contact with an idea and not only on material the learner
+  // has already met twice. First contact is exactly where the illusion of
+  // knowing bites hardest, so measuring only review would sample the wrong end.
   await supabase.from('quiz_attempts').insert({
     user_id: user.id,
     question_id: question.id,
     selected_option_ids: parsed.data.optionIds,
     is_correct: isCorrect,
+    confidence: parsed.data.confidence ?? null,
   });
 
   const xpAwarded = await awardXp(

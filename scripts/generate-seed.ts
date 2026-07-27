@@ -11,7 +11,7 @@
  * Run: npm run seed:generate
  */
 
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
@@ -20,11 +20,12 @@ import { SKILLS } from '../src/content/skills';
 import { ACHIEVEMENTS } from '../src/content/achievements';
 import { PROJECT_TEMPLATES } from '../src/content/projects';
 import { MEDIA_ASSETS, getMedia } from '../src/content/media/manifest';
-import { orderedOptions } from '../src/content/types';
-import type { LessonSpec, ModuleSpec, QuestionSpec, RequirementSpec } from '../src/content/types';
+import { blockProblems, orderedOptions } from '../src/content/types';
+import type { BlockSpec, LessonSpec, ModuleSpec, QuestionSpec, RequirementSpec } from '../src/content/types';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUT = join(ROOT, 'supabase', 'seed.sql');
+const HEALTH_CHECK = join(ROOT, 'supabase', 'tests', 'verify-database.sql');
 
 // ---------------------------------------------------------------------------
 // SQL literal helpers
@@ -106,6 +107,7 @@ function validate(): void {
           if (block.mediaSlug && !mediaSlugs.has(block.mediaSlug)) {
             problems.push(`lesson "${lesson.slug}" references unknown media "${block.mediaSlug}"`);
           }
+          checkBlock(block, `lesson "${lesson.slug}"`);
         }
 
         for (const exercise of lesson.exercises) {
@@ -161,6 +163,12 @@ function validate(): void {
     if (!mediaSlugs.has(template.heroMediaSlug)) {
       problems.push(`project "${template.slug}" references unknown media "${template.heroMediaSlug}"`);
     }
+  }
+}
+
+function checkBlock(block: BlockSpec, context: string): void {
+  for (const problem of blockProblems(block)) {
+    problems.push(`${context}: ${problem}`);
   }
 }
 
@@ -647,6 +655,53 @@ function emitStaleCleanup(): void {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * Rewrites the expected counts inside the database health check.
+ *
+ * The check hard-codes how much content should be present, so that a
+ * half-loaded seed fails loudly instead of looking fine. The cost of that
+ * precision is that it goes stale every time a lesson is added — and a check
+ * that is wrong after every authoring change is one people stop reading.
+ *
+ * Since the seed generator already knows every count, and the health check
+ * exists to verify precisely this seed, it updates the numbers itself. Drift
+ * becomes impossible rather than merely detectable. `curriculum.test.ts` still
+ * asserts the two agree, which catches the case where this function is removed
+ * or its patterns stop matching.
+ */
+async function syncHealthCheck(): Promise<void> {
+  const reviewQuestions = allLessons().flatMap((lesson) => lesson.quiz).length;
+  const reviewExercises = allLessons()
+    .flatMap((lesson) => lesson.exercises)
+    .filter((exercise) => exercise.kind !== 'project_mission').length;
+
+  const replacements: [RegExp, string][] = [
+    [/(\(select count\(\*\) from lessons\) = )\d+/, `$1${allLessons().length}`],
+    [/(\(select count\(\*\) from lesson_blocks\) = )\d+/, `$1${stats.blocks}`],
+    [/(\(select count\(\*\) from quiz_questions\) = )\d+/, `$1${stats.quizQuestions}`],
+    [/(\(select count\(\*\) from levels\) = )\d+/, `$1${stats.levels}`],
+    [/(\(select count\(\*\) from modules\) = )\d+/, `$1${stats.modules}`],
+    [/(\(select count\(\*\) from review_items\) = )\d+/, `$1${reviewQuestions + reviewExercises}`],
+    [/(where kind = 'question'\) = )\d+/, `$1${reviewQuestions}`],
+    [/(where kind = 'exercise'\) = )\d+/, `$1${reviewExercises}`],
+    [/(\(select count\(\*\) from learning_media\) = )\d+/, `$1${MEDIA_ASSETS.length}`],
+    [/(' of )\d+'\n\s+from public\.learning_media/, `$1${MEDIA_ASSETS.length}'`],
+    [/'All \d+ levels and \d+ modules'/, `'All ${stats.levels} levels and ${stats.modules} modules'`],
+  ];
+
+  let sql = await readFile(HEALTH_CHECK, 'utf8');
+  for (const [pattern, value] of replacements) {
+    sql = sql.replace(pattern, value);
+  }
+  // The media count appears twice on one line; handle the detail string too.
+  sql = sql.replace(
+    /(\(select count\(\*\) from learning_media\)::text \|\| ' of )\d+'/,
+    `$1${MEDIA_ASSETS.length}'`,
+  );
+
+  await writeFile(HEALTH_CHECK, sql, 'utf8');
+}
+
 async function main(): Promise<void> {
   validate();
   if (problems.length > 0) {
@@ -668,6 +723,7 @@ async function main(): Promise<void> {
 
   sql.push('', 'commit;', '');
   await writeFile(OUT, sql.join('\n'), 'utf8');
+  await syncHealthCheck();
 
   const lessons = allLessons();
   console.log('✓ supabase/seed.sql written');
@@ -677,6 +733,9 @@ async function main(): Promise<void> {
   );
   console.log(
     `  ${stats.reviewItems} reviewable items for spaced repetition`,
+  );
+  console.log(
+    `  ${stats.retrievalBlocks} retrieval-practice blocks across ${stats.lessonsWithRetrieval} lesson(s)`,
   );
   console.log(
     `  ${MEDIA_ASSETS.length} media assets · ${ACHIEVEMENTS.length} achievements · ` +

@@ -1,4 +1,4 @@
-import type { RequirementKind } from '@/lib/supabase/database.types';
+import type { ExerciseRequirementRow, RequirementKind } from '@/lib/supabase/database.types';
 
 /**
  * A single structural rule an exercise checks.
@@ -26,6 +26,33 @@ export interface Requirement {
   weight: number;
   /** A non-critical requirement can fail without failing the whole exercise. */
   isCritical: boolean;
+}
+
+/**
+ * Turns a stored requirement row into the shape the evaluator grades against.
+ *
+ * Shared because two callers grade the same exercises: the lesson page and the
+ * review queue. Two copies of this mapping would be two chances for a review to
+ * grade an exercise by slightly different rules than the lesson did, and a
+ * learner who passes an exercise and then fails its review on identical markup
+ * would rightly conclude the checker is arbitrary.
+ */
+export function requirementFromRow(row: ExerciseRequirementRow): Requirement {
+  return {
+    id: row.id,
+    ordinal: row.ordinal,
+    kind: row.kind,
+    selector: row.selector,
+    attribute: row.attribute,
+    expectedValue: row.expected_value,
+    ancestorSelector: row.ancestor_selector,
+    minCount: row.min_count,
+    maxCount: row.max_count,
+    message: row.message,
+    hint: row.hint,
+    weight: Number(row.weight),
+    isCritical: row.is_critical,
+  };
 }
 
 export interface RequirementResult {

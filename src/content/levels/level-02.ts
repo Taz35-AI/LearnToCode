@@ -114,6 +114,7 @@ export const LEVEL_02: LevelSpec = {
               'Does an h1 have to be the site name?',
               'No. The `<h1>` should name *this page*, not the whole site. On a homepage those are often the same, but on an About page the `<h1>` should say "About us", not repeat the company name. Search engines and screen-reader users both use the h1 to answer "what is this particular page?".',
             ),
+            visual('forest-path', 'A long article benefits from headings for the same reason a path benefits from signposts: you can tell where you are without reading everything.'),
             recap(
               [
                 'Six heading levels form the page outline.',
@@ -303,6 +304,23 @@ has lots of spacing in the file.</p>`,
               'Line break that is part of the content itself → `<br>`',
               'The subject genuinely changes → `<hr>`',
               'You just want more space → neither; that is a styling job',
+            ]),
+            demo('Three ways to break a line, one of them right', 'The same address, marked up three ways.', [
+              {
+                label: 'One paragraph, real breaks',
+                code: '<p>Riverside Bakery<br>12 Mill Lane<br>Hexford HX1 2AB</p>',
+                note: 'Correct. An address is one block of text whose line breaks are part of its meaning — exactly what <br> is for.',
+              },
+              {
+                label: 'Separate paragraphs',
+                code: '<p>Riverside Bakery</p>\n<p>12 Mill Lane</p>\n<p>Hexford HX1 2AB</p>',
+                note: 'Wrong meaning: it claims these are three unrelated paragraphs, and screen readers announce three separate blocks.',
+              },
+              {
+                label: 'Empty paragraphs for spacing',
+                code: '<p>Riverside Bakery</p>\n<p></p>\n<p>12 Mill Lane</p>',
+                note: 'Never do this. The empty paragraph is a spacing hack, it is announced as a blank paragraph, and CSS is the correct tool for space.',
+              },
             ]),
             recap(
               [
@@ -701,6 +719,23 @@ Hexford HX2 4PL`,
               'You use an abbreviation a reader may not know → `<abbr title="…">`',
               'You mention any date or time → `<time datetime="…">`',
             ]),
+            demo('A quotation, marked up three ways', 'Only one of these tells software what it is looking at.', [
+              {
+                label: 'Marked up',
+                code: '<blockquote cite="https://example.org/review">\n  <p>The best sourdough in the county.</p>\n</blockquote>\n<p>— <cite>The Hexford Review</cite></p>',
+                note: 'The quotation is identifiable as a quotation, its source is recorded, and the publication is marked as a title.',
+              },
+              {
+                label: 'Typed quotation marks',
+                code: '<p>"The best sourdough in the county." — The Hexford Review</p>',
+                note: 'Looks nearly identical and means nothing to software. Nothing can find the quotations on this page, and nothing knows who said it.',
+              },
+              {
+                label: 'Italics for everything',
+                code: '<p><i>"The best sourdough in the county."</i> — <i>The Hexford Review</i></p>',
+                note: 'Two different things — a quotation and a publication title — flattened into the same purely visual instruction.',
+              },
+            ]),
             recap(
               [
                 '`<blockquote>` for block quotations, `<q>` for inline ones — never type the quotation marks yourself.',
@@ -930,6 +965,23 @@ Transport Research Unit, Cycling in Small Towns, 2026`,
 </ul>`,
               'Correctly nested lists',
             ),
+            demo('Showing code on a page', 'To display a tag rather than have the browser act on it, the angle brackets must be escaped.', [
+              {
+                label: 'Escaped correctly',
+                code: '<p>Wrap a heading in <code>&lt;h1&gt;</code> tags.</p>',
+                note: 'The entities produce the characters < and >, so the reader sees the tag written out. Nothing is interpreted as markup.',
+              },
+              {
+                label: 'Not escaped',
+                code: '<p>Wrap a heading in <code><h1></code> tags.</p>',
+                note: 'The browser reads <h1> as an instruction, not as text. An empty heading is created and the sentence falls apart.',
+              },
+              {
+                label: 'A preformatted block',
+                code: '<pre><code>&lt;ul&gt;\n  &lt;li&gt;Sourdough&lt;/li&gt;\n&lt;/ul&gt;</code></pre>',
+                note: '<pre> keeps the line breaks and indentation exactly as typed, which is what makes multi-line code readable.',
+              },
+            ]),
             recap(
               [
                 '`<code>` for code in a sentence; `<pre>` preserves spacing exactly.',
@@ -1112,6 +1164,18 @@ Transport Research Unit, Cycling in Small Towns, 2026`,
               'How long should the page be?',
               'Long enough to need two sections and short enough that you can still hold the whole structure in your head. Three or four hundred words is plenty. The exercise is about making accurate structural decisions, not about producing volume — a short page with precise markup demonstrates far more than a long one with vague markup.',
             ),
+            demo('The same article, structured and flat', 'Both contain identical words.', [
+              {
+                label: 'Structured',
+                code: '<article>\n  <h1>Fifteen hours to a loaf</h1>\n  <p>Published <time datetime="2026-03-04">4 March 2026</time></p>\n  <h2>The starter</h2>\n  <p>It begins the night before.</p>\n  <h2>The bake</h2>\n  <p>Forty minutes, no more.</p>\n</article>',
+                note: 'A screen-reader user can list the headings and jump to the part they want. The date is machine-readable.',
+              },
+              {
+                label: 'Flat',
+                code: '<p><b>Fifteen hours to a loaf</b></p>\n<p>Published 4 March 2026</p>\n<p><b>The starter</b></p>\n<p>It begins the night before.</p>\n<p><b>The bake</b></p>\n<p>Forty minutes, no more.</p>',
+                note: 'Looks similar and has no structure at all: no headings to navigate by, no article, and a date nothing can parse.',
+              },
+            ]),
             recap(
               [
                 'You can now mark up a full page of realistic text with accurate semantics.',

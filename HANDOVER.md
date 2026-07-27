@@ -5,7 +5,8 @@
 > time to discover. The README describes the application; this describes the
 > *work*.
 >
-> Last updated at commit `28c0de7`.
+> Last updated after Part A was completed and verified against the live
+> database, and Part B phase 1 (Level 8) was authored.
 
 ---
 
@@ -27,8 +28,8 @@ more here than usual: they will discover any gap by walking into it.
 
 | Part | Content | Status |
 |---|---|---|
-| **A** | Rebuild the learning engine on evidence | **Done** |
-| **B** | Fix the HTML course's known gaps | Not started |
+| **A** | Rebuild the learning engine on evidence | **Done and verified against the live database** |
+| **B** | Fix the HTML course's known gaps | **Done** |
 | **C** | Complete CSS course | Not started |
 | **D** | Complete JavaScript course | Not started |
 
@@ -54,13 +55,13 @@ Tailwind 4, Supabase auth + Postgres with RLS on every table.
 
 | | |
 |---|---|
-| Levels / modules / lessons | 12 / 20 / 48 |
-| Lesson content blocks | 498 |
-| Exercises / questions | 91 / 220 |
-| Reviewable items | 195 |
+| Levels / modules / lessons | 12 / 21 / 55 |
+| Lesson content blocks | 664 (40 of them retrieval practice, across 18 lessons) |
+| Exercises / questions | 105 / 241 |
+| Reviewable items | 236 (both questions and exercises served) |
 | Tracked skills | 26 |
 | Media assets | 38 (136 files, all CC0, self-generated) |
-| Automated tests | 464 across 7 files |
+| Automated tests | 539 across 8 files |
 | RLS assertions | 29, against real PostgreSQL |
 
 Live at `learn-to-code-nine.vercel.app`, Supabase project `fulazwoiwhtwumerjiex`.
@@ -86,31 +87,65 @@ commit; Vercel's production branch is the feature branch (see §7).
   `src/app/(learn)/review/page.tsx`, `src/components/learn/review-session.tsx`.
 - `src/lib/data/mastery.ts` — shared server-only mastery writer.
 
-### Part A, NOT delivered — be honest about this
+### Part A, remaining five items — delivered
 
-The engine works and the `/review` page uses it. These pieces of the approved
-Part A scope were **not** built:
+The five gaps this document previously listed have been built.
 
-- **Lesson warm-ups are not wired in.** `composeLessonWarmUp` exists and is
-  tested, but no lesson renders one. Lessons still open with objectives, not
-  with retrieval.
-- **The new block types are unused.** `pretest`, `recall`, `predict_check`,
-  `self_explain`, `worked_example` and `recap` exist in the enum and in the
-  database. No authoring builders exist for them in `src/content/types.ts`,
-  and no lesson uses one.
-- **Module and level recaps do not exist.** The three-level recap structure
-  (module recall → level cumulative review → cross-level queue) is only
-  delivered at the third level, via `/review`.
-- **Exercise review items are never served.** 79 of the 195 items are
-  exercises; `/review` only renders questions. The composer selects them and
-  then they are filtered out.
-- **No calibration surfaced outside `/review`.** Ordinary lesson quizzes do
-  not ask for confidence, so calibration only measures review answers despite
-  the schema supporting it everywhere.
+- **The six retrieval block types are authored, rendered and validated.**
+  Builders in `src/content/types.ts`: `pretest`, `recall`, `predictCheck`,
+  `selfExplain`, `workedExample`, `activeRecap`. The last is named that way
+  because `recap` was already taken by the `summary` builder that 48 lessons
+  call — do not rename it. `blockProblems()` lives beside them and the seed
+  generator calls it, so a pretest with one option or a worked example with no
+  reasoning fails the build with a message naming the lesson. Renderers are in
+  `lesson-blocks.tsx`; every one withholds its answer until the learner
+  commits, which is asserted per type in `components.test.tsx`.
+- **Lesson warm-ups are wired in.** `getLessonWarmUp` composes them,
+  `LessonWarmUp` renders them at the top of every lesson. Questions only,
+  drawn from earlier lessons and never the current one, skippable rather than
+  a gate. `warmUpSkillsFor` is the pure skill-derivation function.
+- **Exercise review items are served.** `getReviewExercises` +
+  `answerReviewExerciseAction` + the exercise branch of `ReviewSession`. Graded
+  by the same evaluator and the same requirement rows as the lesson, via the
+  shared `requirementFromRow`. No XP, and deliberately **not** written to
+  `exercise_attempts` — that table feeds the first-pass streak the achievements
+  are computed from.
+- **Confidence is asked on ordinary lesson quizzes**, and required rather than
+  optional: an optional rating is filled in when the learner feels sure and
+  skipped when they do not, so the report would be built from a sample selected
+  by the bias it exists to measure. `getCalibrationHistory` now also folds in
+  `review_logs` confidence for *exercise* items, which have no `quiz_attempts`
+  row.
+- **Module recall and level cumulative review exist**, at
+  `/review/module/[slug]` and `/review/level/[slug]`, linked from the roadmap
+  and from `/review`. All three surfaces share `composeSession`.
 
-**Finish these before starting Part B**, because Part B authors ~40 new
-lessons and they should use the new block types from the start rather than be
-retrofitted.
+No migration was needed: everything the five items required was already in
+0006. The TypeScript enums in `database.types.ts` were, however, missing all
+six block types, `completion` and `review` — they had been added to the
+database and never to the types. Adding them immediately surfaced a real gap
+(`completion` had no label in the workbench).
+
+### Verified in the running application
+
+Every item above was exercised against the live Supabase project and in a
+browser, not only under test: the warm-up drawing a real question from a
+previously studied lesson; all six block types rendering and withholding their
+answers; an exercise reviewed, graded, failed, re-queued and passed on the
+retry; a session run to completion; and the calibration blind-spot detector
+firing on real answers.
+
+**The review pool had never actually been loaded.** `review_items` held zero
+rows on the live database — the seed that builds the pool was generated but
+never applied — so `/review` had been serving nothing at all. Fixed, and the
+health check now asserts the pool is present, because it previously reported
+PASS on a database missing the entire feature.
+
+### Still not done
+
+- **Only 10 of the 52 lessons use a retrieval block** (23 blocks). Deliberate:
+  prove the pipeline, then author broadly rather than retrofit twice. All six
+  types are used, and `curriculum.test.ts` fails if that stops being true.
 
 ---
 
@@ -194,6 +229,64 @@ the learner's own site and mean nothing repeated out of context.
 ---
 
 ## 4. Part B — fix the HTML course's known gaps
+
+### Part B — delivered
+
+| | before | after |
+|---|---|---|
+| Lessons | 48 | 55 |
+| Exercises | 91 | 105 |
+| Questions | 220 | 241 |
+| Content blocks | 498 | 664 |
+| Lessons with an interactive demo | 13 | **55 — all of them** |
+| Media assets never shown | 14 | **0** |
+| Retrieval-practice blocks | 0 | 40, across 18 lessons |
+
+**B1 — Level 8 Accessibility.** 3 lessons → 7, split into `accessibility-foundations`
+and a new `aria-and-accessible-forms`; Level 9's prerequisite re-pointed at the
+later module. New: `keyboard-and-focus-management`, `accessible-names-in-depth`,
+`aria-live-and-state`, `accessible-forms-in-depth`.
+
+**B2 — Levels 10 and 11.** `third-party-and-embeds` (the real cost of an embed,
+and the placeholder pattern) and `a-method-for-debugging` (bisection, minimal
+reproductions, one change at a time).
+
+*A lesson was written and then deleted here.* An images/layout-stability lesson
+duplicated the existing `loading-strategy` almost entirely — dimensions, lazy,
+`fetchpriority`, resource hints. Two lessons teaching the same attributes from
+scratch is exactly the redundancy this project optimises against, so it was
+removed and `third-party-and-embeds` trimmed to cross-reference rather than
+re-teach. **If you extend a level, read its existing lessons first.**
+
+**B3 — Level 9.** `language-and-internationalisation`: `lang`, `dir`, and why a
+wrong `lang` is worse than a missing one.
+
+**B4 — Demonstrations.** Every one of the 55 lessons now has an
+`interactive_demo`. This was 13 of 48.
+
+**B5 — Media.** All 38 assets are now shown somewhere they teach something —
+audio in the audio lesson, the reflow video where responsive layout is taught,
+the neutral placeholder where decorative alt text is explained.
+
+**B6 — Cumulative review.** `recall` blocks in the milestones of Levels 6 and
+8–12, each reaching back several levels by name. This complements
+`/review/level/[slug]`, which resurfaces earlier material automatically.
+
+Every new lesson opens with a `pretest` and closes with an `activeRecap`, and
+uses at least one of `predict_check`, `self_explain` or `worked_example`.
+
+### Notes for whoever extends this
+
+- **The health check regenerates itself.** `npm run seed:generate` rewrites the
+  expected counts in `supabase/tests/verify-database.sql`, and
+  `curriculum.test.ts` asserts the two agree. Do not hand-edit those numbers.
+- **A reference solution must pass its own requirements**, so an exercise
+  cannot ask the learner to leave something broken. One was rewritten from
+  "reduce but keep the fault" to "reduce, then repair" for this reason.
+- **Backticks belong in prose fields only.** `code`, term `example`, starter
+  code and reference solutions are rendered verbatim; a test enforces this.
+
+### The original Part B assessment, for reference
 
 Assessed from the database, not impressions:
 
@@ -314,6 +407,24 @@ The cloud sandbox **cannot reach `*.supabase.co`** (network policy) or the
 owner's localhost. Every database operation must be handed to them as SQL or a
 command. A session running on their own machine does not have this limitation
 and is markedly better for this project — that is why this document exists.
+
+**A local session still needs credentials, and as of this writing they are not
+on disk.** There is no `.env.local` in the repository root, only an empty
+`.env.local.txt`, and the Supabase CLI is linked to `fulazwoiwhtwumerjiex` but
+not authenticated (`supabase projects list` → *"Access token not provided"*).
+So a local session can build, lint, typecheck and test, and can do nothing at
+all against the database or in a browser.
+
+`psql` is **not** required. The CLI does the same jobs:
+
+```bash
+supabase db push  --db-url "<direct connection string>"
+supabase db query --db-url "<direct connection string>" -f supabase/seed.sql
+supabase db query --db-url "<direct connection string>" -f supabase/tests/verify-database.sql
+```
+
+The connection string is in Supabase under Project Settings → Database. That
+one value plus a populated `.env.local` unblocks everything.
 
 ---
 

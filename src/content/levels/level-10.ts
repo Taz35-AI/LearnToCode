@@ -1,4 +1,5 @@
 import {
+  activeRecap,
   annotated,
   attr,
   attrMatches,
@@ -7,15 +8,21 @@ import {
   checklist,
   code,
   compare,
+  count,
+  demo,
   detail,
   goodAlt,
   mediaResolves,
   objectives,
   present,
+  pretest,
   prose,
+  recall,
   recap,
+  selfExplain,
   term,
   type LevelSpec,
+  mediaExample,
 } from '../types';
 
 export const LEVEL_10: LevelSpec = {
@@ -145,6 +152,23 @@ preload="auto"          Fetch the whole file. Almost never justified.`,
               'What HTML cannot do for performance',
               'Markup cannot compress your images, cannot speed up a slow database query, cannot add caching headers, and cannot fix a 2MB JavaScript bundle. The biggest performance wins are usually elsewhere: image formats and sizes, server response time, caching, and how much JavaScript you ship. What HTML gives you is the difference between a page that renders progressively and pleasantly and one that blocks, jumps and reflows — which is what users actually perceive as "fast".',
             ),
+            demo('One page, three loading strategies', 'The same three images, told to load in different ways.', [
+              {
+                label: 'Deliberate',
+                code: '<img src="/learning-media/images/coast-sunrise.jpg" alt="Sunrise over a calm sea" width="1600" height="900" fetchpriority="high">\n<img src="/learning-media/images/forest-path.jpg" alt="A path between tall trees" width="1600" height="900" loading="lazy" decoding="async">',
+                note: 'The banner is prioritised and eager; everything below is deferred. Exactly one asset is marked urgent.',
+              },
+              {
+                label: 'Everything urgent',
+                code: '<img src="/learning-media/images/coast-sunrise.jpg" alt="Sunrise over a calm sea" width="1600" height="900" fetchpriority="high">\n<img src="/learning-media/images/forest-path.jpg" alt="A path between tall trees" width="1600" height="900" fetchpriority="high">',
+                note: 'Priority is relative, so marking both urgent prioritises neither — and the banner now competes with an image nobody has scrolled to.',
+              },
+              {
+                label: 'No dimensions',
+                code: '<img src="/learning-media/images/coast-sunrise.jpg" alt="Sunrise over a calm sea">\n<p>Everything below this jumps when the image lands.</p>',
+                note: 'The image claims no height until it arrives, then shoves the paragraph down the page — often just as somebody reaches for a link.',
+              },
+            ]),
             recap(
               [
                 'Set `width` and `height` on every image, video and iframe — it fixes the ratio, not the size.',
@@ -330,6 +354,23 @@ rel="sponsored"   Marks a paid or affiliate link.`,
               'The honest boundary',
               'HTML cannot authenticate a user, cannot authorise an action, cannot validate input in any way that survives an attacker, cannot encrypt anything, and cannot keep a secret. Every `required`, `pattern`, `maxlength` and `type="email"` on your page is a convenience for honest users and is trivially bypassed. Real security lives on the server: validate every input, authenticate every request, authorise every action, and never trust anything that arrives from a browser. What HTML *can* do is avoid handing an attacker an easy opening — which is exactly what this lesson is about.',
             ),
+            selfExplain(
+              'A teammate has added `required`, `pattern="[0-9]{16}"` and `maxlength="16"` to a card-number field, and says the input is now validated. Write your reply. Be specific about what those attributes *do* achieve, so that the answer is not simply "they are useless".',
+              'They achieve something real and something narrow: they catch honest mistakes early, in the browser, before a request is made — better error messages, fewer round trips, a kinder form. What they do not do is validate anything, because every one of them is enforced by the browser and an attacker does not need to use one. The request can be sent by hand with any value at all. So the field is validated for people who are trying to get it right, and completely unvalidated against anyone who is not. The server must check the same things again, and its check is the only one that counts.',
+            ),
+            recall(
+              'Close the page. From memory, list every markup-level security measure this lesson covered — and beside each one, say what it prevents.',
+              [
+                '`rel="noopener noreferrer"` on `target="_blank"` — stops the opened page controlling the tab it came from, and stops your address being passed on.',
+                '`sandbox` on every iframe, granting the minimum — the embed runs someone else\'s code inside your page.',
+                '`title` on every iframe — without it the embed is announced as an unnamed frame.',
+                'A referrer policy — stops full URLs, which may carry tokens or identifiers, leaking to third parties.',
+                '`rel="nofollow ugc"` on user-submitted links — refuses to lend your site\'s standing to content you did not write.',
+                'No secrets in hidden inputs, comments or data attributes — all of it is plainly readable.',
+                'Subresource integrity on third-party scripts — guarantees you got the code you agreed to.',
+                'And the boundary itself: none of this authenticates, authorises or validates. That is the server\'s job, always.',
+              ],
+            ),
             checklist('The markup-level security checklist', [
               '`rel="noopener noreferrer"` on every `target="_blank"`',
               '`sandbox` on every iframe, granting the minimum',
@@ -343,6 +384,23 @@ rel="sponsored"   Marks a paid or affiliate link.`,
               'What about `integrity`?',
               'Subresource Integrity lets you pin the exact contents of a third-party file: `<script src="https://cdn.example/lib.js" integrity="sha384-…" crossorigin="anonymous"></script>`. If the file changes by so much as a byte, the browser refuses to run it. It is genuinely useful when loading code from a CDN you do not control. It is also a good illustration of HTML\'s role in security: it does not make the code safe, it just guarantees you got the code you agreed to.',
             ),
+            demo('The same external link, three ways', 'Only one of these is safe and honest about what it does.', [
+              {
+                label: 'Safe',
+                code: '<a href="https://example.org/report" target="_blank" rel="noopener noreferrer">The 2026 cycling report (opens in a new tab)</a>',
+                note: 'The opened page gets no reference back to your tab and no referrer, and the visitor is told a new tab is coming.',
+              },
+              {
+                label: 'No rel',
+                code: '<a href="https://example.org/report" target="_blank">The 2026 cycling report</a>',
+                note: 'Modern browsers imply noopener, so this is no longer the hole it once was — but it still leaks your full URL as the referrer, and still surprises the visitor.',
+              },
+              {
+                label: 'Same tab',
+                code: '<a href="https://example.org/report">The 2026 cycling report</a>',
+                note: 'Often the best answer. Nothing to leak, nothing to warn about, and the Back button still works.',
+              },
+            ]),
             recap(
               [
                 '`rel="noopener noreferrer"` on every external link opened in a new tab.',
@@ -453,6 +511,242 @@ rel="sponsored"   Marks a paid or affiliate link.`,
           ],
         },
         {
+          slug: 'third-party-and-embeds',
+          title: 'Third-party content and embeds',
+          subtitle: 'The code you did not write, running on your page',
+          summary:
+            'Almost every slow site is slow because of things someone else wrote. Here is what markup can do about it.',
+          objectives: [
+            'Explain what an embed actually costs',
+            'Defer and sandbox third-party frames',
+            'Use `preconnect` and `dns-prefetch` where they genuinely help',
+          ],
+          estimatedMinutes: 15,
+          skill: 'performance',
+          blocks: [
+            pretest(
+              'A page embeds one video player from another site. Roughly how much does that typically add before the visitor has watched anything?',
+              [
+                'Often more than the entire rest of the page combined',
+                'A few kilobytes — it is only an iframe',
+                'Nothing until the visitor presses play',
+                'It depends only on your own server',
+              ],
+              'Often more than everything else on the page put together. A typical embedded player pulls in its own HTML, its own scripts, its own styles, frequently its own analytics, and connects to several additional hosts — all before anyone presses play. This is why "the site is slow" so often traces back to something nobody on the team wrote, and why deciding *when* an embed loads is one of the highest-value markup decisions available to you.',
+            ),
+            objectives([
+              'Weigh the real cost of an embed before adding one',
+              'Defer offscreen frames and restrict what they may do',
+              'Warm up connections to hosts you will definitely use',
+            ]),
+            prose(
+              'An `<iframe>` is not a picture of another page. It is another whole page, with its own network requests, its own scripts and its own memory, rendered inside yours. Treat it as such.',
+            ),
+            annotated(
+              `<iframe
+  src="https://example.org/player/12345"
+  title="Introduction to sourdough, 4 minutes"
+  loading="lazy"
+  sandbox="allow-scripts allow-same-origin allow-presentation"
+  referrerpolicy="no-referrer"
+  width="560" height="315"></iframe>`,
+              [
+                { line: '3', text: '`title` is not optional. Without it the frame is announced as an unnamed frame, and a page with three of them becomes unnavigable.' },
+                { line: '4', text: '`loading="lazy"` on an offscreen embed is the single biggest win available here — it moves the entire cost until the visitor scrolls to it.' },
+                { line: '5', text: 'Start from nothing and grant back only what the embed genuinely needs. Note what is *not* granted: no top-navigation, so it cannot redirect your page; no popups; no downloads.' },
+                { line: '6', text: '`no-referrer` means the third party is told nothing about which page the visitor came from.' },
+                { line: '7', text: 'Dimensions, for the same reason images need them — otherwise the page jumps when the frame resolves.' },
+              ],
+            ),
+            callout(
+              'warning',
+              '`allow-scripts` plus `allow-same-origin` removes most of the protection',
+              'Granted together, a frame from *your own origin* can reach out and remove its own sandbox attribute. For same-origin embeds, that combination is close to no sandbox at all. It is fine for a genuinely third-party origin, which cannot touch your document either way — but know which case you are in rather than copying the pair by habit.',
+            ),
+            demo('Where an embed loads', 'The same video embed, placed and configured three ways.', [
+              {
+                label: 'Lazy, below the fold',
+                code: '<h1>How we bake</h1>\n<p>Fifteen hours, start to finish.</p>\n<iframe src="about:blank" title="Introduction to sourdough" loading="lazy" width="560" height="315"></iframe>',
+                note: 'Costs nothing until the visitor scrolls to it. The right default for any embed that is not the point of the page.',
+              },
+              {
+                label: 'Eager, at the top',
+                code: '<iframe src="about:blank" title="Introduction to sourdough" width="560" height="315"></iframe>\n<h1>How we bake</h1>',
+                note: 'Correct only when the embed *is* the page — a video the visitor came specifically to watch.',
+              },
+              {
+                label: 'No title, no dimensions',
+                code: '<iframe src="about:blank"></iframe>',
+                note: 'Announced as an unnamed frame, and the page jumps when it resolves. Two bugs in one line.',
+              },
+            ]),
+            callout(
+              'tip',
+              'Resource hints, applied to embeds',
+              'You met `preconnect` and `dns-prefetch` in the loading-strategy lesson. Embeds are the case where they pay off most, because a third-party frame reaches hosts the browser cannot discover until the frame itself has loaded. One `preconnect` to the embed provider is often worthwhile — and the same limit applies as before: two or three hosts, not ten, because prioritising everything prioritises nothing.',
+            ),
+            selfExplain(
+              'Your team wants to add three embeds to the homepage: a video, a map, and a social feed. Write the case you would make. Do not say "embeds are slow" — be specific about what each one costs and what you would do about it if the answer is that they stay.',
+              'Each one is a whole page loaded inside yours: its own scripts, styles, connections and often its own analytics, typically dwarfing everything the team actually wrote. Three of them means three of that. If they stay, the markup can still do a great deal — every one gets `loading="lazy"` so nothing loads until it is scrolled to, a `title` so the page stays navigable, dimensions so it does not shift the layout, a minimal `sandbox`, and `referrerpolicy="no-referrer"` so three third parties are not told the visitor\'s exact page. The stronger option for the map and the feed is a static image that links out, loading the real embed only when someone asks for it — which costs nothing for the large majority who never interact with either.',
+            ),
+            detail(
+              'The placeholder pattern',
+              'For a map or a social feed, the strongest option is not a better-configured embed — it is no embed until someone asks for one. Show a static image with a link or a button, and load the real thing only on interaction. Most visitors never interact, so most visitors pay nothing at all. The markup is ordinary: an `<img>`, an `<a>` or `<button>`, and the embed added afterwards. This is the one performance technique on the page that can remove a cost entirely rather than merely moving it.',
+            ),
+            checklist('Before you accept an embed', [
+              'Does the page genuinely need it, or would a linked image do?',
+              'Does it have a `title`?',
+              'Is it `loading="lazy"` unless it is the point of the page?',
+              'Does it have `width` and `height`?',
+              'Is it sandboxed to the minimum it needs?',
+              'Does it have a referrer policy?',
+              'Are you preconnecting to at most two or three hosts?',
+            ]),
+            recap(
+              [
+                'An embed is another whole page, and usually costs more than everything you wrote.',
+                '`loading="lazy"`, `title`, dimensions and `sandbox` are the four attributes every frame wants.',
+                '`allow-scripts` with `allow-same-origin` is close to no sandbox for a same-origin frame.',
+                'A static placeholder that loads the embed on interaction removes the cost rather than deferring it.',
+              ],
+              'Next: the Level 10 milestone.',
+            ),
+            activeRecap(
+              [
+                'What does an embedded player actually cost, before anyone interacts with it?',
+                'Name the four attributes every `<iframe>` should carry, and why.',
+                'Why is a static placeholder stronger than a well-configured embed?',
+              ],
+              [
+                'Its own HTML, scripts, styles, analytics and extra host connections — frequently more than the entire rest of the page combined.',
+                '`title` so it is announced and navigable; `loading="lazy"` so an offscreen frame costs nothing until reached; `width`/`height` so the layout does not shift; `sandbox` so it can only do what it needs.',
+                'Because it removes the cost rather than moving it. A lazy embed still loads in full for anyone who scrolls to it; a placeholder loads the embed only for the minority who actually interact, so most visitors pay nothing at all.',
+              ],
+            ),
+          ],
+          exercises: [
+            {
+              slug: 'embed-hardening-guided',
+              kind: 'guided',
+              title: 'Make an embed behave',
+              brief:
+                'The embed below sits well down a long page. Give it a `title` describing what it is, make it lazy, add its `width` and `height` (560 by 315), sandbox it to scripts and presentation only, and stop it leaking the referrer.',
+              starterCode: `<h1>How we bake</h1>
+<p>Fifteen hours from mix to cooling rack.</p>
+<iframe src="https://example.org/player/12345"></iframe>`,
+              referenceSolution: `<h1>How we bake</h1>
+<p>Fifteen hours from mix to cooling rack.</p>
+<iframe src="https://example.org/player/12345"
+        title="Introduction to sourdough, 4 minutes"
+        loading="lazy"
+        sandbox="allow-scripts allow-presentation"
+        referrerpolicy="no-referrer"
+        width="560" height="315"></iframe>`,
+              hints: [
+                'The title should say what the embed contains, not just "video".',
+                'loading="lazy" is what stops it costing anything until scrolled to.',
+                'sandbox takes a space-separated list of permissions to grant back.',
+                'referrerpolicy="no-referrer" sends the third party nothing.',
+              ],
+              requirements: [
+                present('iframe', 'The embed is still there'),
+                attr('iframe', 'title', 'The frame has a title'),
+                attrMatches('iframe', 'title', '.{10,}', 'The title actually describes the embed'),
+                attrValue('iframe', 'loading', 'lazy', 'The frame is lazy-loaded'),
+                attr('iframe', 'sandbox', 'The frame is sandboxed'),
+                attrValue('iframe', 'referrerpolicy', 'no-referrer', 'The frame sends no referrer'),
+                attr('iframe', 'width', 'The frame declares its width'),
+                attr('iframe', 'height', 'The frame declares its height'),
+              ],
+              difficulty: 3,
+              xp: 45,
+              skill: 'performance',
+            },
+            {
+              slug: 'third-party-debug',
+              kind: 'debug',
+              title: 'A homepage full of other people\'s code',
+              brief:
+                'Three problems: an unnamed eager iframe, a render-blocking script in the head, and eight preconnects. Give the frame a title and make it lazy, defer the script, and cut the preconnects down to the one host that is genuinely certain.',
+              starterCode: `<head>
+  <link rel="preconnect" href="https://a.example.com">
+  <link rel="preconnect" href="https://b.example.com">
+  <link rel="preconnect" href="https://c.example.com">
+  <script src="/analytics.js"></script>
+</head>
+<body>
+  <h1>Riverside Bakery</h1>
+  <iframe src="https://example.org/map"></iframe>
+</body>`,
+              referenceSolution: `<head>
+  <link rel="preconnect" href="https://a.example.com">
+  <script src="/analytics.js" defer></script>
+</head>
+<body>
+  <h1>Riverside Bakery</h1>
+  <iframe src="https://example.org/map" title="Map of the bakery location"
+          loading="lazy" width="560" height="315"></iframe>
+</body>`,
+              hints: [
+                'Keep one preconnect and delete the rest.',
+                'Adding defer to the script stops it blocking the parser.',
+                'The iframe needs a title, loading="lazy" and dimensions.',
+              ],
+              requirements: [
+                count('link[rel="preconnect"]', 1, 1, 'Only one host is preconnected'),
+                attr('script', 'defer', 'The script no longer blocks parsing'),
+                attr('iframe', 'title', 'The frame has a title'),
+                attrValue('iframe', 'loading', 'lazy', 'The frame is lazy-loaded'),
+                attr('iframe', 'width', 'The frame declares its dimensions'),
+              ],
+              difficulty: 4,
+              xp: 55,
+              skill: 'performance',
+            },
+          ],
+          quiz: [
+            {
+              slug: 'q-iframe-cost',
+              prompt: 'What is an `<iframe>` embed, in resource terms?',
+              explanation:
+                'It is another complete page — its own requests, scripts, styles and memory — rendered inside yours.',
+              options: [
+                { label: 'Another complete page, with its own requests and scripts', correct: true },
+                { label: 'A static image of another page' },
+                { label: 'A lightweight reference costing a few kilobytes' },
+                { label: 'A copy of content fetched by your own server' },
+              ],
+              skill: 'performance',
+            },
+            {
+              slug: 'q-sandbox-combination',
+              prompt: 'Why is `sandbox="allow-scripts allow-same-origin"` weak on a same-origin frame?',
+              explanation:
+                'Together they let the framed document reach out and remove its own sandbox attribute.',
+              options: [
+                { label: 'The frame can remove its own sandbox attribute', correct: true },
+                { label: 'Browsers ignore sandbox when two values are given' },
+                { label: 'It blocks the frame from loading at all' },
+                { label: 'It is fine — the combination is the recommended default' },
+              ],
+              skill: 'security',
+            },
+            {
+              slug: 'q-defer-vs-async',
+              prompt: 'What does `defer` do that `async` does not?',
+              explanation:
+                '`defer` runs scripts after parsing in document order. `async` runs each as soon as it arrives, in no predictable order.',
+              options: [
+                { label: 'Runs after parsing, preserving document order', correct: true },
+                { label: 'Downloads the script faster' },
+                { label: 'Prevents the script from running at all' },
+                { label: 'Runs the script before the parser starts' },
+              ],
+              skill: 'performance',
+            },
+          ],
+        },
+        {
           slug: 'performance-milestone',
           title: 'Milestone: repair a slow, unsafe page',
           subtitle: 'Every problem from this level, on one page',
@@ -509,6 +803,37 @@ rel="sponsored"   Marks a paid or affiliate link.`,
               'A referrer policy is set',
               'No secrets anywhere in the markup',
             ]),
+            mediaExample(
+              'vehicle-hire',
+              'The image that decides how fast the page feels',
+              'On a page like this the banner *is* the perceived load time. It gets dimensions so nothing shifts, a priority hint so it is fetched first, and deliberately no `loading="lazy"` — the two would contradict each other.',
+              `<img src="/learning-media/images/vehicle-hire.jpg"
+     alt="A blue five-door car photographed side-on, parked on an open road"
+     width="1600" height="900" fetchpriority="high">`,
+            ),
+            demo('The same repair, measured', 'What each change actually buys.', [
+              {
+                label: 'Repaired',
+                code: '<img src="/learning-media/images/vehicle-hire.jpg" alt="A blue five-door car parked on an open road" width="1600" height="900" fetchpriority="high">\n<iframe src="https://example.org/map" title="Location map" loading="lazy" width="560" height="315"></iframe>',
+                note: 'Nothing shifts, the banner is fetched first, and the map costs nothing until somebody scrolls to it.',
+              },
+              {
+                label: 'As found',
+                code: '<img src="/learning-media/images/vehicle-hire.jpg" alt="car" loading="lazy" fetchpriority="high">\n<iframe src="https://example.org/map"></iframe>',
+                note: 'No dimensions so the page jumps; lazy and high-priority contradicting each other on the banner; and an unnamed frame loading immediately.',
+              },
+            ]),
+            recall(
+              'Most of this repair is applying earlier lessons with a new motive. From memory: which decisions from Levels 4 and 9 turn out to be performance decisions too?',
+              [
+                'Level 4 — `srcset` and `sizes` stop a phone downloading a 1600-pixel file to display it at 400.',
+                'Level 4 — `<picture>` offers a modern format with a fallback, which is usually the single largest byte saving available.',
+                'Level 4 — `width` and `height` on every image, which you learned for layout and which also stops the page shifting as it loads.',
+                'Level 9 — `<link rel="canonical">` and clean metadata keep duplicate URLs from competing, so caching and crawling both do less work.',
+                'This level — `loading`, `fetchpriority` and `decoding` decide *when* and *in what order*, not how much.',
+              ],
+              'The performance you already wrote',
+            ),
             recap(
               [
                 'Most HTML performance work is about not making things worse.',

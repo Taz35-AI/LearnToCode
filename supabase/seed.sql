@@ -3,10 +3,10 @@
 -- GENERATED FILE. Do not edit by hand.
 -- Source: src/content/**  ·  Regenerate: npm run seed:generate
 --
--- 12 levels · 20 modules · 48 lessons
--- 498 content blocks · 91 exercises · 220 questions
+-- 12 levels · 21 modules · 55 lessons
+-- 664 content blocks · 105 exercises · 241 questions
 -- 38 media assets · 22 achievements
--- Estimated learner time: 1907 minutes
+-- Estimated learner time: 2163 minutes
 --
 -- This script is idempotent: running it again updates existing rows in place
 -- rather than duplicating them, so content edits can be re-seeded safely.
@@ -1507,7 +1507,11 @@ select id, 11, 'progressive_detail'::public.block_type, 'What about CSS and Java
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'what-happens-when-you-open-a-page';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 12, 'interactive_demo'::public.block_type, 'The same words, with and without labels', 'This is the whole idea of HTML, in two panels.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Plain text","code":"Fresh bread, every morning\nWe open at 6am and bake until we sell out.","note":"The browser has been told nothing about what these words are, so it runs them together as one undifferentiated block."},{"label":"With labels","code":"<h1>Fresh bread, every morning</h1>\n<p>We open at 6am and bake until we sell out.</p>","note":"Identical words. The labels say what each part *is*, and the browser decides how to show it — larger and bolder for the heading, normal for the paragraph."}]}'::jsonb
+from public.lessons where slug = 'what-happens-when-you-open-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["A browser fetches a file from a server and draws it on screen.","That file is HTML: ordinary text with labels around parts of it.","The labels say what a piece of content *means*, and the browser decides how to display it.","HTML is not a programming language — it describes, it does not calculate."],"nextUp":"Next: the file itself, and the tool you write it in."}'::jsonb
 from public.lessons where slug = 'what-happens-when-you-open-a-page';
 
@@ -1637,66 +1641,79 @@ on conflict (slug) do update set
   estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
   primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'You have seen `<h1>Fresh bread</h1>` already. Which part of that would you call the *element*?',
+       NULL, NULL, NULL, '{"options":["The whole thing: `<h1>Fresh bread</h1>`","Just `<h1>`","Just the words `Fresh bread`","Just `</h1>`"],"answer":"The element is the whole thing — opening tag, content and closing tag together. `<h1>` on its own is a *tag*. The distinction sounds pedantic and is not: nearly every error message you will ever read talks about one or the other, and they mean different things."}'::jsonb
+from public.lessons where slug = 'tags-elements-attributes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
        NULL, NULL, NULL, '{"items":["Explain the difference between a tag and an element","Add an attribute to an element with the correct syntax","Identify void elements, which never have a closing tag"]}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'prose'::public.block_type, NULL, 'Nearly everything in HTML follows one pattern: an opening tag, some content, and a closing tag. Together those three things are called an element.',
+select id, 3, 'prose'::public.block_type, NULL, 'Nearly everything in HTML follows one pattern: an opening tag, some content, and a closing tag. Together those three things are called an element.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'visual'::public.block_type, NULL, 'Every part of an element, labelled.',
+select id, 4, 'visual'::public.block_type, NULL, 'Every part of an element, labelled.',
        NULL, NULL, 'anatomy-of-an-element', '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'term'::public.block_type, 'Tag', 'The bit in angle brackets. `<p>` is an opening tag; `</p>` is a closing tag.',
+select id, 5, 'term'::public.block_type, 'Tag', 'The bit in angle brackets. `<p>` is an opening tag; `</p>` is a closing tag.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'term'::public.block_type, 'Element', 'The opening tag, the content and the closing tag together. `<p>Hello</p>` is one paragraph element.',
+select id, 6, 'term'::public.block_type, 'Element', 'The opening tag, the content and the closing tag together. `<p>Hello</p>` is one paragraph element.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'term'::public.block_type, 'Attribute', 'Extra information written inside the opening tag, as `name="value"`. It tells the browser something the tag alone cannot.',
-       NULL, NULL, NULL, '{"example":"<a href=\"about.html\">About us</a> — here `href` is the attribute name and `about.html` is its value."}'::jsonb
+select id, 7, 'term'::public.block_type, 'Attribute', 'Extra information written inside the opening tag, as `name="value"`. It tells the browser something the tag alone cannot.',
+       NULL, NULL, NULL, '{"example":"<a href=\"about.html\">About us</a> — here href is the attribute name and about.html is its value."}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'annotated_code'::public.block_type, 'Line by line', NULL,
+select id, 8, 'annotated_code'::public.block_type, 'Line by line', NULL,
        '<a href="about.html" title="Learn about our bakery">About us</a>', 'html', NULL, '{"annotations":[{"line":"1","text":"`<a` starts a link element. The letter \"a\" stands for anchor."},{"line":"1","text":"`href=\"about.html\"` is an attribute. `href` means \"hypertext reference\" — where the link goes. Its value sits in quotation marks."},{"line":"1","text":"`title=\"…\"` is a second attribute. Attributes are separated by a single space, and an element can have as many as it needs."},{"line":"1","text":"`>` closes the opening tag. Everything after it is the content."},{"line":"1","text":"`About us` is the content — the words a person actually sees and clicks."},{"line":"1","text":"`</a>` closes the element. The slash is what makes it a closing tag."}]}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'callout'::public.block_type, 'The three mistakes everyone makes at first', 'Forgetting the slash in the closing tag (`<p>` twice instead of `<p>` then `</p>`). Forgetting the quotation marks around an attribute value. Putting a space around the equals sign — write `href="x"`, not `href = "x"`. All three are normal, and the checker in this course names them for you.',
+select id, 9, 'callout'::public.block_type, 'The three mistakes everyone makes at first', 'Forgetting the slash in the closing tag (`<p>` twice instead of `<p>` then `</p>`). Forgetting the quotation marks around an attribute value. Putting a space around the equals sign — write `href="x"`, not `href = "x"`. All three are normal, and the checker in this course names them for you.',
        NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'prose'::public.block_type, NULL, 'A small number of elements have nothing to put between an opening and closing tag, because they are not wrapping anything. These are called void elements, and they are written as a single tag.',
+select id, 10, 'prose'::public.block_type, NULL, 'A small number of elements have nothing to put between an opening and closing tag, because they are not wrapping anything. These are called void elements, and they are written as a single tag.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'code_example'::public.block_type, 'Void elements: one tag, no closing tag', NULL,
+select id, 11, 'code_example'::public.block_type, 'Void elements: one tag, no closing tag', NULL,
        '<br>
 <hr>
 <img src="/learning-media/images/coast-sunrise.jpg" alt="Sunrise over a calm sea">', 'html', NULL, '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'prose'::public.block_type, NULL, 'There are only fifteen void elements in the whole language, and you will meet the useful ones — `<br>`, `<hr>`, `<img>`, `<input>`, `<meta>`, `<link>`, `<source>`, `<track>` — as the course goes on. You never need to memorise the list.',
+select id, 12, 'prose'::public.block_type, NULL, 'There are only fifteen void elements in the whole language, and you will meet the useful ones — `<br>`, `<hr>`, `<img>`, `<input>`, `<meta>`, `<link>`, `<source>`, `<track>` — as the course goes on. You never need to memorise the list.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'interactive_demo'::public.block_type, 'See it change', 'Watch what the same words look like with different labels around them.',
+select id, 13, 'interactive_demo'::public.block_type, 'See it change', 'Watch what the same words look like with different labels around them.',
        NULL, NULL, NULL, '{"variants":[{"label":"As a heading","code":"<h1>Opening hours</h1>","note":"The browser makes it large and bold, and screen readers announce it as a heading."},{"label":"As a paragraph","code":"<p>Opening hours</p>","note":"Normal body text. Correct if it is a sentence, wrong if it is really a heading."},{"label":"As a link","code":"<a href=\"hours.html\">Opening hours</a>","note":"Now it is interactive — it can be clicked, and reached with the Tab key."}]}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'comparison'::public.block_type, 'Attributes: written correctly, and written wrongly', NULL,
+select id, 14, 'comparison'::public.block_type, 'Attributes: written correctly, and written wrongly', NULL,
        NULL, NULL, NULL, '{"good":{"label":"Correct","code":"<a href=\"contact.html\">Contact us</a>","why":"Attribute name, equals sign, value in quotation marks, no stray spaces."},"bad":{"label":"Broken","code":"<a href = contact.html>Contact us</a>","why":"Spaces around the equals sign and no quotation marks. Browsers sometimes forgive this, but it breaks the moment the value contains a space."}}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 14, 'checklist'::public.block_type, 'Before you move on, you can', NULL,
+select id, 15, 'predict_check'::public.block_type, 'Predict, then check', 'Two paragraphs, almost identical. `<br>` is a void element, so the second one closes a tag that was never open. Before you run it: will the browser refuse the second paragraph, or do something else?',
+       '<p>Fresh bread<br>every morning</p>
+<p>Fresh bread</br>every morning</p>', 'html', NULL, '{"outcome":"It does something else. Browsers do not reject broken HTML — they repair it and carry on, so `</br>` is silently treated as `<br>` and both paragraphs look identical. That is why a page can look perfect and still be wrong, and why this course checks your markup rather than trusting how it looks."}'::jsonb
+from public.lessons where slug = 'tags-elements-attributes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 16, 'checklist'::public.block_type, 'Before you move on, you can', NULL,
        NULL, NULL, NULL, '{"items":["Point at a tag and an element and say which is which","Write an attribute with its quotation marks","Name two void elements"]}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 17, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["A tag is one label in angle brackets; an element is the opening tag, content and closing tag together.","Attributes live inside the opening tag and are written `name=\"value\"`.","Void elements such as `<br>`, `<hr>` and `<img>` have no closing tag because they wrap nothing."],"nextUp":"Next: how elements sit inside one another."}'::jsonb
+from public.lessons where slug = 'tags-elements-attributes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 18, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What is the difference between a tag and an element?","Write out the anatomy of a link to `about.html` with the text \"About us\", from memory.","Name two void elements and say what makes them void."],"points":["A tag is one label in angle brackets. An element is the opening tag, the content and the closing tag together.","`<a href=\"about.html\">About us</a>` — element name, attribute as `name=\"value\"` in quotation marks, content, then a closing tag with a slash.","`<br>`, `<hr>`, `<img>`, `<input>`, `<meta>` and `<link>` are all void: they wrap no content, so there is nothing for a closing tag to close."]}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 
 insert into public.exercises
@@ -1964,7 +1981,11 @@ select id, 12, 'progressive_detail'::public.block_type, 'What browsers do with b
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'nesting-and-the-document-tree';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 13, 'interactive_demo'::public.block_type, 'Nesting, correct and crossed', 'The same four tags, opened in the same order and closed in different ones.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Nested correctly","code":"<p>Baked <strong>every <em>single</em> morning</strong>.</p>","note":"Each element closes inside the one that contains it. The tree is unambiguous, and every browser agrees on it."},{"label":"Crossed over","code":"<p>Baked <strong>every <em>single</strong> morning</em>.</p>","note":"The strong closes while the em is still open. The browser repairs this silently, and the structure it invents may not be the one you meant."},{"label":"Never closed","code":"<p>Baked <strong>every single morning.</p>\n<p>Open seven days.</p>","note":"The strong is never closed, so the browser keeps it open — and the second paragraph is bold too."}]}'::jsonb
+from public.lessons where slug = 'nesting-and-the-document-tree';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Elements nest inside one another and must close in reverse order.","The nested structure is a tree; the browser''s live copy of it is called the DOM.","Indent two spaces per level so a missing closing tag is visible at a glance.","Comments (`<!-- … -->`) are ignored by the browser but readable by anyone."],"nextUp":"Next: the skeleton every real HTML file needs."}'::jsonb
 from public.lessons where slug = 'nesting-and-the-document-tree';
 
@@ -2467,7 +2488,11 @@ select id, 8, 'progressive_detail'::public.block_type, 'Why "real content" matte
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'your-first-complete-page';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 9, 'interactive_demo'::public.block_type, 'What each part of the skeleton does', 'Remove one piece at a time and watch what changes.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Complete","code":"<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <title>Riverside Bakery</title>\n  </head>\n  <body>\n    <h1>Riverside Bakery</h1>\n    <p>Open seven days a week.</p>\n  </body>\n</html>","note":"Every required part present. The tab shows a title, the text is decoded correctly, and assistive technology knows the language."},{"label":"No charset","code":"<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <title>Riverside Bakery</title>\n  </head>\n  <body>\n    <h1>Café Riverside</h1>\n    <p>Open seven days — from £6.</p>\n  </body>\n</html>","note":"Accented characters, dashes and currency symbols are the first casualties. Often it happens to look fine until someone types an é."},{"label":"No title","code":"<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n  </head>\n  <body>\n    <h1>Riverside Bakery</h1>\n  </body>\n</html>","note":"The page still renders, but the tab shows the file name, a bookmark is meaningless, and a search result has nothing to display."}]}'::jsonb
+from public.lessons where slug = 'your-first-complete-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["You can now build a valid HTML document from an empty file.","The frame comes first; the content fills it in.","This page is the seed of your capstone website — you will return to it many times."],"nextUp":"Level 2 next: making the content itself meaningful."}'::jsonb
 from public.lessons where slug = 'your-first-complete-page';
 
@@ -3024,7 +3049,11 @@ select id, 9, 'progressive_detail'::public.block_type, 'Does an h1 have to be th
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'heading-hierarchy';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 10, 'visual'::public.block_type, NULL, 'A long article benefits from headings for the same reason a path benefits from signposts: you can tell where you are without reading everything.',
+       NULL, NULL, 'forest-path', '{}'::jsonb
+from public.lessons where slug = 'heading-hierarchy';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Six heading levels form the page outline.","Exactly one `<h1>`, naming what this page is about.","Never skip a level going down; going back up starts a new section.","Choose the level by meaning, never by how big the text looks."],"nextUp":"Next: paragraphs, and the difference between a line break and a new paragraph."}'::jsonb
 from public.lessons where slug = 'heading-hierarchy';
 
@@ -3236,7 +3265,11 @@ select id, 12, 'checklist'::public.block_type, 'Choosing between them', NULL,
        NULL, NULL, NULL, '{"items":["New topic or new block of prose → a new `<p>`","Line break that is part of the content itself → `<br>`","The subject genuinely changes → `<hr>`","You just want more space → neither; that is a styling job"]}'::jsonb
 from public.lessons where slug = 'paragraphs-breaks-rules';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 13, 'interactive_demo'::public.block_type, 'Three ways to break a line, one of them right', 'The same address, marked up three ways.',
+       NULL, NULL, NULL, '{"variants":[{"label":"One paragraph, real breaks","code":"<p>Riverside Bakery<br>12 Mill Lane<br>Hexford HX1 2AB</p>","note":"Correct. An address is one block of text whose line breaks are part of its meaning — exactly what <br> is for."},{"label":"Separate paragraphs","code":"<p>Riverside Bakery</p>\n<p>12 Mill Lane</p>\n<p>Hexford HX1 2AB</p>","note":"Wrong meaning: it claims these are three unrelated paragraphs, and screen readers announce three separate blocks."},{"label":"Empty paragraphs for spacing","code":"<p>Riverside Bakery</p>\n<p></p>\n<p>12 Mill Lane</p>","note":"Never do this. The empty paragraph is a spacing hack, it is announced as a blank paragraph, and CSS is the correct tool for space."}]}'::jsonb
+from public.lessons where slug = 'paragraphs-breaks-rules';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Whitespace in the file is collapsed; structure comes from elements.","`<p>` for each block of prose.","`<br>` only when the break belongs to the content, such as an address.","`<hr>` means a change of subject, not \"draw a line\"."],"nextUp":"Next: the elements that add meaning inside a sentence."}'::jsonb
 from public.lessons where slug = 'paragraphs-breaks-rules';
 
@@ -3680,7 +3713,11 @@ select id, 13, 'checklist'::public.block_type, 'Use these when', NULL,
        NULL, NULL, NULL, '{"items":["You quote a block of text from elsewhere → `<blockquote>` + `<figcaption>`","You quote a phrase inside a sentence → `<q>`","You name a book, film, study or article → `<cite>`","You use an abbreviation a reader may not know → `<abbr title=\"…\">`","You mention any date or time → `<time datetime=\"…\">`"]}'::jsonb
 from public.lessons where slug = 'quotes-abbreviations-dates';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 14, 'interactive_demo'::public.block_type, 'A quotation, marked up three ways', 'Only one of these tells software what it is looking at.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Marked up","code":"<blockquote cite=\"https://example.org/review\">\n  <p>The best sourdough in the county.</p>\n</blockquote>\n<p>— <cite>The Hexford Review</cite></p>","note":"The quotation is identifiable as a quotation, its source is recorded, and the publication is marked as a title."},{"label":"Typed quotation marks","code":"<p>\"The best sourdough in the county.\" — The Hexford Review</p>","note":"Looks nearly identical and means nothing to software. Nothing can find the quotations on this page, and nothing knows who said it."},{"label":"Italics for everything","code":"<p><i>\"The best sourdough in the county.\"</i> — <i>The Hexford Review</i></p>","note":"Two different things — a quotation and a publication title — flattened into the same purely visual instruction."}]}'::jsonb
+from public.lessons where slug = 'quotes-abbreviations-dates';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<blockquote>` for block quotations, `<q>` for inline ones — never type the quotation marks yourself.","`<cite>` names the *work*, not the author.","`<abbr title=\"…\">` expands an abbreviation, but spelling it out in full first is better still.","`<time datetime=\"…\">` makes a casual date machine-readable."],"nextUp":"Next: code, superscripts and the special characters that break pages."}'::jsonb
 from public.lessons where slug = 'quotes-abbreviations-dates';
 
@@ -3940,7 +3977,11 @@ select id, 13, 'code_example'::public.block_type, 'Correctly nested lists', NULL
 </ul>', 'html', NULL, '{}'::jsonb
 from public.lessons where slug = 'code-entities-and-lists';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 14, 'interactive_demo'::public.block_type, 'Showing code on a page', 'To display a tag rather than have the browser act on it, the angle brackets must be escaped.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Escaped correctly","code":"<p>Wrap a heading in <code>&lt;h1&gt;</code> tags.</p>","note":"The entities produce the characters < and >, so the reader sees the tag written out. Nothing is interpreted as markup."},{"label":"Not escaped","code":"<p>Wrap a heading in <code><h1></code> tags.</p>","note":"The browser reads <h1> as an instruction, not as text. An empty heading is created and the sentence falls apart."},{"label":"A preformatted block","code":"<pre><code>&lt;ul&gt;\n  &lt;li&gt;Sourdough&lt;/li&gt;\n&lt;/ul&gt;</code></pre>","note":"<pre> keeps the line breaks and indentation exactly as typed, which is what makes multi-line code readable."}]}'::jsonb
+from public.lessons where slug = 'code-entities-and-lists';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<code>` for code in a sentence; `<pre>` preserves spacing exactly.","`&lt;`, `&gt;` and `&amp;` are the entities you genuinely need.","`<ol>` when order matters, `<ul>` when it does not, `<dl>` for term-and-description pairs.","Nest a sub-list inside the `<li>` it belongs to."],"nextUp":"Next: the Level 2 milestone — a complete article page."}'::jsonb
 from public.lessons where slug = 'code-entities-and-lists';
 
@@ -4161,7 +4202,11 @@ select id, 7, 'progressive_detail'::public.block_type, 'How long should the page
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'article-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 8, 'interactive_demo'::public.block_type, 'The same article, structured and flat', 'Both contain identical words.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Structured","code":"<article>\n  <h1>Fifteen hours to a loaf</h1>\n  <p>Published <time datetime=\"2026-03-04\">4 March 2026</time></p>\n  <h2>The starter</h2>\n  <p>It begins the night before.</p>\n  <h2>The bake</h2>\n  <p>Forty minutes, no more.</p>\n</article>","note":"A screen-reader user can list the headings and jump to the part they want. The date is machine-readable."},{"label":"Flat","code":"<p><b>Fifteen hours to a loaf</b></p>\n<p>Published 4 March 2026</p>\n<p><b>The starter</b></p>\n<p>It begins the night before.</p>\n<p><b>The bake</b></p>\n<p>Forty minutes, no more.</p>","note":"Looks similar and has no structure at all: no headings to navigate by, no article, and a date nothing can parse."}]}'::jsonb
+from public.lessons where slug = 'article-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["You can now mark up a full page of realistic text with accurate semantics.","Heading hierarchy, lists, emphasis, quotations and dates all have a correct element.","Your capstone site now has two pages of real content."],"nextUp":"Level 3 next: connecting pages together."}'::jsonb
 from public.lessons where slug = 'article-milestone';
 
@@ -4685,7 +4730,11 @@ select id, 10, 'progressive_detail'::public.block_type, 'When should a link open
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'anchors-and-link-text';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 11, 'interactive_demo'::public.block_type, 'Link text, heard on its own', 'Screen-reader users often pull up a list of links. This is what each version sounds like there.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Names the destination","code":"<h3>Sourdough workshop</h3>\n<p>Six hours, small groups.</p>\n<a href=\"sourdough.html\">Book the sourdough workshop</a>","note":"In a link list it reads \"Book the sourdough workshop\" — unambiguous with the page removed."},{"label":"Read more","code":"<h3>Sourdough workshop</h3>\n<p>Six hours, small groups.</p>\n<a href=\"sourdough.html\">Read more</a>","note":"Reads \"Read more\", identical to every other such link on the site. The list becomes useless."},{"label":"The bare URL","code":"<p>Details: <a href=\"https://example.org/workshops/sourdough.html\">https://example.org/workshops/sourdough.html</a></p>","note":"Announced character by character in some configurations. Long, unreadable, and it tells the reader nothing a sentence would not."}]}'::jsonb
+from public.lessons where slug = 'anchors-and-link-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<a href=\"…\">` creates a link; the content between the tags is what people see.","Link text must make sense read on its own, out of context.","`target=\"_blank\"` needs `rel=\"noopener noreferrer\"` and a visible warning.","Opening in a new tab takes control away from the user — do it rarely."],"nextUp":"Next: relative paths, the thing everyone gets wrong once."}'::jsonb
 from public.lessons where slug = 'anchors-and-link-text';
 
@@ -4870,15 +4919,19 @@ select id, 8, 'callout'::public.block_type, 'The leading slash trap', 'Writing `
        NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
 from public.lessons where slug = 'relative-and-absolute-paths';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'interactive_demo'::public.block_type, 'Same link, three ways', 'Each of these can be correct — it depends where you are.',
+select id, 9, 'worked_example'::public.block_type, 'Working out one path, step by step', 'The question: you are editing `projects/first.html` and you want to show `images/logo.svg`, which sits at the top level. Rather than guessing and refreshing, here is the reasoning — it is the same four steps every time, and it never fails.',
+       NULL, NULL, NULL, '{"steps":[{"title":"Say where you are, out loud","code":"projects/first.html","reasoning":"You are *inside* the `projects` folder. Everything that follows is measured from there, not from the top of the project. This is the step people skip, and skipping it is why paths feel like guesswork."},{"title":"Say where the file is","code":"images/logo.svg","reasoning":"The image lives inside `images`, which sits at the top level — beside `projects`, not inside it. So the two folders are siblings, and you cannot reach one from inside the other by going further down."},{"title":"Climb out until you can see it","code":"../","reasoning":"One `../` takes you up from `projects` to the top level. From there `images` is visible. You needed exactly one, because you were exactly one folder deep — count the folders, do not guess the dots."},{"title":"Then walk down to the file","code":"<img src=\"../images/logo.svg\" alt=\"Company logo\">","reasoning":"Up one, into `images`, take `logo.svg`. Read it back as a sentence — \"go up one folder, into images, then logo.svg\" — and if the sentence is true, the path is right."}]}'::jsonb
+from public.lessons where slug = 'relative-and-absolute-paths';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'interactive_demo'::public.block_type, 'Same link, three ways', 'Each of these can be correct — it depends where you are.',
        NULL, NULL, NULL, '{"variants":[{"label":"Relative","code":"<a href=\"about.html\">About</a>","note":"Looks for about.html beside the current file. Works locally and on a server."},{"label":"Root-relative","code":"<a href=\"/about.html\">About</a>","note":"Always starts at the site root. Great on a server; usually broken when opening files directly."},{"label":"Absolute","code":"<a href=\"https://example.org/about.html\">About</a>","note":"Points at one specific live site. Use it for links to *other* sites, not your own pages."}]}'::jsonb
 from public.lessons where slug = 'relative-and-absolute-paths';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'prose'::public.block_type, NULL, 'A fragment link points at a specific place *within* a page. You give an element an `id`, then link to `#that-id`. Clicking it scrolls straight there.',
+select id, 11, 'prose'::public.block_type, NULL, 'A fragment link points at a specific place *within* a page. You give an element an `id`, then link to `#that-id`. Clicking it scrolls straight there.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'relative-and-absolute-paths';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'annotated_code'::public.block_type, 'Line by line', NULL,
+select id, 12, 'annotated_code'::public.block_type, 'Line by line', NULL,
        '<nav aria-label="On this page">
   <ul>
     <li><a href="#rates">Rates</a></li>
@@ -4893,15 +4946,25 @@ select id, 11, 'annotated_code'::public.block_type, 'Line by line', NULL,
 <p>Three waymarked loops from the door.</p>', 'html', NULL, '{"annotations":[{"line":"3","text":"`href=\"#rates\"` means \"the element on this page whose id is rates\"."},{"line":"8","text":"The matching `id=\"rates\"`. Ids must be unique on a page — two elements can never share one."},{"line":"1","text":"Giving the `<nav>` an `aria-label` distinguishes it from the site''s main navigation for screen-reader users. Level 8 covers this properly."}]}'::jsonb
 from public.lessons where slug = 'relative-and-absolute-paths';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'progressive_detail'::public.block_type, 'Linking to a section on another page', 'Combine a path with a fragment: `<a href="prices.html#day-rates">Day rates</a>` loads prices.html and jumps to the element with `id="day-rates"`. This works with relative paths and absolute URLs alike. The `#top` fragment, and an empty `href="#"`, both scroll to the top of the current page — though `href="#"` on a real link is usually a sign that something is missing.',
+select id, 13, 'progressive_detail'::public.block_type, 'Linking to a section on another page', 'Combine a path with a fragment: `<a href="prices.html#day-rates">Day rates</a>` loads prices.html and jumps to the element with `id="day-rates"`. This works with relative paths and absolute URLs alike. The `#top` fragment, and an empty `href="#"`, both scroll to the top of the current page — though `href="#"` on a real link is usually a sign that something is missing.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'relative-and-absolute-paths';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'checklist'::public.block_type, 'Path rules to remember', NULL,
+select id, 14, 'predict_check'::public.block_type, 'Predict, then check', 'Two headings have been given the same `id`, which is not allowed. Before you run it: does the link fail, jump to the first heading, or jump to the second?',
+       '<h2 id="rates">Rates</h2>
+<p>From £6 an hour.</p>
+
+<h2 id="rates">Off-peak rates</h2>
+<p>From £4 an hour after 4pm.</p>
+
+<p><a href="#rates">Jump to rates</a></p>', 'html', NULL, '{"outcome":"It jumps to the *first* one, silently. Nothing warns you, and the second `id=\"rates\"` is simply unreachable — no link can ever reach it. Duplicate ids are one of the few HTML mistakes with no visible symptom at all, which is exactly why the checker in this course looks for them."}'::jsonb
+from public.lessons where slug = 'relative-and-absolute-paths';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 15, 'checklist'::public.block_type, 'Path rules to remember', NULL,
        NULL, NULL, NULL, '{"items":["No slash at the start = start from where I am","`../` = go up one folder","Leading `/` = start from the site root","`#name` = an element with `id=\"name\"` on this page","Folder and file names: lowercase, hyphens, no spaces"]}'::jsonb
 from public.lessons where slug = 'relative-and-absolute-paths';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 16, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Relative paths start from the current file; `../` moves up a folder.","A leading slash starts at the site root and usually breaks local file browsing.","Absolute URLs are for other people''s sites, not your own pages.","Fragment links (`#id`) jump to a specific element, whose id must be unique."],"nextUp":"Next: email, telephone and download links."}'::jsonb
 from public.lessons where slug = 'relative-and-absolute-paths';
 
@@ -5166,7 +5229,11 @@ select id, 7, 'progressive_detail'::public.block_type, 'Does the download attrib
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'special-links';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 8, 'interactive_demo'::public.block_type, 'Three protocols, three behaviours', 'The scheme at the start of the href decides what happens on click.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Email","code":"<a href=\"mailto:hello@example.org?subject=Workshop%20booking\">Email the bakery</a>","note":"Opens the visitor''s mail client with the address, and here the subject, already filled in. Note the encoded space."},{"label":"Telephone","code":"<a href=\"tel:+441632960123\">Call 01632 960123</a>","note":"Dials on a phone and is often ignored on a desktop — so the readable number belongs in the link text, not only in the href."},{"label":"Download","code":"<a href=\"/menu.pdf\" download=\"riverside-menu.pdf\">Download the menu (PDF, 240KB)</a>","note":"Saves rather than navigates, under the name you supply. Telling the reader the format and size before they click is basic courtesy."}]}'::jsonb
+from public.lessons where slug = 'special-links';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`mailto:` opens an email client; show the real address as the link text.","`tel:` should always use full international format with a `+`.","`download=\"filename\"` saves the file and suggests a better name.","Always state the file type and size in the link text."],"nextUp":"Next: assembling links into navigation."}'::jsonb
 from public.lessons where slug = 'special-links';
 
@@ -5375,7 +5442,11 @@ select id, 12, 'checklist'::public.block_type, 'Every page in your site should h
        NULL, NULL, NULL, '{"items":["A skip link as the first focusable element","The same `<nav>` in the same place, with the same links","`aria-current=\"page\"` on the link to the current page","A breadcrumb trail on pages more than one level deep","A `<main>` element with an `id` the skip link targets"]}'::jsonb
 from public.lessons where slug = 'navigation-menus';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 13, 'interactive_demo'::public.block_type, 'Marking where the visitor already is', 'Three navs. Only one is useful to somebody who cannot see the styling.',
+       NULL, NULL, NULL, '{"variants":[{"label":"aria-current","code":"<nav aria-label=\"Main\">\n  <ul>\n    <li><a href=\"index.html\">Home</a></li>\n    <li><a href=\"menu.html\" aria-current=\"page\">Menu</a></li>\n  </ul>\n</nav>","note":"Announced as \"Menu, current page\". The information reaches everybody."},{"label":"A class only","code":"<nav aria-label=\"Main\">\n  <ul>\n    <li><a href=\"index.html\">Home</a></li>\n    <li><a href=\"menu.html\" class=\"active\">Menu</a></li>\n  </ul>\n</nav>","note":"Visually obvious, completely silent. A class name means nothing to assistive technology."},{"label":"Two unlabelled navs","code":"<nav>\n  <ul><li><a href=\"index.html\">Home</a></li></ul>\n</nav>\n<nav>\n  <ul><li><a href=\"terms.html\">Terms</a></li></ul>\n</nav>","note":"Both announce as just \"navigation\", so a user listing the landmarks cannot tell the main menu from the footer links."}]}'::jsonb
+from public.lessons where slug = 'navigation-menus';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Navigation is a list of links inside `<nav>`; name each nav with `aria-label`.","`aria-current=\"page\"` marks where the visitor already is.","Breadcrumbs are an ordered list, because the order is the meaning.","A skip link must be the first focusable element and must become visible on focus."],"nextUp":"Next: organising the files themselves."}'::jsonb
 from public.lessons where slug = 'navigation-menus';
 
@@ -5677,7 +5748,11 @@ select id, 6, 'prose'::public.block_type, NULL, 'The navigation block itself is 
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'multi-page-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 7, 'interactive_demo'::public.block_type, 'A nav that works across every page', 'The same markup on three pages, with one attribute moving.',
+       NULL, NULL, NULL, '{"variants":[{"label":"On index.html","code":"<nav aria-label=\"Main\">\n  <ul>\n    <li><a href=\"index.html\" aria-current=\"page\">Home</a></li>\n    <li><a href=\"about.html\">About</a></li>\n  </ul>\n</nav>","note":"aria-current sits on Home. Everything else is identical to every other page."},{"label":"On about.html","code":"<nav aria-label=\"Main\">\n  <ul>\n    <li><a href=\"index.html\">Home</a></li>\n    <li><a href=\"about.html\" aria-current=\"page\">About</a></li>\n  </ul>\n</nav>","note":"The one attribute moves. This is the detail most often forgotten when copying a shell between pages."}]}'::jsonb
+from public.lessons where slug = 'multi-page-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Decide your folder structure before you write the files.","Lowercase, hyphenated, descriptive filenames.","Navigation stays identical; only the paths change with depth.","Every internal link must resolve — check them all."],"nextUp":"Level 4 next: images, video and audio."}'::jsonb
 from public.lessons where slug = 'multi-page-milestone';
 
@@ -6422,7 +6497,12 @@ select id, 11, 'progressive_detail'::public.block_type, 'When the caption alread
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'writing-alt-text';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 12, 'media_example'::public.block_type, 'The decorative case, in full', 'A neutral graphic carrying no information. The correct alt text is empty — present, but with nothing in it — so assistive technology skips it instead of announcing a filename.',
+       '<img src="/learning-media/svg/placeholder.svg" alt=""
+     width="600" height="400">', 'html', 'placeholder', '{}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Ask: what would I say if I were reading this page aloud?","Informative images need descriptive alt; decorative images take `alt=\"\"`.","`alt=\"\"` and a missing `alt` are not the same — always include the attribute.","Captions and alt text serve different audiences and should not duplicate each other."],"nextUp":"Next: serving the right image for the screen."}'::jsonb
 from public.lessons where slug = 'writing-alt-text';
 
@@ -6674,7 +6754,21 @@ select id, 8, 'callout'::public.block_type, 'The media library already has the s
        NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
 from public.lessons where slug = 'srcset-and-sizes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 9, 'interactive_demo'::public.block_type, 'One image, three requests', 'What the browser actually downloads depends on what you told it.',
+       NULL, NULL, NULL, '{"variants":[{"label":"With srcset and sizes","code":"<img src=\"/learning-media/images/coast-sunrise.jpg\"\n     srcset=\"/learning-media/images/coast-sunrise-800.jpg 800w,\n             /learning-media/images/coast-sunrise-1200.jpg 1200w,\n             /learning-media/images/coast-sunrise.jpg 1600w\"\n     sizes=\"(max-width: 700px) 100vw, 700px\"\n     alt=\"Sunrise over a calm sea\" width=\"1600\" height=\"900\">","note":"A phone fetches the 800-wide file. A wide screen fetches the largest. Nobody downloads more than they can display."},{"label":"srcset with no sizes","code":"<img src=\"/learning-media/images/coast-sunrise.jpg\"\n     srcset=\"/learning-media/images/coast-sunrise-800.jpg 800w,\n             /learning-media/images/coast-sunrise.jpg 1600w\"\n     alt=\"Sunrise over a calm sea\" width=\"1600\" height=\"900\">","note":"Without sizes the browser assumes the image spans the full viewport width, and usually fetches larger than it needs."},{"label":"A single large file","code":"<img src=\"/learning-media/images/coast-sunrise.jpg\"\n     alt=\"Sunrise over a calm sea\" width=\"1600\" height=\"900\">","note":"Everyone downloads the full-size file, including a phone that will display it 400 pixels wide."}]}'::jsonb
+from public.lessons where slug = 'srcset-and-sizes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'media_example'::public.block_type, 'What responsive actually looks like', 'A layout reflowing from three columns to one as the viewport narrows. `srcset` is the image half of this: the same page asking for a different file at each of those widths.',
+       '<video controls preload="metadata"
+       poster="/learning-media/posters/responsive-layout.jpg"
+       width="1280" height="720">
+  <source src="/learning-media/video/responsive-layout.mp4" type="video/mp4">
+  <p>Your browser cannot play this video.
+     <a href="/learning-media/video/responsive-layout.mp4">Download the MP4</a>.</p>
+</video>', 'html', 'responsive-layout', '{}'::jsonb
+from public.lessons where slug = 'srcset-and-sizes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`srcset` offers candidate files with `w` descriptors giving each file''s real width.","`sizes` tells the browser how wide the image will display, before layout is known.","`src` remains as the fallback for browsers that do not understand `srcset`.","The browser makes the final choice, using information you do not have."],"nextUp":"Next: art direction and modern formats with `<picture>`."}'::jsonb
 from public.lessons where slug = 'srcset-and-sizes';
 
@@ -6908,7 +7002,20 @@ select id, 11, 'progressive_detail'::public.block_type, 'Why does lazy loading a
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'picture-and-formats';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 12, 'interactive_demo'::public.block_type, 'Choosing a format, and the fallback that must be there', 'The browser takes the first source it understands.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Modern format with a fallback","code":"<picture>\n  <source srcset=\"/learning-media/images/city-dusk.webp\" type=\"image/webp\">\n  <img src=\"/learning-media/images/city-dusk.jpg\"\n       alt=\"A city skyline at dusk with hundreds of lit office windows\"\n       width=\"1600\" height=\"900\">\n</picture>","note":"A browser that understands WebP takes it; anything else falls through to the JPEG. The <img> is what actually renders."},{"label":"Art direction","code":"<picture>\n  <source media=\"(max-width: 600px)\" srcset=\"/learning-media/images/city-dusk-800.jpg\">\n  <img src=\"/learning-media/images/city-dusk.jpg\"\n       alt=\"A city skyline at dusk with hundreds of lit office windows\"\n       width=\"1600\" height=\"900\">\n</picture>","note":"Here the choice is by viewport, not format — a differently cropped image on narrow screens. That is what <picture> is for; plain srcset cannot do it."},{"label":"No img fallback","code":"<picture>\n  <source srcset=\"/learning-media/images/city-dusk.webp\" type=\"image/webp\">\n</picture>","note":"Nothing renders at all. The <img> inside <picture> is not optional — it is the element that displays, and the sources merely redirect it."}]}'::jsonb
+from public.lessons where slug = 'picture-and-formats';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'media_example'::public.block_type, 'One photograph, several possible files', 'A detailed night scene is exactly where format matters: gradients and noise make it large as a JPEG, and markedly smaller in a modern format. `<picture>` is how you offer both without excluding anyone.',
+       '<picture>
+  <source srcset="/learning-media/images/city-dusk.jpg" type="image/jpeg">
+  <img src="/learning-media/images/city-dusk.jpg"
+       alt="A city skyline at dusk with hundreds of lit office windows"
+       width="1600" height="900" loading="lazy" decoding="async">
+</picture>', 'html', 'city-dusk', '{}'::jsonb
+from public.lessons where slug = 'picture-and-formats';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<picture>` chooses between genuinely different files; `srcset` chooses between sizes.","The `<img>` inside `<picture>` is required and carries the alt text.","`loading=\"lazy\"` for images below the fold; never for the hero image.","`fetchpriority=\"high\"` marks the one image that matters most."],"nextUp":"Next: video and audio."}'::jsonb
 from public.lessons where slug = 'picture-and-formats';
 
@@ -7221,7 +7328,27 @@ select id, 9, 'checklist'::public.block_type, 'Every video you publish', NULL,
        NULL, NULL, NULL, '{"items":["`controls`, always","A `poster` image","At least one `<source>`, ideally WebM and MP4","A `<track kind=\"captions\">` with a real caption file","Fallback content with a download link","`width` and `height` to reserve space","No autoplay — or if truly necessary, `muted` and still with controls"]}'::jsonb
 from public.lessons where slug = 'video-and-audio';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 10, 'media_example'::public.block_type, 'A three-second clip, with controls', 'Press play. `controls` is what makes this operable at all — without it nothing renders and nothing is focusable, so only a script could ever start it.',
+       '<audio controls preload="none">
+  <source src="/learning-media/audio/welcome-chime.mp3" type="audio/mpeg">
+  <p>Your browser cannot play audio.
+     <a href="/learning-media/audio/welcome-chime.mp3">Download the file</a>.</p>
+</audio>', 'html', 'welcome-chime', '{}'::jsonb
+from public.lessons where slug = 'video-and-audio';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'media_example'::public.block_type, 'A longer clip, and why `preload` matters', 'Eight seconds of ambient tone. `preload="none"` means nothing is fetched until somebody presses play — the right default for any audio that is not the reason they came.',
+       '<audio controls preload="none">
+  <source src="/learning-media/audio/calm-loop.mp3" type="audio/mpeg">
+  <p>Your browser cannot play audio.
+     <a href="/learning-media/audio/calm-loop.mp3">Download the file</a>.</p>
+</audio>', 'html', 'calm-loop', '{}'::jsonb
+from public.lessons where slug = 'video-and-audio';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'interactive_demo'::public.block_type, 'What each attribute is holding up', 'Remove one thing at a time from a working player.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Complete","code":"<audio controls preload=\"none\">\n  <source src=\"/learning-media/audio/welcome-chime.mp3\" type=\"audio/mpeg\">\n  <p>Your browser cannot play audio. <a href=\"/learning-media/audio/welcome-chime.mp3\">Download the file</a>.</p>\n</audio>","note":"Operable by keyboard, nothing downloaded until asked for, and a working link for anyone whose browser cannot play the format."},{"label":"No controls","code":"<audio preload=\"none\">\n  <source src=\"/learning-media/audio/welcome-chime.mp3\" type=\"audio/mpeg\">\n</audio>","note":"Nothing renders and nothing is focusable. The audio exists on the page and no visitor can reach it."},{"label":"No fallback","code":"<audio controls preload=\"none\">\n  <source src=\"/learning-media/audio/welcome-chime.mp3\" type=\"audio/mpeg\">\n</audio>","note":"Fine until somebody arrives with a browser that cannot play MP3 — and then an empty player with no way through to the file."}]}'::jsonb
+from public.lessons where slug = 'video-and-audio';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<source>` elements let the browser choose a format it supports.","`controls` and a `poster` are effectively mandatory.","`<track kind=\"captions\">` is what makes video usable by deaf viewers.","Fallback content sits after the sources; make it a download link.","Autoplay with sound is harmful and is blocked by browsers."],"nextUp":"Next: embedding other people''s content safely."}'::jsonb
 from public.lessons where slug = 'video-and-audio';
 
@@ -7471,7 +7598,11 @@ select id, 7, 'checklist'::public.block_type, 'The media milestone page needs', 
        NULL, NULL, NULL, '{"items":["A responsive hero image with `srcset` and `sizes`","A `<figure>` with an image and a `<figcaption>`","A `<video>` with controls, a poster, two sources, captions and fallback content","One decorative image with `alt=\"\"`","Correct alt text on every informative image","Lazy loading on everything below the fold, but not on the hero","No broken media paths"]}'::jsonb
 from public.lessons where slug = 'iframes-and-media-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 8, 'interactive_demo'::public.block_type, 'An embed, configured and not', 'The four attributes every frame wants.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Configured","code":"<iframe src=\"https://example.org/map\" title=\"Map of the bakery location\" loading=\"lazy\" width=\"560\" height=\"315\"></iframe>","note":"Named so it can be navigated to, deferred so it costs nothing until scrolled to, and sized so the layout does not jump."},{"label":"Bare","code":"<iframe src=\"https://example.org/map\"></iframe>","note":"Announced as an unnamed frame, loaded immediately, and the page shifts when it resolves. Three faults in one line."}]}'::jsonb
+from public.lessons where slug = 'iframes-and-media-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["An `<iframe>` embeds a whole separate document; `title` is required.","`sandbox` removes capabilities; add back only what is needed.","`loading=\"lazy\"` matters even more for embeds than for images.","You can now build a complete, accessible, fast media page."],"nextUp":"Level 5 next: giving your pages professional structure."}'::jsonb
 from public.lessons where slug = 'iframes-and-media-milestone';
 
@@ -8055,7 +8186,11 @@ select id, 11, 'progressive_detail'::public.block_type, 'Do landmarks replace AR
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'semantic-vs-non-semantic';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 12, 'self_explain'::public.block_type, 'Explain it in your own words', 'A colleague says: "Both pages look identical in the browser, so semantic elements are just a style preference." Write your answer to them. Do not list the landmark elements — explain *who or what* is worse off with the div version, and why looking the same is not the same as being the same.',
+       NULL, NULL, NULL, '{"modelAnswer":"Looking identical is exactly the point: the difference is invisible to someone who can see the page, and decisive for everything that cannot. A screen-reader user can jump straight to `main` or list the page''s regions; with divs there are no regions, so the only way through is to read from the top every time. Search engines, reader modes and browser translation all read the same structure. And a `<div class=\"header\">` tells the next developer nothing that the class name has not already promised — a promise nothing enforces. \"It looks the same\" is a statement about one way of using a page, by one kind of user, on one device."}'::jsonb
+from public.lessons where slug = 'semantic-vs-non-semantic';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Semantic elements name what their content is; `<div>` and `<span>` name nothing.","Landmarks let assistive technology jump straight to a region of the page.","Exactly one `<main>`, holding what is unique to this page.","Use `<div>` when no semantic element fits — but ask the question first."],"nextUp":"Next: sections, articles, and the ones people get wrong."}'::jsonb
 from public.lessons where slug = 'semantic-vs-non-semantic';
 
@@ -8581,7 +8716,15 @@ select id, 10, 'progressive_detail'::public.block_type, 'Avoiding unnecessary co
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'file-organisation-and-patterns';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 11, 'interactive_demo'::public.block_type, 'Where a file lives changes every path in it', 'The same link, written from three different places in the project.',
+       NULL, NULL, NULL, '{"variants":[{"label":"From index.html, at the top","code":"<a href=\"projects/first.html\">First project</a>\n<img src=\"images/logo.svg\" alt=\"Riverside Bakery\" width=\"200\" height=\"60\">","note":"Both targets are below the current file, so both paths simply step down into a folder."},{"label":"From projects/first.html","code":"<a href=\"../index.html\">Home</a>\n<img src=\"../images/logo.svg\" alt=\"Riverside Bakery\" width=\"200\" height=\"60\">","note":"One folder deep, so both need ../ first. Read it back as a sentence: up one, into images, take logo.svg."},{"label":"A leading slash","code":"<img src=\"/images/logo.svg\" alt=\"Riverside Bakery\" width=\"200\" height=\"60\">","note":"Means \"from the site root\". Correct on a server, broken when you open the file directly from your computer."}]}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'visual'::public.block_type, NULL, 'A project folder is a desk. Everything has a place, and you can find things without remembering where you put them.',
+       NULL, NULL, 'studio-desk', '{}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Lowercase, hyphenated filenames avoid an entire class of deployment bug.","Group assets by type under one folder.","Keep shared page furniture byte-for-byte identical.","Add a container only when it earns its place."],"nextUp":"Next: the Level 5 milestone rebuild."}'::jsonb
 from public.lessons where slug = 'file-organisation-and-patterns';
 
@@ -8713,7 +8856,11 @@ select id, 6, 'visual'::public.block_type, NULL, 'The structure you are rebuildi
        NULL, NULL, 'semantic-landmarks', '{}'::jsonb
 from public.lessons where slug = 'semantic-rebuild-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 7, 'interactive_demo'::public.block_type, 'Div soup and its replacement, side by side', 'Identical on screen. Not remotely identical to software.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Rebuilt","code":"<header><nav aria-label=\"Main\"><ul><li><a href=\"index.html\">Home</a></li></ul></nav></header>\n<main><h1>Prices</h1><p>From £6 an hour.</p></main>\n<footer><p>© 2026</p></footer>","note":"Four landmarks a screen-reader user can jump between, and a heading that describes the page."},{"label":"The original","code":"<div class=\"header\"><div class=\"nav\"><ul><li><a href=\"index.html\">Home</a></li></ul></div></div>\n<div class=\"main\"><div class=\"h1\">Prices</div><p>From £6 an hour.</p></div>\n<div class=\"footer\"><p>© 2026</p></div>","note":"No landmarks, no heading. The class names describe the intent perfectly and communicate it to nothing."}]}'::jsonb
+from public.lessons where slug = 'semantic-rebuild-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["You can now read an unstructured page and see the structure it should have had.","Landmarks first, then content elements, then headings.","This is the skill that most visibly separates professional markup from amateur markup."],"nextUp":"Level 6 next: tables and forms."}'::jsonb
 from public.lessons where slug = 'semantic-rebuild-milestone';
 
@@ -9593,7 +9740,11 @@ select id, 12, 'progressive_detail'::public.block_type, 'Why autocomplete is an 
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'labels-and-inputs';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 13, 'interactive_demo'::public.block_type, 'Three ways to label a field', 'Two of these work. One only looks like it does.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Label with for","code":"<label for=\"email\">Email address</label>\n<input type=\"email\" id=\"email\" name=\"email\" autocomplete=\"email\">","note":"The usual form. Announced as \"Email address, edit text\", and clicking the words focuses the field."},{"label":"Label wrapping the input","code":"<label>Email address\n  <input type=\"email\" name=\"email\" autocomplete=\"email\">\n</label>","note":"Also correct, and needs no id at all. Useful when you do not control the ids on the page."},{"label":"Placeholder only","code":"<input type=\"email\" name=\"email\" placeholder=\"Email address\">","note":"No accessible name at all, and the hint vanishes the moment typing starts — removing the only clue exactly when it is needed."}]}'::jsonb
+from public.lessons where slug = 'labels-and-inputs';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Every input needs a `<label for=\"…\">` matching its `id`.","`name` is what the value is submitted under — without it the field is not sent.","Placeholder text is a hint, never a label.","Choose `type` for the keyboard and the checking it brings; use `inputmode` where `number` would hurt.","`autocomplete` is a real accessibility feature, not just a convenience."],"nextUp":"Next: grouping, selects and buttons."}'::jsonb
 from public.lessons where slug = 'labels-and-inputs';
 
@@ -9884,7 +10035,11 @@ select id, 12, 'progressive_detail'::public.block_type, 'Button versus link', 'A
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'grouping-and-controls';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 13, 'interactive_demo'::public.block_type, 'A question, and a list of unrelated options', 'The difference is one wrapper.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Grouped","code":"<fieldset>\n  <legend>How should we contact you?</legend>\n  <input type=\"radio\" id=\"by-email\" name=\"contact\" value=\"email\">\n  <label for=\"by-email\">Email</label>\n  <input type=\"radio\" id=\"by-phone\" name=\"contact\" value=\"phone\">\n  <label for=\"by-phone\">Phone</label>\n</fieldset>","note":"The legend names the group, so the options are announced together with the question they answer."},{"label":"Ungrouped","code":"<p>How should we contact you?</p>\n<input type=\"radio\" id=\"by-email\" name=\"contact\" value=\"email\">\n<label for=\"by-email\">Email</label>\n<input type=\"radio\" id=\"by-phone\" name=\"contact\" value=\"phone\">\n<label for=\"by-phone\">Phone</label>","note":"The question is just a paragraph floating above. A user who jumps straight to the controls hears \"Email, radio button\" with no idea what is being asked."}]}'::jsonb
+from public.lessons where slug = 'grouping-and-controls';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<fieldset>` groups controls; `<legend>` labels the group and comes first.","A shared `name` creates a radio group, not the fieldset.","`value` is submitted; the label is for the human.","Always write `type` on a button, or it will submit the form.","Links navigate; buttons act."],"nextUp":"Next: validation attributes and the milestone form."}'::jsonb
 from public.lessons where slug = 'grouping-and-controls';
 
@@ -10172,7 +10327,15 @@ select id, 9, 'checklist'::public.block_type, 'The milestone form needs', NULL,
        NULL, NULL, NULL, '{"items":["`<form>` with an `action` and `method=\"post\"`","Every control labelled with `<label for=\"…\">`","A `<fieldset>` with a `<legend>` around at least one group","At least four different input types","`required` on the fields that genuinely are","`autocomplete` on every personal-detail field","A hint connected with `aria-describedby`","A `<textarea>` for a message","A submit button with an explicit `type`"]}'::jsonb
 from public.lessons where slug = 'validation-and-form-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 10, 'interactive_demo'::public.block_type, 'Client-side validation, and what it is worth', 'The same field, three ways of asking.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Typed and required","code":"<label for=\"email\">Email address</label>\n<input type=\"email\" id=\"email\" name=\"email\" autocomplete=\"email\" required>","note":"The right keyboard on a phone, browser-level checking, autofill, and a real label. All of it helps honest users and stops nobody else."},{"label":"Untyped","code":"<label for=\"email\">Email address</label>\n<input type=\"text\" id=\"email\" name=\"email\">","note":"Works, but gives up the mobile keyboard, the built-in check and the autofill hint for no gain."},{"label":"Pattern with no hint","code":"<label for=\"postcode\">Postcode</label>\n<input type=\"text\" id=\"postcode\" name=\"postcode\" pattern=\"[A-Z]{1,2}[0-9]{1,2} ?[0-9][A-Z]{2}\" required>","note":"Rejects valid-looking input with no explanation of the rule. A pattern always needs a visible description of what it wants."}]}'::jsonb
+from public.lessons where slug = 'validation-and-form-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'recall'::public.block_type, 'Four levels back', 'Before you build the form, reach back four levels. From memory, and without scrolling: what does each of these give you, and what breaks without it?',
+       NULL, NULL, NULL, '{"points":["Level 1 — the document skeleton: doctype, `<html lang>`, `<head>` with a charset and title, `<body>`. Without the charset, accented characters and currency symbols break.","Level 2 — headings describe structure, not size. A skipped level leaves a gap in the outline a screen-reader user navigates by.","Level 3 — link text has to make sense read on its own, because links are commonly listed with the surrounding sentence removed.","Level 5 — landmarks let assistive technology jump to a region. Exactly one `<main>`, holding what is unique to this page."]}'::jsonb
+from public.lessons where slug = 'validation-and-form-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Native validation attributes catch most honest mistakes for free.","`pattern` always needs a visible, connected hint.","GET for reading, POST for anything that changes or is private.","The server must revalidate everything. HTML secures nothing."],"nextUp":"Level 7 next: native interactive elements."}'::jsonb
 from public.lessons where slug = 'validation-and-form-milestone';
 
@@ -11043,7 +11206,11 @@ select id, 11, 'progressive_detail'::public.block_type, 'Browser support, and ho
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'dialog-and-popover';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 12, 'interactive_demo'::public.block_type, 'Native disclosure versus a hand-built one', 'The same control, with and without the browser doing the work.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Native details","code":"<details>\n  <summary>Opening hours</summary>\n  <p>Tuesday to Sunday, 8am to 6pm.</p>\n</details>","note":"Focusable, keyboard-operable, and its expanded state is maintained by the browser — so it can never fall out of step with what is on screen."},{"label":"Hand-built, state maintained","code":"<button type=\"button\" aria-expanded=\"false\" aria-controls=\"hours\">Opening hours</button>\n<div id=\"hours\" hidden>\n  <p>Tuesday to Sunday, 8am to 6pm.</p>\n</div>","note":"Correct as written — but only stays correct if the script updates aria-expanded on every toggle, forever."},{"label":"Hand-built, state forgotten","code":"<div class=\"toggle\">Opening hours</div>\n<div id=\"hours\" hidden>\n  <p>Tuesday to Sunday, 8am to 6pm.</p>\n</div>","note":"Not focusable, no role, no state. Sighted mouse users see a working control; nobody else has one at all."}]}'::jsonb
+from public.lessons where slug = 'dialog-and-popover';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<dialog>` gives focus trapping, Escape-to-close and inert background — but opening it needs one line of JavaScript.","`<form method=\"dialog\">` closes a dialog with no scripting.","The `popover` attribute needs no JavaScript at all, on either side.","Never make an overlay the only place essential content exists."],"nextUp":"Next: progress, meter, datalist and output."}'::jsonb
 from public.lessons where slug = 'dialog-and-popover';
 
@@ -11264,7 +11431,11 @@ select id, 7, 'checklist'::public.block_type, 'The Level 7 milestone page needs'
        NULL, NULL, NULL, '{"items":["An FAQ accordion of at least three `<details>` sharing a `name`","A `<dialog>` with a heading and a `<form method=\"dialog\">` close button","A popover with a trigger button and a close button","A `<progress>` element with a label","A `<meter>` element with a label","An input backed by a `<datalist>`","No `<script>` elements anywhere"]}'::jsonb
 from public.lessons where slug = 'progress-meter-datalist-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 8, 'interactive_demo'::public.block_type, 'Three elements people reach for JavaScript to build', 'All three are native, and all three come with keyboard and screen-reader support already.',
+       NULL, NULL, NULL, '{"variants":[{"label":"progress","code":"<label for=\"upload\">Upload</label>\n<progress id=\"upload\" value=\"70\" max=\"100\">70%</progress>","note":"A task in progress towards completion. The text inside is what older browsers show."},{"label":"meter","code":"<label for=\"stock\">In stock</label>\n<meter id=\"stock\" value=\"3\" min=\"0\" max=\"20\" low=\"5\" high=\"15\" optimum=\"20\">3 of 20</meter>","note":"A measurement within a known range — not progress. The low, high and optimum values let the browser signal whether the reading is good."},{"label":"datalist","code":"<label for=\"route\">Route</label>\n<input list=\"routes\" id=\"route\" name=\"route\">\n<datalist id=\"routes\">\n  <option value=\"Riverside loop\">\n  <option value=\"Hill circuit\">\n</datalist>","note":"Suggestions that do not restrict the answer — unlike a select, the visitor may still type something else entirely."}]}'::jsonb
+from public.lessons where slug = 'progress-meter-datalist-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<progress>` for tasks advancing; `<meter>` for gauge readings.","`<datalist>` suggests values without restricting them.","`<output>` announces calculated results to screen readers.","Everything in this level works without a line of JavaScript."],"nextUp":"Level 8 next: accessibility in depth."}'::jsonb
 from public.lessons where slug = 'progress-meter-datalist-milestone';
 
@@ -11989,11 +12160,11 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'onclick only works on buttons', false, NULL
 from public.quiz_questions where slug = 'q-div-button';
 
--- lesson: ARIA fundamentals
+-- lesson: Keyboard operability and focus
 insert into public.lessons
   (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'aria-fundamentals', 2, 'ARIA fundamentals', 'A small, useful set — and the rule that matters most', 'ARIA can make a page more accessible or considerably less. The first rule of ARIA is not to use it.',
-       ARRAY['State the first rule of ARIA', 'Use aria-label, aria-labelledby, aria-describedby and aria-current correctly', 'Explain what a live region is and when to use one']::text[], 15, 40, (select id from public.skills where slug = 'aria'), 0.7
+select m.id, 'keyboard-and-focus-management', 2, 'Keyboard operability and focus', 'The test you can run on anything, and the three ways people break it', 'If it cannot be done with a keyboard, it cannot be done by a large number of people. This is the single highest-value habit in the level.',
+       ARRAY['Name the elements that are focusable without any extra work', 'Use tabindex correctly — and know why positive values are a bug', 'Add a skip link that actually works']::text[], 16, 40, (select id from public.skills where slug = 'accessibility'), 0.7
 from public.modules m where m.slug = 'accessibility-foundations'
 on conflict (slug) do update set
   module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
@@ -12001,23 +12172,648 @@ on conflict (slug) do update set
   estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
   primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A developer makes a clickable card by putting a click handler on a `<div>`. Who, apart from screen-reader users, is locked out?',
+       NULL, NULL, NULL, '{"options":["Anyone not using a mouse — keyboard, voice control, switch devices","Nobody else — it is only a screen-reader problem","Only people on a phone","Only people who have turned JavaScript off"],"answer":"Far more people than most developers expect. A `<div>` is not focusable, so it cannot be reached with Tab, cannot be activated with Enter or Space, and is invisible to voice control asking to \"click the card\". That locks out people using switch devices or voice control, anyone whose trackpad has died, and anyone who simply prefers the keyboard. Screen-reader users are a minority of the people this breaks."}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["List the elements that are keyboard-focusable by default","Apply `tabindex=\"0\"` and `tabindex=\"-1\"` correctly","Write a skip link whose target can actually take focus"]}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, NULL, 'Keyboard access is not an accessibility extra. It is the substrate almost every assistive technology sits on: switch devices, voice control and screen readers all drive the page through the same focus model you use when you press Tab. Get the keyboard right and most of the rest follows.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'term'::public.block_type, 'Focusable', 'An element the browser will move focus to. Links *with an href*, buttons, form controls, `<summary>`, `<iframe>` and anything carrying a `tabindex` are focusable. Almost nothing else is.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'term'::public.block_type, 'Tab order', 'The sequence Tab moves through. By default it is exactly the order elements appear in your source — which is one more reason source order matters.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'code_example'::public.block_type, 'What the browser gives you free', NULL,
+       'Focusable with no extra work:
+  <a href="...">        a link — but only if it has an href
+  <button>              always
+  <input> <select>      every form control
+  <textarea>
+  <summary>             the toggle of a <details>
+  <iframe>              the embed itself
+  <audio controls>      and <video controls>
+
+Not focusable, ever, without help:
+  <div> <span> <p>      no matter what handlers you attach', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'callout'::public.block_type, 'An anchor without an href is not a link', 'Writing `<a>Menu</a>` or `<a href="#">Menu</a>` is a common way to fake a button. The first is not focusable at all; the second is focusable but announced as a link that goes nowhere. If it performs an action rather than navigating, it is a `<button>`.',
+       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'interactive_demo'::public.block_type, 'The same card, three ways', 'Tab through each one and notice what you can reach.',
+       NULL, NULL, NULL, '{"variants":[{"label":"A real link","code":"<article><h2><a href=\"article.html\">How we bake</a></h2><p>Fifteen hours, start to finish.</p></article>","note":"Focusable, announced as a link, activated with Enter, findable by voice control. Nothing extra required."},{"label":"A real button","code":"<article><h2>How we bake</h2><p>Fifteen hours, start to finish.</p><button type=\"button\">Read more</button></article>","note":"Correct when it performs an action rather than navigating. Enter and Space both activate it."},{"label":"A div pretending","code":"<article><h2>How we bake</h2><p>Fifteen hours, start to finish.</p><div class=\"btn\">Read more</div></article>","note":"Tab skips straight past it. There is no way to reach or activate it without a mouse — and no amount of styling fixes that."}]}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'prose'::public.block_type, NULL, '`tabindex` has exactly two values worth using, and one that is almost always a mistake.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'annotated_code'::public.block_type, 'Line by line', NULL,
+       '<div tabindex="0">Now reachable by Tab</div>
+<h2 tabindex="-1" id="results">Focusable by script only</h2>
+<button tabindex="3">Please do not</button>', 'html', NULL, '{"annotations":[{"line":"1","text":"`tabindex=\"0\"` puts an element into the natural tab order, at its source position. Use it when you have genuinely built a custom control — and remember it makes the element *focusable*, not *operable*: you still owe it a role and keyboard handling."},{"line":"2","text":"`tabindex=\"-1\"` makes an element focusable by script, while Tab skips it. This is the right tool for something you want to move focus *to* after an action — a results heading, for instance."},{"line":"3","text":"A positive `tabindex` jumps the queue, moving this button ahead of everything with `tabindex=\"0\"` or no tabindex at all. It creates an order nobody can predict and which breaks as soon as the page changes. Treat any positive value as a bug."}]}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'predict_check'::public.block_type, 'Predict, then check', 'A skip link sits first in the source and points at the `id` of `<main>`. Before you run it: what has to be true of the target for *focus* — not merely the scroll position — to move there?',
+       '<a href="#main-content">Skip to main content</a>
+<nav aria-label="Main">
+  <a href="index.html">Home</a>
+  <a href="menu.html">Menu</a>
+</nav>
+<main id="main-content">
+  <h1>Today''s bakes</h1>
+</main>', 'html', NULL, '{"outcome":"The target has to be focusable. Browsers have improved here and most now move focus to the target of a fragment link even when it is not focusable, but the behaviour has historically been inconsistent — and the reliable fix is `tabindex=\"-1\"` on the target. That makes it focusable by fragment navigation and by script while keeping it out of the Tab order. Without it, on some browsers the page scrolls and focus stays on the skip link, so the next Tab press drops the user straight back into the navigation they were trying to skip."}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'callout'::public.block_type, 'A skip link must become visible when focused', 'The usual pattern positions the link off-screen and brings it back on focus. That part is CSS, so it is outside this course — but the markup half is yours, and a skip link hidden with `display: none` is not focusable at all. Never hide one that way.',
+       NULL, NULL, NULL, '{"tone":"accessibility"}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'progressive_detail'::public.block_type, 'Focus traps, and the one place you want one', 'A focus trap is when Tab cannot escape a region. Usually it is a bug — a custom menu that swallows focus and never gives it back. In exactly one case it is correct: a modal dialog, where focus *should* stay inside until the dialog is dismissed. The native `<dialog>` opened as a modal does this for you, along with Escape to close and returning focus to whatever opened it. Building it by hand means reimplementing all three, and most hand-built versions get at least one of them wrong.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'checklist'::public.block_type, 'The two-minute keyboard test', NULL,
+       NULL, NULL, NULL, '{"items":["Can you reach every interactive thing with Tab?","Can you always see where focus is?","Does the order follow the visual layout?","Can you get out of everything you can get into?","Does Enter activate links, and Enter *and* Space activate buttons?","Does the skip link appear when focused, and land somewhere useful?"]}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Links with an `href`, buttons, form controls, `<summary>` and `<iframe>` are focusable for free; `<div>` and `<span>` never are.","Tab order follows source order, which makes source order an accessibility decision.","`tabindex=\"0\"` adds to the natural order, `tabindex=\"-1\"` allows script focus, positive values are a bug.","A skip link needs a target that can take focus, which in practice means `tabindex=\"-1\"` on it."],"nextUp":"Next: where an accessible name actually comes from."}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 16, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Which elements are focusable without a tabindex? Name at least four.","What do `tabindex=\"0\"` and `tabindex=\"-1\"` each do, and why is `tabindex=\"3\"` a bug?","What has to be true of a skip link''s target?"],"points":["Links *with an href*, `<button>`, `<input>`, `<select>`, `<textarea>`, `<summary>`, `<iframe>`, and media carrying `controls`.","`0` puts it in the natural order at its source position. `-1` makes it focusable by script while Tab skips it. A positive value jumps the queue, producing an order nobody can predict and which breaks whenever the page changes.","It has to be able to take focus — give it `tabindex=\"-1\"` — and it must not be hidden with `display: none`, which would stop the link working at all."]}'::jsonb
+from public.lessons where slug = 'keyboard-and-focus-management';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'keyboard-skip-link-guided', 1, 'guided'::public.exercise_kind, 'Add a working skip link',
+       'This page puts navigation before its content, so a keyboard user must Tab through every menu item on every page. Add a skip link as the very first element, pointing at the `<main>`, and give the `<main>` an `id` and `tabindex="-1"` so focus can actually land there.', '<nav aria-label="Main">
+  <a href="index.html">Home</a>
+  <a href="menu.html">Menu</a>
+  <a href="contact.html">Contact</a>
+</nav>
+<main>
+  <h1>Today''s bakes</h1>
+  <p>Sourdough, rye and a seeded loaf.</p>
+</main>', '<a href="#main-content">Skip to main content</a>
+<nav aria-label="Main">
+  <a href="index.html">Home</a>
+  <a href="menu.html">Menu</a>
+  <a href="contact.html">Contact</a>
+</nav>
+<main id="main-content" tabindex="-1">
+  <h1>Today''s bakes</h1>
+  <p>Sourdough, rye and a seeded loaf.</p>
+</main>', ARRAY['A skip link is an ordinary anchor whose href is a fragment, beginning with #.', 'Give the main element an id, then point the link at #that-id.', 'Add tabindex="-1" to the main so focus can move there without adding it to the Tab order.']::text[],
+       40, 2,
+       (select id from public.skills where slug = 'accessibility'), false
+from public.lessons l where l.slug = 'keyboard-and-focus-management'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'unique_element'::public.requirement_kind, 'main', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is exactly one <main>', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-skip-link-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'attribute_present'::public.requirement_kind, 'main', 'id',
+       NULL, NULL, NULL, NULL,
+       'The <main> has an id so it can be targeted', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-skip-link-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'attribute_value'::public.requirement_kind, 'main', 'tabindex',
+       '-1', NULL, NULL, NULL,
+       'The <main> has tabindex="-1" so focus can land on it', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-skip-link-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'attribute_matches'::public.requirement_kind, 'a', 'href',
+       '^#', NULL, NULL, NULL,
+       'A fragment link points somewhere within the page', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-skip-link-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'text_not_empty'::public.requirement_kind, 'a', NULL,
+       NULL, NULL, NULL, NULL,
+       'The skip link has visible text', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-skip-link-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true
+from public.exercises e where e.slug = 'keyboard-skip-link-guided';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'keyboard-operability-debug', 2, 'debug'::public.exercise_kind, 'Three things a keyboard cannot reach',
+       'This page looks fine and is unusable without a mouse. Three faults: an anchor with no destination, a `<div>` acting as a button, and a positive `tabindex`. Fix all three by using the correct elements.', '<nav aria-label="Main">
+  <a>Home</a>
+  <a href="menu.html" tabindex="2">Menu</a>
+</nav>
+<main>
+  <h1>Book a table</h1>
+  <div class="button">Book now</div>
+</main>', '<nav aria-label="Main">
+  <a href="index.html">Home</a>
+  <a href="menu.html">Menu</a>
+</nav>
+<main>
+  <h1>Book a table</h1>
+  <button type="button">Book now</button>
+</main>', ARRAY['An anchor is only focusable when it has an href.', 'Something that performs an action is a <button>, not a <div>.', 'Remove the positive tabindex entirely — the source order is already correct.']::text[],
+       45, 3,
+       (select id from public.skills where slug = 'accessibility'), false
+from public.lessons l where l.slug = 'keyboard-and-focus-management'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_count'::public.requirement_kind, 'a:not([href])', NULL,
+       NULL, NULL, 0, 0,
+       'Every anchor has an href', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-operability-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'element_present'::public.requirement_kind, 'button', NULL,
+       NULL, NULL, NULL, NULL,
+       'The action uses a real <button>', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-operability-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'element_count'::public.requirement_kind, 'div.button', NULL,
+       NULL, NULL, 0, 0,
+       'No <div> is pretending to be a button', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-operability-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'element_count'::public.requirement_kind, '[tabindex="1"], [tabindex="2"], [tabindex="3"]', NULL,
+       NULL, NULL, 0, 0,
+       'No positive tabindex values remain', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-operability-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'unique_element'::public.requirement_kind, 'main', NULL,
+       NULL, NULL, NULL, NULL,
+       'The page still has exactly one <main>', NULL, 1, true
+from public.exercises e where e.slug = 'keyboard-operability-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'keyboard-and-focus-management'), NULL, 'q-focusable-defaults', 1, 'single'::public.question_kind,
+        'Which of these is focusable with no `tabindex` at all?', 'An anchor is focusable only when it has an href. Generic containers never are, whatever handlers you attach to them.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`<a>About</a>`', false, NULL
+from public.quiz_questions where slug = 'q-focusable-defaults';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`<div class="link">About</div>`', false, NULL
+from public.quiz_questions where slug = 'q-focusable-defaults';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`<span class="link">About</span>`', false, NULL
+from public.quiz_questions where slug = 'q-focusable-defaults';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`<a href="about.html">About</a>`', true, NULL
+from public.quiz_questions where slug = 'q-focusable-defaults';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'keyboard-and-focus-management'), NULL, 'q-tabindex-negative', 2, 'single'::public.question_kind,
+        'What does `tabindex="-1"` do?', 'It makes an element focusable by script or by a fragment link, while keeping it out of the Tab sequence.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Removes it from the accessibility tree', false, NULL
+from public.quiz_questions where slug = 'q-tabindex-negative';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Puts it last in the Tab order', false, NULL
+from public.quiz_questions where slug = 'q-tabindex-negative';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Hides it from screen readers', false, NULL
+from public.quiz_questions where slug = 'q-tabindex-negative';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Makes it focusable by script, but skipped by Tab', true, NULL
+from public.quiz_questions where slug = 'q-tabindex-negative';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'keyboard-and-focus-management'), NULL, 'q-positive-tabindex', 3, 'single'::public.question_kind,
+        'Why is a positive `tabindex` such as `tabindex="5"` treated as a bug?', 'It jumps ahead of everything in the natural order, creating a sequence nobody can predict and which breaks whenever the page changes.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It is ignored by every modern browser', false, NULL
+from public.quiz_questions where slug = 'q-positive-tabindex';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It removes the element from the accessibility tree', false, NULL
+from public.quiz_questions where slug = 'q-positive-tabindex';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It only works when JavaScript is enabled', false, NULL
+from public.quiz_questions where slug = 'q-positive-tabindex';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It jumps the queue, creating an unpredictable and fragile order', true, NULL
+from public.quiz_questions where slug = 'q-positive-tabindex';
+
+-- lesson: Accessible names
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'accessible-names-in-depth', 3, 'Accessible names', 'Where the words a screen reader says actually come from', 'Every control is announced by something. Knowing which something, and in what order, is what separates a page that reads well from one that reads as "link, link, button, link".',
+       ARRAY['State the order a browser uses to work out an accessible name', 'Write link text that makes sense read out of context', 'Choose the right alt text for informative, decorative and functional images']::text[], 16, 40, (select id from public.skills where slug = 'accessibility'), 0.7
+from public.modules m where m.slug = 'accessibility-foundations'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A screen-reader user asks for a list of every link on the page. Nine of them say "Read more". What has gone wrong?',
+       NULL, NULL, NULL, '{"options":["Link text is announced without its surrounding paragraph, so nine links are indistinguishable","Nothing — the surrounding text is read out with each link","The links need a `title` attribute as well","Screen readers cannot list links, so it does not matter"],"answer":"Listing links is one of the most common ways screen-reader users navigate, and the list contains the link *text alone* — the paragraph it sat in is gone. Nine identical \"Read more\" entries are nine destinations the user cannot tell apart. This is why link text has to make sense with everything around it removed."}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Explain how a browser computes an accessible name, in order","Write link text that works when read on its own","Decide between descriptive alt text and `alt=\"\"`"]}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, NULL, 'An accessible name is simply the words an element is announced by. Almost every accessibility bug you will meet is really a naming bug: a control with no name, the wrong name, or a name that only makes sense if you can see the rest of the page.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'visual'::public.block_type, NULL, 'Names, roles and states are what assistive technology actually receives.',
+       NULL, NULL, 'accessibility-tree', '{}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'code_example'::public.block_type, 'How a name is worked out', NULL,
+       'The browser works down this list and stops at the first one it finds:
+
+  1. aria-labelledby   points at other elements; their text becomes the name
+  2. aria-label        a string you supply directly
+  3. the native source  <label> for a field, alt for an image,
+                        <legend> for a fieldset, <caption> for a table,
+                        the element''s own text for a link or button
+  4. title             a last resort, and a poor one', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'callout'::public.block_type, 'Prefer the lowest number you can', 'That ordering looks like a ranking of quality, and it is — upside down. `aria-labelledby` and the native sources are best because they reuse text that is *already visible*, so the name and the screen can never disagree. `aria-label` replaces the visible text with something only some users get, which is why a mismatch there breaks voice control. `title` is unreliable on touch, invisible to keyboard users, and should be treated as a fallback you did not want.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'comparison'::public.block_type, 'Link text, read out of context', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"Works alone","code":"<h3>Sourdough workshop</h3>\n<p>Six hours, small groups.</p>\n<a href=\"sourdough.html\">Book the sourdough workshop</a>","why":"In a list of links it reads \"Book the sourdough workshop\" — unambiguous with the page removed."},"bad":{"label":"Meaningless alone","code":"<h3>Sourdough workshop</h3>\n<p>Six hours, small groups.</p>\n<a href=\"sourdough.html\">Read more</a>","why":"In a list of links it reads \"Read more\", identical to every other one on the page."}}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'interactive_demo'::public.block_type, 'Naming an icon-only button', 'Three attempts. Only one of them is announced usefully.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Named with aria-label","code":"<button type=\"button\" aria-label=\"Search\"><img src=\"/learning-media/icons/search.svg\" alt=\"\" width=\"24\" height=\"24\"></button>","note":"Announced as \"Search, button\". The icon takes alt=\"\" because the button already carries the name — describing both would say it twice."},{"label":"Named by the image","code":"<button type=\"button\"><img src=\"/learning-media/icons/search.svg\" alt=\"Search\" width=\"24\" height=\"24\"></button>","note":"Also correct. The button has no text of its own, so the image''s alt becomes the button''s name."},{"label":"Named by nothing","code":"<button type=\"button\"><img src=\"/learning-media/icons/search.svg\" alt=\"\" width=\"24\" height=\"24\"></button>","note":"Announced as just \"button\". The user is told there is a control and nothing about what it does."}]}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'prose'::public.block_type, NULL, 'Alt text is the same problem wearing different clothes. The question is never "what is in this picture" — it is "what would this image have told the reader, and how do I say that in words".',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'media_example'::public.block_type, 'The same photograph, three correct answers', 'Which alt text is right depends entirely on why the image is on the page. All three of these are correct — in different contexts.',
+       '<!-- Informative: the image carries information -->
+<img src="/learning-media/images/team-portrait.jpg"
+     alt="Priya Raman, head baker" width="800" height="800">
+
+<!-- Functional: the image is the link -->
+<a href="team.html"><img src="/learning-media/images/team-portrait.jpg"
+     alt="Meet the team" width="800" height="800"></a>
+
+<!-- Decorative: the caption already says it -->
+<figure>
+  <img src="/learning-media/images/team-portrait.jpg" alt=""
+       width="800" height="800">
+  <figcaption>Priya Raman, head baker</figcaption>
+</figure>', 'html', 'team-portrait', '{}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'callout'::public.block_type, '`alt=""` is a decision, not an omission', 'An empty alt says "this image adds nothing, skip it" and is exactly right for decoration or for an image whose caption already carries the message. Leaving the attribute off altogether is different and worse: with no `alt` at all, many screen readers fall back to reading the file name, so the user hears "team hyphen portrait dot jay peg".',
+       NULL, NULL, NULL, '{"tone":"accessibility"}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'self_explain'::public.block_type, 'Explain it in your own words', 'A colleague writes `<img src="logo.svg" alt="logo">` and says the image is now accessible because it has alt text. Write your reply. Say what a reader actually gains from that alt, and what it should say instead in two different situations.',
+       NULL, NULL, NULL, '{"modelAnswer":"It has alt text and it still tells the reader nothing. \"Logo\" names the *kind of thing* the image is, which the user did not ask about and cannot act on. What matters is what the image does on this page. If the logo is inside a link to the homepage, its alt is the link''s name, so it should say where the link goes — \"Riverside Bakery, home\". If it is decoration beside a heading that already says the company name, it should be `alt=\"\"` so it is skipped rather than announced twice. Same file, two different correct answers, and neither of them is \"logo\"."}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'progressive_detail'::public.block_type, 'Naming regions, groups and tables', 'The same rules extend past controls. A `<nav>` gets a name from `aria-label` or `aria-labelledby`, which is how a user with three navs tells them apart. A group of related radio buttons is named by its `<fieldset>`''s `<legend>`. A data table is named by its `<caption>`. In every case, prefer the native element — the legend and the caption are visible to everyone, and a name everybody can see is a name that cannot silently drift out of date.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'checklist'::public.block_type, 'Naming checklist', NULL,
+       NULL, NULL, NULL, '{"items":["Every image has an `alt`, even when the right value is empty","Every form control has a `<label>`, or a name from `aria-labelledby`","Every link makes sense read on its own","Every icon-only button has an `aria-label` or a named image inside it","Every `<nav>` beyond the first has a label distinguishing it","No name is supplied by `title` alone"]}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["The name comes from `aria-labelledby`, then `aria-label`, then the native source, then `title`.","Prefer sources that reuse visible text, so the name and the screen cannot disagree.","Link text must make sense with the page removed, because that is how it is often heard.","`alt=\"\"` means \"skip this\"; no `alt` at all often means \"read the file name out\"."],"nextUp":"Next: the ARIA worth knowing, and the rule that matters most."}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 16, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["List the four sources of an accessible name, in the order the browser tries them.","Why is \"Read more\" poor link text, and what makes replacement text good?","When is `alt=\"\"` correct, and how does it differ from leaving `alt` off?"],"points":["`aria-labelledby`, then `aria-label`, then the native source (`<label>`, `alt`, `<legend>`, `<caption>`, or the element''s own text), then `title`.","Because links are commonly listed and heard without their surrounding text, so nine \"Read more\" links are indistinguishable. Good link text names the destination — \"Book the sourdough workshop\".","`alt=\"\"` is correct for decoration, or where a caption already carries the message, and tells assistive technology to skip the image. Omitting `alt` entirely often makes a screen reader read out the file name instead."]}'::jsonb
+from public.lessons where slug = 'accessible-names-in-depth';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'accessible-names-challenge', 1, 'challenge'::public.exercise_kind, 'Name four controls correctly',
+       'Build a small block containing: a search button whose only content is an icon image, a link to `team.html` whose text works read on its own, a decorative image, and a labelled email field. Every one of the four must end up with a sensible accessible name. The wording is yours.', '<!-- A search button with an icon: /learning-media/icons/search.svg -->
+
+<!-- A link to team.html -->
+
+<!-- A decorative image: /learning-media/svg/placeholder.svg -->
+
+<!-- An email field with a label -->
+', '<button type="button" aria-label="Search the site">
+  <img src="/learning-media/icons/search.svg" alt="" width="24" height="24">
+</button>
+
+<a href="team.html">Meet the bakery team</a>
+
+<img src="/learning-media/svg/placeholder.svg" alt="" width="600" height="400">
+
+<label for="email">Email address</label>
+<input type="email" id="email" name="email" autocomplete="email">', ARRAY['An icon-only button needs an aria-label, and the icon inside it should then take alt="".', 'Link text should name the destination, not say "click here".', 'A decorative image takes alt="" — the attribute is present, its value is empty.', 'A label needs for="the-input-id", and the input needs a matching id.']::text[],
+       50, 3,
+       (select id from public.skills where slug = 'accessibility'), false
+from public.lessons l where l.slug = 'accessible-names-in-depth'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_present'::public.requirement_kind, 'button', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a button', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-names-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'accessible_name'::public.requirement_kind, 'button', NULL,
+       NULL, NULL, NULL, NULL,
+       'The button has an accessible name', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-names-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'element_present'::public.requirement_kind, 'a[href="team.html"]', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a link to team.html', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-names-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'accessible_name'::public.requirement_kind, 'a', NULL,
+       NULL, NULL, NULL, NULL,
+       'The link text makes sense on its own', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-names-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'element_count'::public.requirement_kind, 'img', NULL,
+       NULL, NULL, 2, NULL,
+       'Both images are present', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-names-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'alt_quality'::public.requirement_kind, 'img', NULL,
+       NULL, NULL, NULL, NULL,
+       'Every image has an appropriate alt attribute', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+from public.exercises e where e.slug = 'accessible-names-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 7, 'label_association'::public.requirement_kind, 'input', NULL,
+       NULL, NULL, NULL, NULL,
+       'The email field has an associated label', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+from public.exercises e where e.slug = 'accessible-names-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 8, 'attribute_value'::public.requirement_kind, 'input', 'type',
+       'email', NULL, NULL, NULL,
+       'The email field uses type="email"', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-names-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 9, 'local_media_path'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+from public.exercises e where e.slug = 'accessible-names-challenge';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'accessible-names-debug', 2, 'debug'::public.exercise_kind, 'Four names that say nothing',
+       'Every control below has a name problem: a link that reads meaninglessly on its own, an icon button with no name, an image whose alt describes the file rather than the content, and a field labelled only by a placeholder. Repair all four.', '<article>
+  <h2>Sourdough workshop</h2>
+  <p>Six hours, small groups, everything provided.</p>
+  <a href="sourdough.html">Click here</a>
+  <button type="button"><img src="/learning-media/icons/mail.svg" alt="" width="24" height="24"></button>
+  <img src="/learning-media/images/studio-desk.jpg" alt="studio-desk.jpg" width="1200" height="800">
+  <input type="email" name="email" placeholder="Email">
+</article>', '<article>
+  <h2>Sourdough workshop</h2>
+  <p>Six hours, small groups, everything provided.</p>
+  <a href="sourdough.html">Book the sourdough workshop</a>
+  <button type="button" aria-label="Email us about this workshop">
+    <img src="/learning-media/icons/mail.svg" alt="" width="24" height="24">
+  </button>
+  <img src="/learning-media/images/studio-desk.jpg"
+       alt="An open laptop, a notebook and a mug on a wooden desk" width="1200" height="800">
+  <label for="email">Email address</label>
+  <input type="email" id="email" name="email" autocomplete="email">
+</article>', ARRAY['Replace "Click here" with text naming where the link goes.', 'The icon button has no text at all, so give it an aria-label.', 'Alt text describes what the image shows, never the file name.', 'A placeholder is not a label — add a real <label> with a matching for and id.']::text[],
+       45, 3,
+       (select id from public.skills where slug = 'accessibility'), false
+from public.lessons l where l.slug = 'accessible-names-in-depth'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'accessible_name'::public.requirement_kind, 'a', NULL,
+       NULL, NULL, NULL, NULL,
+       'The link has meaningful text of its own', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-names-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'element_absent'::public.requirement_kind, 'a:has(> :only-child)', NULL,
+       NULL, NULL, NULL, NULL,
+       'The link is not empty', 'The link needs visible text.', 1, true
+from public.exercises e where e.slug = 'accessible-names-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'accessible_name'::public.requirement_kind, 'button', NULL,
+       NULL, NULL, NULL, NULL,
+       'The icon button has an accessible name', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-names-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'alt_quality'::public.requirement_kind, 'img', NULL,
+       NULL, NULL, NULL, NULL,
+       'The alt text describes the image, not the file', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+from public.exercises e where e.slug = 'accessible-names-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'label_association'::public.requirement_kind, 'input', NULL,
+       NULL, NULL, NULL, NULL,
+       'The email field has a real label', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+from public.exercises e where e.slug = 'accessible-names-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'attribute_present'::public.requirement_kind, 'label', 'for',
+       NULL, NULL, NULL, NULL,
+       'The label points at the field with for', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-names-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 7, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true
+from public.exercises e where e.slug = 'accessible-names-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 8, 'local_media_path'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+from public.exercises e where e.slug = 'accessible-names-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'accessible-names-in-depth'), NULL, 'q-name-order', 1, 'single'::public.question_kind,
+        'Which source wins when a button has both `aria-label` and its own text content?', '`aria-label` overrides the element''s own text — which is why a mismatch between the two breaks voice control.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`aria-label` — it replaces the visible text', true, NULL
+from public.quiz_questions where slug = 'q-name-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The visible text — ARIA never overrides real content', false, NULL
+from public.quiz_questions where slug = 'q-name-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Both are read, one after the other', false, NULL
+from public.quiz_questions where slug = 'q-name-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Whichever appears first in the source', false, NULL
+from public.quiz_questions where slug = 'q-name-order';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'accessible-names-in-depth'), NULL, 'q-alt-empty-vs-missing', 2, 'single'::public.question_kind,
+        'What is the difference between `alt=""` and leaving `alt` off entirely?', '`alt=""` says "skip this image". No alt at all leaves the reader with nothing, and many screen readers then announce the file name.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`alt=""` hides the image from everyone', false, NULL
+from public.quiz_questions where slug = 'q-alt-empty-vs-missing';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A missing alt is required for decorative images', false, NULL
+from public.quiz_questions where slug = 'q-alt-empty-vs-missing';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`alt=""` tells assistive tech to skip it; a missing alt often makes it read the file name', true, NULL
+from public.quiz_questions where slug = 'q-alt-empty-vs-missing';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'They behave identically', false, NULL
+from public.quiz_questions where slug = 'q-alt-empty-vs-missing';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'accessible-names-in-depth'), NULL, 'q-link-text-alone', 3, 'single'::public.question_kind,
+        'Why does link text have to make sense without its surrounding paragraph?', 'Screen-reader users frequently pull up a list of every link on the page, and that list contains the link text alone.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Browsers truncate long link text', false, NULL
+from public.quiz_questions where slug = 'q-link-text-alone';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It is only a style preference', false, NULL
+from public.quiz_questions where slug = 'q-link-text-alone';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Links are often listed on their own, with the surrounding text removed', true, NULL
+from public.quiz_questions where slug = 'q-link-text-alone';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Search engines cannot read paragraphs', false, NULL
+from public.quiz_questions where slug = 'q-link-text-alone';
+
+-- module: ARIA and accessible forms
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'aria-and-accessible-forms', 2, 'ARIA and accessible forms', 'The small set of ARIA worth knowing, the states that have to be announced when they change, and the forms most people get wrong.',
+       75, false
+from public.levels l where l.slug = 'accessibility-champion'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'aria-and-accessible-forms' and p.slug = 'accessibility-foundations';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'aria-and-accessible-forms' and s.slug = 'aria';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0.5
+from public.modules m, public.skills s
+where m.slug = 'aria-and-accessible-forms' and s.slug = 'accessibility';
+
+-- lesson: ARIA fundamentals
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'aria-fundamentals', 1, 'ARIA fundamentals', 'A small, useful set — and the rule that matters most', 'ARIA can make a page more accessible or considerably less. The first rule of ARIA is not to use it.',
+       ARRAY['State the first rule of ARIA', 'Use aria-label, aria-labelledby, aria-describedby and aria-current correctly', 'Explain what a live region is and when to use one']::text[], 15, 40, (select id from public.skills where slug = 'aria'), 0.7
+from public.modules m where m.slug = 'aria-and-accessible-forms'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A developer wants a clickable "Menu" control and writes `<div role="button">Menu</div>`. A screen reader announces it as a button. What happens when someone presses Enter on it?',
+       NULL, NULL, NULL, '{"options":["Nothing — it is announced as a button but does not behave like one","It activates, because the role tells the browser how to treat it","It activates, but only in browsers that support ARIA","The page reports an error"],"answer":"Nothing happens. This is the single most important thing to understand about ARIA, and it is why the first rule of ARIA is not to use it. A role changes what assistive technology *announces* and nothing else — not focus, not keyboard behaviour, not anything. So this control is now announced as a button to exactly the users who cannot operate it, which is worse than leaving it unannounced."}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
        NULL, NULL, NULL, '{"items":["Explain why native HTML beats ARIA","Apply the handful of ARIA attributes worth knowing","Recognise ARIA that makes a page worse"]}'::jsonb
 from public.lessons where slug = 'aria-fundamentals';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'callout'::public.block_type, 'The first rule of ARIA', 'If a native HTML element will do the job, use it instead. ARIA changes what assistive technology *announces*; it changes nothing about how an element actually behaves. `<div role="button">` is announced as a button but is still not focusable, still ignores Enter and Space, and still does nothing on a keyboard. You would have to add all of that yourself — or use `<button>`, which has it already.',
+select id, 3, 'callout'::public.block_type, 'The first rule of ARIA', 'If a native HTML element will do the job, use it instead. ARIA changes what assistive technology *announces*; it changes nothing about how an element actually behaves. `<div role="button">` is announced as a button but is still not focusable, still ignores Enter and Space, and still does nothing on a keyboard. You would have to add all of that yourself — or use `<button>`, which has it already.',
        NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
 from public.lessons where slug = 'aria-fundamentals';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'comparison'::public.block_type, 'The same control, two ways', NULL,
+select id, 4, 'comparison'::public.block_type, 'The same control, two ways', NULL,
        NULL, NULL, NULL, '{"good":{"label":"Native","code":"<button type=\"button\">Menu</button>","why":"Focusable, announced as a button, responds to Enter and Space, works with voice control. Zero extra work."},"bad":{"label":"ARIA rebuild","code":"<div role=\"button\" tabindex=\"0\" aria-pressed=\"false\">Menu</div>","why":"Announced as a button, but Enter and Space do nothing without JavaScript, and voice-control software may not find it. More code, less function."}}'::jsonb
 from public.lessons where slug = 'aria-fundamentals';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'prose'::public.block_type, NULL, 'These are the ARIA attributes genuinely worth knowing at this stage.',
+select id, 5, 'prose'::public.block_type, NULL, 'These are the ARIA attributes genuinely worth knowing at this stage.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'aria-fundamentals';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'code_example'::public.block_type, 'The ARIA worth learning first', NULL,
+select id, 6, 'code_example'::public.block_type, 'The ARIA worth learning first', NULL,
        'aria-label="Main"          Names an element that has no visible label.
                            Use on <nav>, <section>, <iframe>, icon-only buttons.
 
@@ -12040,7 +12836,7 @@ aria-hidden="true"         Removes an element from the accessibility tree entire
                            Only for genuinely decorative things.', 'text', NULL, '{}'::jsonb
 from public.lessons where slug = 'aria-fundamentals';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'annotated_code'::public.block_type, 'Line by line', NULL,
+select id, 7, 'annotated_code'::public.block_type, 'Line by line', NULL,
        '<section aria-labelledby="hours-heading">
   <h2 id="hours-heading">Opening hours</h2>
   <p>Tuesday to Sunday, 8am to 6pm.</p>
@@ -12051,15 +12847,15 @@ select id, 6, 'annotated_code'::public.block_type, 'Line by line', NULL,
 </button>', 'html', NULL, '{"annotations":[{"line":"1","text":"`aria-labelledby` names the section using its own heading. Better than `aria-label`, because the name and the visible text can never drift apart."},{"line":"6","text":"An icon-only button has no text, so it has no accessible name. `aria-label=\"Search\"` supplies one."},{"line":"7","text":"The icon itself takes `alt=\"\"`: the button already has a name, and describing the icon too would announce it twice."}]}'::jsonb
 from public.lessons where slug = 'aria-fundamentals';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'callout'::public.block_type, '`aria-label` on the wrong element', '`aria-label` is ignored on most non-interactive elements — a `<span>`, a `<div>` with no role, a plain `<p>`. It works on interactive elements and on landmarks. Putting it on a `<div>` and assuming it will be read is one of the most common ARIA mistakes.',
+select id, 8, 'callout'::public.block_type, '`aria-label` on the wrong element', '`aria-label` is ignored on most non-interactive elements — a `<span>`, a `<div>` with no role, a plain `<p>`. It works on interactive elements and on landmarks. Putting it on a `<div>` and assuming it will be read is one of the most common ARIA mistakes.',
        NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
 from public.lessons where slug = 'aria-fundamentals';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'term'::public.block_type, 'Live region', 'An area whose changes should be announced without moving focus — a form error summary, a "message sent" confirmation, a live score. `aria-live="polite"` waits for a pause; `assertive` interrupts immediately and should be reserved for genuine emergencies.',
+select id, 9, 'term'::public.block_type, 'Live region', 'An area whose changes should be announced without moving focus — a form error summary, a "message sent" confirmation, a live score. `aria-live="polite"` waits for a pause; `assertive` interrupts immediately and should be reserved for genuine emergencies.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'aria-fundamentals';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'code_example'::public.block_type, 'An accessible error message', NULL,
+select id, 10, 'code_example'::public.block_type, 'An accessible error message', NULL,
        '<p id="email-error" role="alert">
   Enter an email address in the format name@example.com
 </p>
@@ -12068,15 +12864,25 @@ select id, 9, 'code_example'::public.block_type, 'An accessible error message', 
        aria-describedby="email-error" aria-invalid="true">', 'html', NULL, '{}'::jsonb
 from public.lessons where slug = 'aria-fundamentals';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'callout'::public.block_type, 'What makes an error message accessible', 'Four things. It says what is wrong in plain words. It says how to fix it. It is connected to the field with `aria-describedby`, so it is read when the user reaches the field. And it is announced when it appears, via `role="alert"` — because a message the user has to go looking for is a message they will miss.',
+select id, 11, 'callout'::public.block_type, 'What makes an error message accessible', 'Four things. It says what is wrong in plain words. It says how to fix it. It is connected to the field with `aria-describedby`, so it is read when the user reaches the field. And it is announced when it appears, via `role="alert"` — because a message the user has to go looking for is a message they will miss.',
        NULL, NULL, NULL, '{"tone":"accessibility"}'::jsonb
 from public.lessons where slug = 'aria-fundamentals';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'progressive_detail'::public.block_type, 'When ARIA is genuinely the right answer', 'ARIA earns its place where HTML has no equivalent: naming a landmark that has no visible heading; announcing a change that happens without a page load; marking the current item in a set; describing a relationship between elements that are not nested. Those are real gaps, and ARIA fills them well. What it cannot do is turn a `<div>` into a working control.',
+select id, 12, 'predict_check'::public.block_type, 'Predict, then check', 'Two elements, each given an `aria-label`. Before you check: what does a screen reader announce for each — and is either of them what the author intended?',
+       '<button type="button" aria-label="Search">Search our recipes</button>
+
+<span aria-label="Closed today">Closed</span>', 'html', NULL, '{"outcome":"Neither is. The button is announced as just \"Search\", because `aria-label` *replaces* the visible text rather than adding to it — so a voice-control user saying \"click Search our recipes\" now finds nothing. The `<span>` is announced as plain \"Closed\", because `aria-label` is ignored on a non-interactive element with no role; the label is simply dropped. Both are quiet failures: the markup looks careful, the page looks fine, and the accessibility is worse than if neither attribute had been written."}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'progressive_detail'::public.block_type, 'When ARIA is genuinely the right answer', 'ARIA earns its place where HTML has no equivalent: naming a landmark that has no visible heading; announcing a change that happens without a page load; marking the current item in a set; describing a relationship between elements that are not nested. Those are real gaps, and ARIA fills them well. What it cannot do is turn a `<div>` into a working control.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'aria-fundamentals';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 14, 'interactive_demo'::public.block_type, 'Native element versus ARIA rebuild', 'Tab to each one and press Space.',
+       NULL, NULL, NULL, '{"variants":[{"label":"A real button","code":"<button type=\"button\">Menu</button>","note":"Focusable, announced as a button, responds to Enter and Space, findable by voice control. No attributes required."},{"label":"The ARIA rebuild","code":"<div role=\"button\" tabindex=\"0\">Menu</div>","note":"Announced as a button and focusable — but Enter and Space do nothing without a script, so it is announced as operable to precisely the people who cannot operate it."},{"label":"A role and nothing else","code":"<div role=\"button\">Menu</div>","note":"Announced as a button and not even reachable by Tab. The role changed what is said about it and nothing about what it does."}]}'::jsonb
+from public.lessons where slug = 'aria-fundamentals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["First rule of ARIA: use native HTML instead, whenever you can.","ARIA changes announcements, never behaviour.","`aria-labelledby` is better than `aria-label` when visible text already exists.","Error messages need plain words, a fix, `aria-describedby`, and an announcement."],"nextUp":"Next: the accessibility audit milestone."}'::jsonb
 from public.lessons where slug = 'aria-fundamentals';
 
@@ -12262,12 +13068,603 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'A title attribute', false, NULL
 from public.quiz_questions where slug = 'q-labelledby-vs-label';
 
+-- lesson: States, and changes worth announcing
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'aria-live-and-state', 2, 'States, and changes worth announcing', 'What to say when something happens without a page load', 'A change nobody is told about did not happen, as far as a screen-reader user is concerned. This is the part of ARIA that earns its place.',
+       ARRAY['Use `aria-expanded`, `aria-current` and `aria-invalid` correctly', 'Explain what a live region is and when one is justified', 'Recognise the states native HTML already manages for you']::text[], 15, 40, (select id from public.skills where slug = 'aria'), 0.7
+from public.modules m where m.slug = 'aria-and-accessible-forms'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A form shows an error message above the field after a failed submit. Focus stays where it was. What does a screen-reader user hear?',
+       NULL, NULL, NULL, '{"options":["Nothing — the message appeared silently, in a place they have already passed","The message, because new content is always announced","The message, but only after they press Tab","An error tone from the browser"],"answer":"Nothing at all. Adding content to a page does not announce it; screen readers read what is focused or what the user navigates to, and this message appeared above a field they have already moved past. Making it heard takes a deliberate act — a live region, or moving focus. This is the gap ARIA live regions exist to close, and it is the one situation where reaching for ARIA is clearly right."}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Apply the state attributes worth knowing to real controls","Choose between `polite`, `assertive` and moving focus","Avoid the live-region mistakes that make a page worse"]}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, NULL, 'A state is a fact about a control that can change: open or closed, current or not, valid or invalid. Sighted users read state from the visuals. Everyone else needs it in the markup — and if you built the control by hand, nothing puts it there for you.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'code_example'::public.block_type, 'The states worth knowing', NULL,
+       'aria-expanded="true|false"   is this control''s target open?
+aria-current="page|step|true" which item in this set is the current one?
+aria-invalid="true"           did this field fail validation?
+aria-describedby="id"         extra description, read after the name
+aria-pressed="true|false"     is this toggle button pressed in?
+aria-disabled="true"          announced as unavailable, but still focusable', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, 'Native elements manage their own state', '`<details>` maintains `expanded` as the user opens and closes it. A checkbox maintains `checked`. A modal `<dialog>` maintains its own presence and focus. You only need these attributes for controls you have built yourself out of parts that do not know what they are — which is one more argument for not building them.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'interactive_demo'::public.block_type, 'Marking the current page', 'Three navs. Only one tells a screen-reader user where they are.',
+       NULL, NULL, NULL, '{"variants":[{"label":"With aria-current","code":"<nav aria-label=\"Main\"><a href=\"index.html\">Home</a> <a href=\"menu.html\" aria-current=\"page\">Menu</a> <a href=\"contact.html\">Contact</a></nav>","note":"The current item is announced as \"Menu, current page\". The user knows where they are without reading the whole page."},{"label":"Styled only","code":"<nav aria-label=\"Main\"><a href=\"index.html\">Home</a> <a href=\"menu.html\" class=\"active\">Menu</a> <a href=\"contact.html\">Contact</a></nav>","note":"A class name is invisible to assistive technology. Visually obvious, silently absent for everyone else."},{"label":"No link at all","code":"<nav aria-label=\"Main\"><a href=\"index.html\">Home</a> <span>Menu</span> <a href=\"contact.html\">Contact</a></nav>","note":"Removing the link removes it from the keyboard order and from the list of links, so the set now looks incomplete."}]}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'term'::public.block_type, 'Live region', 'An area whose changes are announced without focus moving there. `aria-live="polite"` waits for a pause in speech; `aria-live="assertive"` interrupts immediately.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'annotated_code'::public.block_type, 'Line by line', NULL,
+       '<p id="status" role="status"></p>
+
+<p id="email-error" role="alert">
+  Enter an email address in the format name@example.com
+</p>
+
+<input type="email" id="email" name="email"
+       aria-describedby="email-error" aria-invalid="true">', 'html', NULL, '{"annotations":[{"line":"1","text":"`role=\"status\"` is a polite live region. Crucially the element exists in the page *before* the message arrives — a live region added at the same moment as its content is usually not announced at all."},{"line":"3","text":"`role=\"alert\"` is an assertive live region. It interrupts, so it is right for a validation failure and wrong for a \"saved\" confirmation."},{"line":"7","text":"`aria-describedby` ties the message to the field, so the message is read when the user reaches it — separately from the announcement."},{"line":"7","text":"`aria-invalid=\"true\"` marks the field itself as failing, so it is announced as invalid rather than merely having a description."}]}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'callout'::public.block_type, 'The three live-region mistakes', 'First: creating the region and its content at the same time — the region must already be in the page for a change to be noticed. Second: reaching for `assertive` everywhere, which interrupts whatever the user was listening to; reserve it for errors and genuine emergencies. Third: marking a large container as live, so every unrelated change inside it is read out.',
+       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'predict_check'::public.block_type, 'Predict, then check', 'A hand-built disclosure. The markup is correct as written. Before you check: what breaks the moment a learner wires up the click handler and forgets one line?',
+       '<button type="button" aria-expanded="false" aria-controls="hours">
+  Opening hours
+</button>
+<div id="hours" hidden>
+  <p>Tuesday to Sunday, 8am to 6pm.</p>
+</div>', 'html', NULL, '{"outcome":"`aria-expanded` stays `false` forever. The panel opens, the arrow turns, sighted users see the change — and every screen-reader user is told the control is still collapsed. Nothing errors and nothing looks wrong, which is exactly why it survives review. The native `<details>` and `<summary>` pair carries this state itself and cannot fall out of step, which is why it is the better answer whenever it fits."}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'progressive_detail'::public.block_type, 'Announce, or move focus?', 'A live region tells the user something changed while leaving them where they are. Moving focus takes them to it. Use a live region for information that does not need acting on — "Saved", "Three results". Move focus when the user has to do something next: after a failed submit, sending focus to the first invalid field is more use than any announcement, because it both tells them and puts them where the work is.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["State attributes describe what a control *is doing*: expanded, current, invalid, pressed.","Native elements maintain their own state; hand-built ones do not, and drift silently.","`role=\"status\"` is polite, `role=\"alert\"` interrupts — and the element must already exist.","For anything the user must act on, moving focus beats announcing."],"nextUp":"Next: forms, where all of this comes together."}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What does `aria-expanded` describe, and what keeps it accurate on a `<details>`?","Name the three common live-region mistakes.","When should you move focus rather than announce?"],"points":["Whether the control''s target is currently open. `<details>` maintains it natively, so it cannot drift out of step with what is on screen; a hand-built disclosure only stays accurate if you update it yourself.","Creating the region and its content at the same moment; using `assertive` when `polite` would do; marking too large a container as live so unrelated changes are announced.","When the user has to act next — a failed submit should move focus to the first invalid field, which both informs them and puts them where the work is."]}'::jsonb
+from public.lessons where slug = 'aria-live-and-state';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'aria-state-guided', 1, 'guided'::public.exercise_kind, 'Mark the current page and connect an error',
+       'Two jobs. In the nav, mark `menu.html` as the page currently being viewed using `aria-current`. Below it, connect the error message to the email field with `aria-describedby`, mark the field invalid, and make the message announce itself with `role="alert"`.', '<nav aria-label="Main">
+  <a href="index.html">Home</a>
+  <a href="menu.html" class="active">Menu</a>
+  <a href="contact.html">Contact</a>
+</nav>
+
+<p id="email-error">Enter an email address in the format name@example.com</p>
+<label for="email">Email address</label>
+<input type="email" id="email" name="email">', '<nav aria-label="Main">
+  <a href="index.html">Home</a>
+  <a href="menu.html" aria-current="page">Menu</a>
+  <a href="contact.html">Contact</a>
+</nav>
+
+<p id="email-error" role="alert">Enter an email address in the format name@example.com</p>
+<label for="email">Email address</label>
+<input type="email" id="email" name="email"
+       aria-describedby="email-error" aria-invalid="true">', ARRAY['aria-current="page" goes on the link to the page you are already on.', 'aria-describedby takes the id of the message element.', 'The field itself needs aria-invalid="true", and the message needs role="alert".']::text[],
+       45, 3,
+       (select id from public.skills where slug = 'aria'), false
+from public.lessons l where l.slug = 'aria-live-and-state'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'attribute_value'::public.requirement_kind, 'a[href="menu.html"]', 'aria-current',
+       'page', NULL, NULL, NULL,
+       'The current page is marked with aria-current="page"', NULL, 1, true
+from public.exercises e where e.slug = 'aria-state-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'attribute_value'::public.requirement_kind, 'p', 'role',
+       'alert', NULL, NULL, NULL,
+       'The error message is an assertive live region', NULL, 1, true
+from public.exercises e where e.slug = 'aria-state-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'attribute_value'::public.requirement_kind, 'input', 'aria-describedby',
+       'email-error', NULL, NULL, NULL,
+       'The field is described by the error message', NULL, 1, true
+from public.exercises e where e.slug = 'aria-state-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'attribute_value'::public.requirement_kind, 'input', 'aria-invalid',
+       'true', NULL, NULL, NULL,
+       'The field is marked invalid', NULL, 1, true
+from public.exercises e where e.slug = 'aria-state-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'label_association'::public.requirement_kind, 'input', NULL,
+       NULL, NULL, NULL, NULL,
+       'The field still has its label', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+from public.exercises e where e.slug = 'aria-state-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true
+from public.exercises e where e.slug = 'aria-state-guided';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'aria-state-debug', 2, 'debug'::public.exercise_kind, 'ARIA that makes the page worse',
+       'Every piece of ARIA below is actively harmful: a `role="button"` on a `<div>`, an `aria-label` on a `<span>` where it is ignored, an `aria-hidden` hiding a real control from assistive technology, and `aria-live="assertive"` on a whole region. Repair each one, preferring native HTML.', '<main aria-live="assertive">
+  <h1>Book a table</h1>
+  <div role="button">Book now</div>
+  <span aria-label="Closed today">Closed</span>
+  <button type="button" aria-hidden="true">Cancel</button>
+</main>', '<main>
+  <h1>Book a table</h1>
+  <button type="button">Book now</button>
+  <p>Closed today</p>
+  <button type="button">Cancel</button>
+</main>', ARRAY['A role does not make something operable — use the real element instead.', 'aria-label is ignored on a plain span; put the words in the page as text.', 'aria-hidden on a focusable control creates something reachable by Tab but invisible to a screen reader. Remove it.', 'A whole region marked assertive announces every change inside it. Remove it entirely.']::text[],
+       55, 4,
+       (select id from public.skills where slug = 'aria'), false
+from public.lessons l where l.slug = 'aria-live-and-state'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_count'::public.requirement_kind, '[role="button"]', NULL,
+       NULL, NULL, 0, 0,
+       'No element fakes a button with a role', NULL, 1, true
+from public.exercises e where e.slug = 'aria-state-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'element_count'::public.requirement_kind, 'button', NULL,
+       NULL, NULL, 2, 2,
+       'Both actions are real buttons', NULL, 1, true
+from public.exercises e where e.slug = 'aria-state-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'element_count'::public.requirement_kind, '[aria-hidden="true"]', NULL,
+       NULL, NULL, 0, 0,
+       'Nothing interactive is hidden from assistive technology', NULL, 1, true
+from public.exercises e where e.slug = 'aria-state-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'attribute_absent'::public.requirement_kind, 'main', 'aria-live',
+       NULL, NULL, NULL, NULL,
+       'The whole region is no longer a live region', NULL, 1, true
+from public.exercises e where e.slug = 'aria-state-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'text_content'::public.requirement_kind, 'main', NULL,
+       'Closed today', NULL, NULL, NULL,
+       'The closed message is real text on the page', NULL, 1, true
+from public.exercises e where e.slug = 'aria-state-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'unique_element'::public.requirement_kind, 'main', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is exactly one <main>', NULL, 1, true
+from public.exercises e where e.slug = 'aria-state-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'aria-live-and-state'), NULL, 'q-aria-current-page', 1, 'single'::public.question_kind,
+        'How do you tell assistive technology which nav item is the page currently open?', '`aria-current="page"` marks the current item. A CSS class is invisible to assistive technology.', (select id from public.skills where slug = 'aria'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`aria-selected="true"`', false, NULL
+from public.quiz_questions where slug = 'q-aria-current-page';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`aria-current="page"` on that link', true, NULL
+from public.quiz_questions where slug = 'q-aria-current-page';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'A class such as `active`', false, NULL
+from public.quiz_questions where slug = 'q-aria-current-page';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Removing the href so it is not a link', false, NULL
+from public.quiz_questions where slug = 'q-aria-current-page';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'aria-live-and-state'), NULL, 'q-live-region-timing', 2, 'single'::public.question_kind,
+        'Why must a live region already exist in the page before its message arrives?', 'Assistive technology watches an existing region for changes. A region created together with its content usually produces no announcement at all.', (select id from public.skills where slug = 'aria'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It does not matter — order is irrelevant', false, NULL
+from public.quiz_questions where slug = 'q-live-region-timing';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Because `aria-live` only works on page load', false, NULL
+from public.quiz_questions where slug = 'q-live-region-timing';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Assistive tech announces changes to a region it is already watching', true, NULL
+from public.quiz_questions where slug = 'q-live-region-timing';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Because the CSS has to load first', false, NULL
+from public.quiz_questions where slug = 'q-live-region-timing';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'aria-live-and-state'), NULL, 'q-assertive-vs-polite', 3, 'single'::public.question_kind,
+        'When is `aria-live="assertive"` (or `role="alert"`) the right choice?', 'Assertive interrupts whatever is being read. That is justified for an error or an emergency, and rude for a routine confirmation.', (select id from public.skills where slug = 'aria'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'For "saved" confirmations', false, NULL
+from public.quiz_questions where slug = 'q-assertive-vs-polite';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Whenever the region is visually prominent', false, NULL
+from public.quiz_questions where slug = 'q-assertive-vs-polite';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'For validation errors and genuine emergencies', true, NULL
+from public.quiz_questions where slug = 'q-assertive-vs-polite';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'For every status message, so nothing is missed', false, NULL
+from public.quiz_questions where slug = 'q-assertive-vs-polite';
+
+-- lesson: Accessible forms
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'accessible-forms-in-depth', 3, 'Accessible forms', 'Labels, groups, errors, and the WCAG 2.2 criteria that are pure markup', 'Forms are where accessibility failures cost people money and appointments. Almost all of it is markup you already know, used deliberately.',
+       ARRAY['Label every control, including groups of related ones', 'Use `autocomplete` so people are not asked to retype what the browser knows', 'Build an error message that is announced, connected and actionable']::text[], 18, 40, (select id from public.skills where slug = 'accessibility'), 0.7
+from public.modules m where m.slug = 'aria-and-accessible-forms'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A checkout form asks for a delivery address, then asks for it again on a later step as "billing address". Which WCAG 2.2 criterion does that risk failing?',
+       NULL, NULL, NULL, '{"options":["Redundant Entry — asking again for information already given","None; repeating a question is always allowed","Contrast Minimum","Page Titled"],"answer":"Redundant Entry (3.3.7, added in WCAG 2.2). Asking someone to supply the same information twice in one process is a genuine barrier for people with memory or motor impairments, and simply annoying for everyone else. The fix is to auto-populate it, or offer it as a selectable option. It is worth knowing this criterion exists because it is one of several in 2.2 that are solved with markup rather than design."}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Associate every control with a label, and every group with a legend","Apply `autocomplete` tokens correctly","Connect and announce validation errors"]}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'visual'::public.block_type, NULL, 'A label and its input, joined by matching `for` and `id`.',
+       NULL, NULL, 'form-anatomy', '{}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'prose'::public.block_type, NULL, 'You met `<label>` in Level 6. Here it matters for a different reason: a control with no label has no accessible name, so it is announced as "edit text" and a voice-control user has nothing to say to reach it.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'comparison'::public.block_type, 'The same field, labelled and not', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"Labelled","code":"<label for=\"postcode\">Postcode</label>\n<input type=\"text\" id=\"postcode\" name=\"postcode\"\n       autocomplete=\"postal-code\">","why":"Announced as \"Postcode, edit text\". Clicking the word focuses the field, which also makes it an easier target for anyone with a tremor. Autofill works."},"bad":{"label":"Placeholder only","code":"<input type=\"text\" name=\"postcode\" placeholder=\"Postcode\">","why":"No name. The placeholder disappears the moment typing starts, so the one hint about what the field wants is gone exactly when it is needed."}}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'term'::public.block_type, 'Fieldset and legend', 'A `<fieldset>` groups related controls and its `<legend>` names the group. Without them, a set of radio buttons is announced as a series of unrelated options with no indication of the question they answer.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'code_example'::public.block_type, 'A group that announces its own question', NULL,
+       '<fieldset>
+  <legend>How should we contact you?</legend>
+
+  <input type="radio" id="by-email" name="contact" value="email">
+  <label for="by-email">Email</label>
+
+  <input type="radio" id="by-phone" name="contact" value="phone">
+  <label for="by-phone">Phone</label>
+</fieldset>', 'html', NULL, '{}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'prose'::public.block_type, NULL, '`autocomplete` is not a convenience feature. WCAG 2.1 made it a requirement for fields collecting information about the user, because it lets browsers and assistive tools fill in details someone may find slow, painful or impossible to type accurately.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'code_example'::public.block_type, 'The autocomplete tokens you will actually use', NULL,
+       'name              given-name        family-name
+email             tel               organization
+street-address    address-level2    postal-code    country-name
+cc-name           cc-number         cc-exp
+username          current-password  new-password
+bday              url', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'callout'::public.block_type, 'Never block paste on a password field', 'WCAG 2.2 added Accessible Authentication (3.3.8). Blocking paste, or forbidding a password manager, forces people to transcribe a long random string by hand — which is precisely what someone with a cognitive or motor impairment cannot reliably do, and which pushes everyone else towards weaker passwords. Use `autocomplete="current-password"` and leave paste alone.',
+       NULL, NULL, NULL, '{"tone":"accessibility"}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'worked_example'::public.block_type, 'Building an error message that actually works', 'The field has been submitted empty. Four things have to be true before that failure is usable, and they are usually added in the wrong order — or three out of four.',
+       NULL, NULL, NULL, '{"steps":[{"title":"Say what is wrong, in words","code":"<p id=\"email-error\">Enter an email address</p>","reasoning":"Not \"invalid input\". The message has to name the field and the problem, because it may be read in isolation, far from the field it describes."},{"title":"Say how to fix it","code":"<p id=\"email-error\">Enter an email address in the format name@example.com</p>","reasoning":"A message that only reports failure leaves the user guessing at the rule. Showing the shape of a correct answer turns a dead end into an instruction."},{"title":"Connect it to the field","code":"<input type=\"email\" id=\"email\" name=\"email\"\n       aria-describedby=\"email-error\" aria-invalid=\"true\">","reasoning":"`aria-describedby` means the message is read when the user reaches the field, however they got there. `aria-invalid` marks the field itself as failing, so it is announced as invalid rather than merely described."},{"title":"Make it announce itself","code":"<p id=\"email-error\" role=\"alert\">Enter an email address in the format name@example.com</p>","reasoning":"Without this, a message that appears after a failed submit is silent — the user is left waiting for a response that already happened. This is the step most often missed, because nothing about the page looks wrong without it."}]}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'callout'::public.block_type, '`required` is a hint, never a guarantee', 'Client-side validation attributes — `required`, `pattern`, `type="email"`, `maxlength` — improve the experience for people filling the form honestly. They are enforced by the browser, so they stop nobody who does not want to be stopped. The server must check everything again, and Level 10 makes the same point about security.',
+       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'checklist'::public.block_type, 'Before you ship a form', NULL,
+       NULL, NULL, NULL, '{"items":["Every control has a `<label>` with a matching `for` and `id`","Every group of related controls sits in a `<fieldset>` with a `<legend>`","Every field about the user has an `autocomplete` token","Errors say what is wrong *and* how to fix it","Errors are connected with `aria-describedby` and marked with `aria-invalid`","Errors announce themselves, or focus moves to the first failing field","Paste is allowed everywhere, especially on passwords","Nothing is asked for twice in the same process"]}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'interactive_demo'::public.block_type, 'An error message, connected and unconnected', 'The same failure, reported three ways.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Fully connected","code":"<p id=\"email-error\" role=\"alert\">Enter an email address in the format name@example.com</p>\n<label for=\"email\">Email address</label>\n<input type=\"email\" id=\"email\" name=\"email\" aria-describedby=\"email-error\" aria-invalid=\"true\">","note":"Announced when it appears, read again when the field is reached, and the field itself reports as invalid."},{"label":"Visible only","code":"<p class=\"error\">Enter an email address in the format name@example.com</p>\n<label for=\"email\">Email address</label>\n<input type=\"email\" id=\"email\" name=\"email\">","note":"Perfectly visible and completely silent. Nothing announces it, and reaching the field tells the user nothing is wrong."},{"label":"Connected but silent","code":"<p id=\"email-error\">Enter an email address in the format name@example.com</p>\n<label for=\"email\">Email address</label>\n<input type=\"email\" id=\"email\" name=\"email\" aria-describedby=\"email-error\" aria-invalid=\"true\">","note":"Better — reaching the field now reads the message — but nothing is announced when it first appears, so a user who submitted and waited hears nothing at all."}]}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["A control with no label has no name, and cannot be reached by voice.","`<fieldset>` and `<legend>` are what make a group of radios a question rather than a list.","`autocomplete` is a WCAG requirement for fields about the user, not a nicety.","A usable error says what is wrong, how to fix it, is connected with `aria-describedby`, and is announced."],"nextUp":"Next: the milestone — a page written to fail, for you to repair."}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 16, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why is a placeholder not a label?","What do `<fieldset>` and `<legend>` add that labels alone cannot?","List the four things a usable error message needs."],"points":["Because it supplies no accessible name, and it disappears as soon as the user starts typing — removing the only hint at exactly the moment it is needed.","They name the *group*, so a set of radio buttons is announced together with the question it answers instead of as unrelated options.","It says what is wrong; it says how to fix it; it is connected to the field with `aria-describedby` and `aria-invalid`; and it announces itself with `role=\"alert\"` or focus moves to the failing field."]}'::jsonb
+from public.lessons where slug = 'accessible-forms-in-depth';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'accessible-form-challenge', 1, 'challenge'::public.exercise_kind, 'Build an accessible booking form',
+       'Build a form containing: a name field, an email field, a grouped pair of radio buttons asking how to contact the person, and a submit button. Every control labelled, the radios grouped with a legend, and `autocomplete` on the fields about the user. Your wording throughout.', '<h1>Book a table</h1>
+<form action="/book" method="post">
+
+</form>', '<h1>Book a table</h1>
+<form action="/book" method="post">
+  <label for="name">Full name</label>
+  <input type="text" id="name" name="name" autocomplete="name" required>
+
+  <label for="email">Email address</label>
+  <input type="email" id="email" name="email" autocomplete="email" required>
+
+  <fieldset>
+    <legend>How should we confirm your booking?</legend>
+
+    <input type="radio" id="by-email" name="contact" value="email">
+    <label for="by-email">By email</label>
+
+    <input type="radio" id="by-phone" name="contact" value="phone">
+    <label for="by-phone">By phone</label>
+  </fieldset>
+
+  <button type="submit">Request a table</button>
+</form>', ARRAY['Each input needs an id, and each label needs a for matching it.', 'Wrap the two radio buttons in a <fieldset> and give it a <legend>.', 'autocomplete="name" and autocomplete="email" are the tokens for those two fields.', 'The submit control is <button type="submit">, not an <input type="button">.']::text[],
+       60, 4,
+       (select id from public.skills where slug = 'accessibility'), false
+from public.lessons l where l.slug = 'accessible-forms-in-depth'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_present'::public.requirement_kind, 'form', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a form', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-form-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'label_association'::public.requirement_kind, 'input', NULL,
+       NULL, NULL, NULL, NULL,
+       'Every input has an associated label', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+from public.exercises e where e.slug = 'accessible-form-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'element_present'::public.requirement_kind, 'fieldset', NULL,
+       NULL, NULL, NULL, NULL,
+       'The related radio buttons are grouped in a fieldset', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-form-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'direct_child'::public.requirement_kind, 'legend', NULL,
+       NULL, 'fieldset', NULL, NULL,
+       'The fieldset has a legend naming the group', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-form-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'text_not_empty'::public.requirement_kind, 'legend', NULL,
+       NULL, NULL, NULL, NULL,
+       'The legend asks the question', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-form-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'element_count'::public.requirement_kind, 'input[type="radio"]', NULL,
+       NULL, NULL, 2, NULL,
+       'There are at least two radio options', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-form-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 7, 'attribute_value'::public.requirement_kind, 'input[type="email"]', 'autocomplete',
+       'email', NULL, NULL, NULL,
+       'The email field carries autocomplete="email"', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-form-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 8, 'element_present'::public.requirement_kind, 'button[type="submit"]', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a submit button', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-form-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 9, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true
+from public.exercises e where e.slug = 'accessible-form-challenge';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'accessible-form-debug', 2, 'debug'::public.exercise_kind, 'A form nobody can complete',
+       'This form has four failures: a placeholder standing in for a label, radios with no group or legend, an error message connected to nothing, and a missing `autocomplete`. Repair all four.', '<form action="/book" method="post">
+  <input type="text" name="name" placeholder="Full name">
+
+  <p id="name-error">That is not valid</p>
+
+  <input type="radio" id="by-email" name="contact" value="email">
+  <label for="by-email">By email</label>
+  <input type="radio" id="by-phone" name="contact" value="phone">
+  <label for="by-phone">By phone</label>
+
+  <button type="submit">Send</button>
+</form>', '<form action="/book" method="post">
+  <label for="name">Full name</label>
+  <input type="text" id="name" name="name" autocomplete="name"
+         aria-describedby="name-error" aria-invalid="true">
+
+  <p id="name-error" role="alert">Enter your full name as it appears on your card</p>
+
+  <fieldset>
+    <legend>How should we confirm your booking?</legend>
+
+    <input type="radio" id="by-email" name="contact" value="email">
+    <label for="by-email">By email</label>
+    <input type="radio" id="by-phone" name="contact" value="phone">
+    <label for="by-phone">By phone</label>
+  </fieldset>
+
+  <button type="submit">Send</button>
+</form>', ARRAY['Replace the placeholder with a real <label for="name">, and give the input a matching id.', 'Wrap the two radios in a <fieldset> with a <legend>.', 'Connect the message with aria-describedby, mark the field aria-invalid, and give the message role="alert".', 'The name field should carry autocomplete="name".']::text[],
+       55, 4,
+       (select id from public.skills where slug = 'accessibility'), false
+from public.lessons l where l.slug = 'accessible-forms-in-depth'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'label_association'::public.requirement_kind, 'input[type="text"]', NULL,
+       NULL, NULL, NULL, NULL,
+       'The text field has a real label', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+from public.exercises e where e.slug = 'accessible-form-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'attribute_value'::public.requirement_kind, 'input[type="text"]', 'autocomplete',
+       'name', NULL, NULL, NULL,
+       'The name field carries autocomplete="name"', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-form-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'attribute_value'::public.requirement_kind, 'input[type="text"]', 'aria-describedby',
+       'name-error', NULL, NULL, NULL,
+       'The error message is connected to the field', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-form-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'attribute_value'::public.requirement_kind, 'p', 'role',
+       'alert', NULL, NULL, NULL,
+       'The error message announces itself', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-form-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'element_present'::public.requirement_kind, 'fieldset', NULL,
+       NULL, NULL, NULL, NULL,
+       'The radios are grouped in a fieldset', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-form-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'direct_child'::public.requirement_kind, 'legend', NULL,
+       NULL, 'fieldset', NULL, NULL,
+       'The group has a legend', NULL, 1, true
+from public.exercises e where e.slug = 'accessible-form-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 7, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true
+from public.exercises e where e.slug = 'accessible-form-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'accessible-forms-in-depth'), NULL, 'q-placeholder-not-label', 1, 'single'::public.question_kind,
+        'Why is a placeholder not an acceptable substitute for a `<label>`?', 'It gives the control no accessible name, and it vanishes as soon as the user starts typing.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It supplies no accessible name and disappears once typing starts', true, NULL
+from public.quiz_questions where slug = 'q-placeholder-not-label';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It cannot be styled', false, NULL
+from public.quiz_questions where slug = 'q-placeholder-not-label';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It is not supported in older browsers', false, NULL
+from public.quiz_questions where slug = 'q-placeholder-not-label';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It is only a problem on mobile', false, NULL
+from public.quiz_questions where slug = 'q-placeholder-not-label';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'accessible-forms-in-depth'), NULL, 'q-fieldset-legend', 2, 'single'::public.question_kind,
+        'What do `<fieldset>` and `<legend>` provide for a set of radio buttons?', 'They name the group, so the options are announced together with the question they answer.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'They are purely decorative', false, NULL
+from public.quiz_questions where slug = 'q-fieldset-legend';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'They set the tab order for the group', false, NULL
+from public.quiz_questions where slug = 'q-fieldset-legend';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'A name for the group, so the question is announced with the options', true, NULL
+from public.quiz_questions where slug = 'q-fieldset-legend';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'They make the radios mutually exclusive', false, NULL
+from public.quiz_questions where slug = 'q-fieldset-legend';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'accessible-forms-in-depth'), NULL, 'q-autocomplete-requirement', 3, 'single'::public.question_kind,
+        'Why does `autocomplete` matter for accessibility, not just convenience?', 'WCAG requires it on fields collecting information about the user, so browsers and assistive tools can fill in details that are slow or painful to type.', (select id from public.skills where slug = 'accessibility'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It replaces the need for a label', false, NULL
+from public.quiz_questions where slug = 'q-autocomplete-requirement';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It validates the value for you', false, NULL
+from public.quiz_questions where slug = 'q-autocomplete-requirement';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It lets tools fill in details some people cannot type quickly or accurately', true, NULL
+from public.quiz_questions where slug = 'q-autocomplete-requirement';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It makes form submission faster on the server', false, NULL
+from public.quiz_questions where slug = 'q-autocomplete-requirement';
+
 -- lesson: Milestone: audit and repair an inaccessible site
 insert into public.lessons
   (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'accessibility-audit-milestone', 3, 'Milestone: audit and repair an inaccessible site', 'Fifteen deliberate failures, one page', 'The page in this milestone was written to fail. Your job is to find and fix everything.',
+select m.id, 'accessibility-audit-milestone', 4, 'Milestone: audit and repair an inaccessible site', 'Fifteen deliberate failures, one page', 'The page in this milestone was written to fail. Your job is to find and fix everything.',
        ARRAY['Audit a page systematically against WCAG principles', 'Repair every failure using correct HTML', 'Produce a page that passes a keyboard test']::text[], 30, 40, (select id from public.skills where slug = 'accessibility'), 0.85
-from public.modules m where m.slug = 'accessibility-foundations'
+from public.modules m where m.slug = 'aria-and-accessible-forms'
 on conflict (slug) do update set
   module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
   subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
@@ -12299,7 +13696,15 @@ select id, 5, 'code_example'::public.block_type, 'The highest-impact repairs, in
 <label for="x">…</label><input id="x">     <!-- 5. label every control -->', 'html', NULL, '{}'::jsonb
 from public.lessons where slug = 'accessibility-audit-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 6, 'interactive_demo'::public.block_type, 'One repair, three times over', 'The commonest three failures, before and after.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Repaired","code":"<label for=\"email\">Email address</label>\n<input type=\"email\" id=\"email\" name=\"email\" autocomplete=\"email\">\n<button type=\"button\">Search</button>\n<img src=\"/learning-media/images/team-portrait.jpg\" alt=\"Priya Raman, head baker\" width=\"800\" height=\"800\">","note":"A named field, a real button, and an image described rather than named. All three announce usefully."},{"label":"As found","code":"<input type=\"text\" placeholder=\"Email\">\n<div class=\"btn\">Search</div>\n<img src=\"/learning-media/images/team-portrait.jpg\" alt=\"portrait\">","note":"A field with no name, a control no keyboard can reach, and alt text that names the file type rather than the person."}]}'::jsonb
+from public.lessons where slug = 'accessibility-audit-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'recall'::public.block_type, 'Everything so far, applied at once', 'This audit uses almost everything you have learned. Close the page and list, from memory, what you already know that applies here — grouped by where you learned it.',
+       NULL, NULL, NULL, '{"points":["Level 2 — one `<h1>`, no skipped heading levels, because the outline is how many people navigate.","Level 3 — link text that works alone; `rel=\"noopener noreferrer\"` on anything opening in a new tab.","Level 4 — alt text describes what the image *does on this page*; `alt=\"\"` for decoration, and never a missing alt.","Level 5 — landmarks, and exactly one `<main>`.","Level 6 — every control labelled, related controls grouped in a `<fieldset>` with a `<legend>`.","Level 7 — native `<details>` and `<dialog>` maintain their own state, so it cannot drift out of step.","This level — keyboard operability first, accessible names second, and ARIA only where HTML cannot express it."]}'::jsonb
+from public.lessons where slug = 'accessibility-audit-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Audit systematically, structure first.","Almost every fix is a correct HTML element rather than an ARIA attribute.","The keyboard test is your final check."],"nextUp":"Level 9 next: metadata, SEO and discoverability."}'::jsonb
 from public.lessons where slug = 'accessibility-audit-milestone';
 
@@ -12910,7 +14315,7 @@ on conflict (slug) do update set
   is_milestone = excluded.is_milestone;
 insert into public.module_prerequisites (module_id, prerequisite_module_id)
 select m.id, p.id from public.modules m, public.modules p
-where m.slug = 'page-metadata' and p.slug = 'accessibility-foundations';
+where m.slug = 'page-metadata' and p.slug = 'aria-and-accessible-forms';
 insert into public.module_skills (module_id, skill_id, mastery_required)
 select m.id, s.id, 0
 from public.modules m, public.skills s
@@ -12975,7 +14380,17 @@ select id, 9, 'checklist'::public.block_type, 'Every page in your site needs', N
        NULL, NULL, NULL, '{"items":["`<meta charset=\"utf-8\">` first in the head","A viewport meta tag","A unique, specific `<title>`","A unique `<meta name=\"description\">`","A `<link rel=\"canonical\">` on a live site","A favicon","`lang` on the `<html>` element"]}'::jsonb
 from public.lessons where slug = 'titles-descriptions-canonicals';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 10, 'media_example'::public.block_type, 'Why every page needs its own title', 'Eight tabs open, all from the same site. The title is the only thing distinguishing them — which is why "Riverside Bakery" on every page makes a site unnavigable the moment somebody opens two of them.',
+       '<title>Bike hire prices — Riverside Cycle Hire</title>
+<title>Route guides — Riverside Cycle Hire</title>
+<title>Contact and opening hours — Riverside Cycle Hire</title>', 'html', 'newsroom-desk', '{}'::jsonb
+from public.lessons where slug = 'titles-descriptions-canonicals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'interactive_demo'::public.block_type, 'The same page, three titles', 'Each shown as it would appear in a browser tab and a search result.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Specific, distinctive first","code":"<title>Bike hire prices — Riverside Cycle Hire</title>","note":"Readable in a narrow tab, unique across the site, and the useful words come before the truncation point."},{"label":"Site name first","code":"<title>Riverside Cycle Hire — Bike hire prices</title>","note":"In a narrow tab the visitor sees only \"Riverside Cycl…\", which is identical on every page of the site."},{"label":"Keyword stuffed","code":"<title>Riverside Cycle Hire | Bike Hire | Cycling | Hexford | Home</title>","note":"Truncated in results, useless in a tab, and search engines have long since stopped rewarding it."}]}'::jsonb
+from public.lessons where slug = 'titles-descriptions-canonicals';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Titles appear in tabs, bookmarks, search results and shares — make each one unique and specific.","Descriptions are not a ranking factor but usually become your search snippet.","Canonical URLs resolve duplicate-content ambiguity.","A robots meta tag is a polite request, never a security measure."],"nextUp":"Next: social sharing metadata and structured data."}'::jsonb
 from public.lessons where slug = 'titles-descriptions-canonicals';
 
@@ -13236,7 +14651,20 @@ select id, 11, 'progressive_detail'::public.block_type, 'The honest limits of on
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'social-and-structured-data';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 12, 'media_example'::public.block_type, 'The image a share card actually uses', 'A sharing image is not decoration — it is often the only thing seen before someone decides whether to click. It needs its own dimensions and an absolute URL, because the site rendering it is not yours.',
+       '<meta property="og:image"
+      content="https://riverside-cycles.example/learning-media/images/event-stage.jpg">
+<meta property="og:image:width" content="1600">
+<meta property="og:image:height" content="900">
+<meta property="og:image:alt"
+      content="A crowd silhouetted in front of a stage lit by pink and blue lights">', 'html', 'event-stage', '{}'::jsonb
+from public.lessons where slug = 'social-and-structured-data';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'interactive_demo'::public.block_type, 'The same page, shared three ways', 'What a chat app or social network has to work with.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Full card","code":"<meta property=\"og:title\" content=\"Bike hire prices — Riverside Cycle Hire\">\n<meta property=\"og:description\" content=\"Hourly, daily and weekly hire from £6, helmet and route map included.\">\n<meta property=\"og:image\" content=\"https://riverside-cycles.example/share.jpg\">\n<meta property=\"og:image:alt\" content=\"A blue bicycle on a riverside path\">\n<meta property=\"og:url\" content=\"https://riverside-cycles.example/prices.html\">","note":"Title, description, image and a described image. The link arrives as a card somebody might actually click."},{"label":"Image with no alt","code":"<meta property=\"og:title\" content=\"Bike hire prices — Riverside Cycle Hire\">\n<meta property=\"og:image\" content=\"https://riverside-cycles.example/share.jpg\">","note":"The card renders, and screen-reader users on the sharing platform get an unlabelled image. `og:image:alt` is the only fix."},{"label":"Nothing declared","code":"<title>Bike hire prices — Riverside Cycle Hire</title>","note":"Platforms fall back to guessing — usually the title and whichever image they find first, which may be your logo or an advert."}]}'::jsonb
+from public.lessons where slug = 'social-and-structured-data';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Open Graph uses `property`, needs absolute image URLs, and wants a 1200×630 image.","JSON-LD describes your content to machines in a standard vocabulary.","Structured data changes how your result *looks*, not where it ranks.","Only ever describe content that is genuinely on the page."],"nextUp":"Next: the Level 9 milestone."}'::jsonb
 from public.lessons where slug = 'social-and-structured-data';
 
@@ -13429,10 +14857,278 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'It is only required for images over 1MB', false, NULL
 from public.quiz_questions where slug = 'q-og-image-url';
 
+-- lesson: Language and direction
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'language-and-internationalisation', 3, 'Language and direction', 'The attribute that changes how your page is spoken, translated and indexed', 'One attribute on `<html>` affects screen-reader pronunciation, automatic translation, search indexing and how the browser hyphenates. Almost everybody sets it wrongly or not at all.',
+       ARRAY['Declare the page language correctly', 'Mark passages that are in a different language', 'Explain what `dir` does and when it is needed']::text[], 14, 40, (select id from public.skills where slug = 'metadata'), 0.7
+from public.modules m where m.slug = 'page-metadata'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A page has no `lang` attribute. A screen-reader user in France opens it. What is the most likely result?',
+       NULL, NULL, NULL, '{"options":["English text is read aloud using French pronunciation rules, and is close to unintelligible","The screen reader detects the language automatically from the words","Nothing changes — `lang` only affects search engines","The page fails to load"],"answer":"The screen reader falls back to the user''s own configured language and applies French pronunciation to English words. The result is not a slight accent — it is genuinely hard to understand, in the way that reading English aloud with strictly French letter sounds would be. Screen readers do not guess the language from the content; they are told, or they fall back. One attribute prevents this entirely, which is why it is the single highest value-per-character thing in the whole of metadata."}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Set `lang` on `<html>` with a valid language tag","Mark inline passages in another language","Use `dir` where the writing direction genuinely changes"]}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'term'::public.block_type, 'Language tag', 'A short code identifying a language, optionally with a region: `en`, `en-GB`, `fr`, `pt-BR`. Use the shortest tag that is accurate — `en` is fine unless the regional difference actually matters.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'code_example'::public.block_type, 'Declaring the page language', NULL,
+       '<html lang="en-GB">      British English
+<html lang="en">         English, region unspecified — usually enough
+<html lang="fr">         French
+<html lang="pt-BR">      Brazilian Portuguese
+<html lang="cy">         Welsh
+<html lang="ar">         Arabic — see dir, below', 'html', NULL, '{}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'prose'::public.block_type, NULL, 'Set it once on `<html>` and every element inherits it. Then override it only where a passage genuinely changes language — and *only* there, because an incorrect override is worse than none.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'annotated_code'::public.block_type, 'Line by line', NULL,
+       '<html lang="en">
+  <body>
+    <p>The bakery is on the Rue des Fleurs.</p>
+    <p>Our motto is <span lang="fr">plus de beurre</span>.</p>
+    <p lang="cy">Croeso i''r becws.</p>
+  </body>
+</html>', 'html', NULL, '{"annotations":[{"line":"1","text":"Declared once. Everything inside inherits `en` unless it says otherwise."},{"line":"3","text":"A French street name inside an English sentence. This does *not* get a `lang` — proper nouns are read acceptably either way, and marking every foreign-derived name quickly becomes noise."},{"line":"4","text":"An actual French phrase, so it is marked. The screen reader switches voice for those three words and switches back."},{"line":"5","text":"A whole paragraph in Welsh, so the attribute goes on the block itself rather than a span inside it."}]}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'callout'::public.block_type, 'The two commonest `lang` errors', 'Leaving it off entirely — which the validator will tell you about, and which is the more damaging. And setting it once and then never revisiting it, so a page translated into Welsh still says `lang="en"`, which is worse than absent: the screen reader now confidently applies the wrong rules rather than falling back to the user''s default.',
+       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'term'::public.block_type, 'Writing direction', '`dir="rtl"` marks text that reads right to left — Arabic, Hebrew, Persian, Urdu. `dir="ltr"` is the default. `dir="auto"` lets the browser decide from the first strongly directional character, which is what you want for text you did not write.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'interactive_demo'::public.block_type, 'Direction in practice', 'The same markup, with and without a direction declared.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Declared","code":"<p lang=\"ar\" dir=\"rtl\">مرحبا بكم في المخبز</p>\n<p>Open seven days a week.</p>","note":"The Arabic paragraph lays out right to left, its punctuation lands on the correct side, and the English paragraph is unaffected."},{"label":"Not declared","code":"<p lang=\"ar\">مرحبا بكم في المخبز</p>\n<p>Open seven days a week.</p>","note":"Browsers handle the characters themselves, but punctuation and any mixed-in Latin text can end up on the wrong side of the line."},{"label":"User-supplied text","code":"<blockquote dir=\"auto\">مرحبا بكم في المخبز</blockquote>\n<blockquote dir=\"auto\">Lovely bread, thank you.</blockquote>","note":"`dir=\"auto\"` is the right choice for anything you did not write — a review, a comment, a name — because you cannot know its direction in advance."}]}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'predict_check'::public.block_type, 'Predict, then check', 'Every element here declares `lang="en"`, including a phrase that is actually French. Before you check: is repeating the attribute harmful, useless, or helpful?',
+       '<html lang="en">
+  <body>
+    <p lang="en">Welcome to the bakery.</p>
+    <p lang="en">Our motto is plus de beurre.</p>
+  </body>
+</html>', 'html', NULL, '{"outcome":"Repeating `en` on the paragraphs is merely useless — they already inherited it. The real fault is the second paragraph, where a French phrase is now positively asserted to be English, so a screen reader will pronounce it with English rules rather than switching. This is the pattern worth internalising: a missing `lang` makes software fall back, which is bad; a *wrong* `lang` makes software confident, which is worse. Declare it once at the top, and override only where the language genuinely changes."}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'progressive_detail'::public.block_type, 'What `lang` reaches beyond screen readers', 'Browser translation offers, and correctly identifies the source language. Hyphenation and line-breaking rules. Which font a browser picks for characters that exist in several scripts. Spell-checking in editable fields. Search engines use it to serve the right page to the right audience — which is why it sits in the metadata level rather than the accessibility one, though it matters most for accessibility. And `<html lang>` is required for several WCAG success criteria, so a page without it cannot conform at any level.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'checklist'::public.block_type, 'Language checklist', NULL,
+       NULL, NULL, NULL, '{"items":["`<html>` has a `lang` with a valid tag","The tag is actually correct for the content — not copied from a template","Passages in another language are marked, at the block or span level","Proper nouns are *not* marked just for being foreign","`dir=\"rtl\"` on right-to-left content, `dir=\"auto\"` on anything user-supplied"]}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["`lang` on `<html>` is inherited by everything and affects speech, translation, fonts and indexing.","Override it only where the language genuinely changes.","A wrong `lang` is worse than a missing one: software stops falling back and becomes confidently wrong.","`dir=\"auto\"` is the right default for text you did not write."],"nextUp":"Next: the Level 9 milestone."}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What does a missing `lang` do to a screen-reader user, specifically?","When should you add `lang` to an element inside the page — and when should you not?","What is `dir=\"auto\"` for?"],"points":["The reader falls back to the user''s own language and applies its pronunciation rules to your words, which can make the page close to unintelligible rather than merely accented.","Add it where a passage is genuinely in another language, at block or span level. Do not add it to proper nouns, and do not restate the page language on elements that already inherit it.","Text whose direction you cannot know in advance — anything user-supplied, such as a review, comment or name. The browser decides from the first strongly directional character."]}'::jsonb
+from public.lessons where slug = 'language-and-internationalisation';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'lang-guided', 1, 'guided'::public.exercise_kind, 'Declare the language properly',
+       'Set the page language to British English, mark the French motto so it is pronounced correctly, and mark the Welsh greeting on its own paragraph. Do not mark the French street name — it is a proper noun.', '<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Riverside Bakery</title>
+  </head>
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p>You will find us on the Rue des Fleurs.</p>
+    <p>Our motto is plus de beurre.</p>
+    <p>Croeso i''r becws.</p>
+  </body>
+</html>', '<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <title>Riverside Bakery</title>
+  </head>
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p>You will find us on the Rue des Fleurs.</p>
+    <p>Our motto is <span lang="fr">plus de beurre</span>.</p>
+    <p lang="cy">Croeso i''r becws.</p>
+  </body>
+</html>', ARRAY['The page language goes on the <html> element itself: lang="en-GB".', 'Wrap just the French words in a <span lang="fr">.', 'The Welsh sentence is a whole paragraph, so the attribute goes on the <p>.']::text[],
+       40, 2,
+       (select id from public.skills where slug = 'metadata'), false
+from public.lessons l where l.slug = 'language-and-internationalisation'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'attribute_value'::public.requirement_kind, 'html', 'lang',
+       'en-GB', NULL, NULL, NULL,
+       'The page declares British English', NULL, 1, true
+from public.exercises e where e.slug = 'lang-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'attribute_value'::public.requirement_kind, 'span', 'lang',
+       'fr', NULL, NULL, NULL,
+       'The French phrase is marked', NULL, 1, true
+from public.exercises e where e.slug = 'lang-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'attribute_value'::public.requirement_kind, 'p[lang="cy"]', 'lang',
+       'cy', NULL, NULL, NULL,
+       'The Welsh paragraph is marked', NULL, 1, true
+from public.exercises e where e.slug = 'lang-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'element_count'::public.requirement_kind, '[lang="fr"]', NULL,
+       NULL, NULL, 1, 1,
+       'Only the French phrase is marked as French', NULL, 1, true
+from public.exercises e where e.slug = 'lang-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'text_not_empty'::public.requirement_kind, 'title', NULL,
+       NULL, NULL, NULL, NULL,
+       'The page still has a title', NULL, 1, true
+from public.exercises e where e.slug = 'lang-guided';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'lang-debug', 2, 'debug'::public.exercise_kind, 'Confidently wrong language markup',
+       'This page declares the wrong language, restates it needlessly on every paragraph, marks a proper noun as foreign, and leaves an Arabic quotation with no direction. Repair all four.', '<html lang="fr">
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p lang="fr">Open seven days a week.</p>
+    <p lang="fr">You will find us on the <span lang="fr">Rue des Fleurs</span>.</p>
+    <blockquote lang="ar">مرحبا بكم في المخبز</blockquote>
+  </body>
+</html>', '<html lang="en">
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p>Open seven days a week.</p>
+    <p>You will find us on the Rue des Fleurs.</p>
+    <blockquote lang="ar" dir="rtl">مرحبا بكم في المخبز</blockquote>
+  </body>
+</html>', ARRAY['The page is in English, so <html lang="en">.', 'Paragraphs inherit the page language — remove the repeated lang attributes.', 'A street name is a proper noun and should not be marked as French.', 'Arabic reads right to left, so the quotation needs dir="rtl".']::text[],
+       45, 3,
+       (select id from public.skills where slug = 'metadata'), false
+from public.lessons l where l.slug = 'language-and-internationalisation'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'attribute_value'::public.requirement_kind, 'html', 'lang',
+       'en', NULL, NULL, NULL,
+       'The page declares English', NULL, 1, true
+from public.exercises e where e.slug = 'lang-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'element_count'::public.requirement_kind, '[lang="fr"]', NULL,
+       NULL, NULL, 0, 0,
+       'Nothing is wrongly marked as French', NULL, 1, true
+from public.exercises e where e.slug = 'lang-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'element_count'::public.requirement_kind, 'p[lang]', NULL,
+       NULL, NULL, 0, 0,
+       'Paragraphs simply inherit the page language', NULL, 1, true
+from public.exercises e where e.slug = 'lang-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'attribute_value'::public.requirement_kind, 'blockquote', 'dir',
+       'rtl', NULL, NULL, NULL,
+       'The Arabic quotation declares its direction', NULL, 1, true
+from public.exercises e where e.slug = 'lang-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'attribute_value'::public.requirement_kind, 'blockquote', 'lang',
+       'ar', NULL, NULL, NULL,
+       'The Arabic quotation declares its language', NULL, 1, true
+from public.exercises e where e.slug = 'lang-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'language-and-internationalisation'), NULL, 'q-lang-missing-effect', 1, 'single'::public.question_kind,
+        'What happens when a page has no `lang` attribute?', 'Assistive technology falls back to the user''s own language settings and applies its pronunciation rules to your text.', (select id from public.skills where slug = 'metadata'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Only search ranking is affected', false, NULL
+from public.quiz_questions where slug = 'q-lang-missing-effect';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Screen readers fall back to the user''s language and mispronounce the content', true, NULL
+from public.quiz_questions where slug = 'q-lang-missing-effect';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The page will not validate but nothing else changes', false, NULL
+from public.quiz_questions where slug = 'q-lang-missing-effect';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Browsers detect the language from the words automatically', false, NULL
+from public.quiz_questions where slug = 'q-lang-missing-effect';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'language-and-internationalisation'), NULL, 'q-wrong-lang-worse', 2, 'single'::public.question_kind,
+        'Why is an incorrect `lang` worse than a missing one?', 'A missing attribute makes software fall back to a sensible default. A wrong one makes it confidently apply the wrong rules.', (select id from public.skills where slug = 'metadata'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It causes a validation error, whereas a missing one does not', false, NULL
+from public.quiz_questions where slug = 'q-wrong-lang-worse';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It prevents the page being indexed at all', false, NULL
+from public.quiz_questions where slug = 'q-wrong-lang-worse';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'There is no difference in practice', false, NULL
+from public.quiz_questions where slug = 'q-wrong-lang-worse';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Software stops falling back and applies the wrong rules with confidence', true, NULL
+from public.quiz_questions where slug = 'q-wrong-lang-worse';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'language-and-internationalisation'), NULL, 'q-dir-auto', 3, 'single'::public.question_kind,
+        'When is `dir="auto"` the right choice?', 'For text whose direction you cannot know when writing the page — anything supplied by a user.', (select id from public.skills where slug = 'metadata'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Whenever the page mixes two fonts', false, NULL
+from public.quiz_questions where slug = 'q-dir-auto';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'For user-supplied text such as reviews, comments or names', true, NULL
+from public.quiz_questions where slug = 'q-dir-auto';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'For every element on a multilingual page', false, NULL
+from public.quiz_questions where slug = 'q-dir-auto';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Only on the `<html>` element', false, NULL
+from public.quiz_questions where slug = 'q-dir-auto';
+
 -- lesson: Milestone: optimise a page for discovery
 insert into public.lessons
   (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'seo-milestone', 3, 'Milestone: optimise a page for discovery', 'Every metadata decision on one page', 'A complete, discoverable, shareable page head plus a correctly structured body.',
+select m.id, 'seo-milestone', 4, 'Milestone: optimise a page for discovery', 'Every metadata decision on one page', 'A complete, discoverable, shareable page head plus a correctly structured body.',
        ARRAY['Build a complete production-quality document head', 'Add social metadata and structured data', 'Apply the same to your capstone site']::text[], 22, 40, (select id from public.skills where slug = 'seo'), 0.8
 from public.modules m where m.slug = 'page-metadata'
 on conflict (slug) do update set
@@ -13472,7 +15168,15 @@ select id, 5, 'comparison'::public.block_type, 'What a shared link looks like', 
        NULL, NULL, NULL, '{"good":{"label":"With Open Graph tags","code":"<meta property=\"og:title\" content=\"Bike hire prices — Riverside\">\n<meta property=\"og:description\" content=\"Hire from £6 an hour.\">\n<meta property=\"og:image\" content=\"https://riverside-cycles.example/share-1200.jpg\">\n<meta property=\"og:image:alt\" content=\"A blue hybrid bike outside the workshop\">","why":"A card with a large image, your headline and your sentence — chosen by you."},"bad":{"label":"Without","code":"<title>Riverside Cycle Hire</title>","why":"The messaging app guesses: often just the bare URL, or the first stray sentence it finds on the page."}}'::jsonb
 from public.lessons where slug = 'seo-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 6, 'interactive_demo'::public.block_type, 'What a search result is built from', 'Three pages, three very different results.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Complete","code":"<title>Bike hire prices — Riverside Cycle Hire</title>\n<meta name=\"description\" content=\"Hourly, daily and weekly hire from £6. Helmet, lock and route map included.\">\n<link rel=\"canonical\" href=\"https://riverside-cycles.example/prices.html\">","note":"A distinct title, a description that reads as a promise, and one canonical address so duplicates do not compete."},{"label":"Shared title","code":"<title>Riverside Cycle Hire</title>\n<meta name=\"description\" content=\"Riverside Cycle Hire\">","note":"Every page identical. Tabs are indistinguishable, bookmarks meaningless, and the search engine has nothing to tell them apart."},{"label":"No canonical","code":"<title>Bike hire prices — Riverside Cycle Hire</title>\n<meta name=\"description\" content=\"Hourly, daily and weekly hire from £6.\">","note":"Fine until the same page is reachable with and without a trailing slash, or with tracking parameters — then several URLs compete with each other."}]}'::jsonb
+from public.lessons where slug = 'seo-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'recall'::public.block_type, 'What the crawler was already reading', 'Metadata sits on top of structure — it cannot rescue a badly built page. From memory: which earlier decisions does a search engine actually read, and why does each one matter to it?',
+       NULL, NULL, NULL, '{"points":["Level 1 — `<html lang>` tells it which audience the page is for; the `<title>` is the single most-read line you will write.","Level 2 — the heading outline is how a crawler works out what the page is about and which parts are subordinate.","Level 3 — descriptive link text is a signal about the destination, which is why \"click here\" wastes it.","Level 4 — `alt` text is the only description of an image a crawler has.","Level 5 — landmarks separate the content of this page from the navigation repeated on every page."]}'::jsonb
+from public.lessons where slug = 'seo-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["A complete head is roughly ten lines and takes five minutes.","Every page needs its own title and description.","Social metadata determines what a shared link looks like.","Structured data describes content that genuinely exists on the page."],"nextUp":"Level 10 next: performance and security."}'::jsonb
 from public.lessons where slug = 'seo-milestone';
 
@@ -14049,7 +15753,11 @@ select id, 11, 'progressive_detail'::public.block_type, 'What HTML cannot do for
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'loading-strategy';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 12, 'interactive_demo'::public.block_type, 'One page, three loading strategies', 'The same three images, told to load in different ways.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Deliberate","code":"<img src=\"/learning-media/images/coast-sunrise.jpg\" alt=\"Sunrise over a calm sea\" width=\"1600\" height=\"900\" fetchpriority=\"high\">\n<img src=\"/learning-media/images/forest-path.jpg\" alt=\"A path between tall trees\" width=\"1600\" height=\"900\" loading=\"lazy\" decoding=\"async\">","note":"The banner is prioritised and eager; everything below is deferred. Exactly one asset is marked urgent."},{"label":"Everything urgent","code":"<img src=\"/learning-media/images/coast-sunrise.jpg\" alt=\"Sunrise over a calm sea\" width=\"1600\" height=\"900\" fetchpriority=\"high\">\n<img src=\"/learning-media/images/forest-path.jpg\" alt=\"A path between tall trees\" width=\"1600\" height=\"900\" fetchpriority=\"high\">","note":"Priority is relative, so marking both urgent prioritises neither — and the banner now competes with an image nobody has scrolled to."},{"label":"No dimensions","code":"<img src=\"/learning-media/images/coast-sunrise.jpg\" alt=\"Sunrise over a calm sea\">\n<p>Everything below this jumps when the image lands.</p>","note":"The image claims no height until it arrives, then shoves the paragraph down the page — often just as somebody reaches for a link."}]}'::jsonb
+from public.lessons where slug = 'loading-strategy';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Set `width` and `height` on every image, video and iframe — it fixes the ratio, not the size.","`loading=\"lazy\"` below the fold; `fetchpriority=\"high\"` on one hero asset.","`defer` is the right default for scripts; a bare `<script>` in the head blocks rendering.","Resource hints are for one or two genuinely critical assets."],"nextUp":"Next: the security decisions HTML actually controls."}'::jsonb
 from public.lessons where slug = 'loading-strategy';
 
@@ -14262,15 +15970,27 @@ select id, 12, 'callout'::public.block_type, 'The honest boundary', 'HTML cannot
        NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
 from public.lessons where slug = 'html-security';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'checklist'::public.block_type, 'The markup-level security checklist', NULL,
+select id, 13, 'self_explain'::public.block_type, 'Explain it in your own words', 'A teammate has added `required`, `pattern="[0-9]{16}"` and `maxlength="16"` to a card-number field, and says the input is now validated. Write your reply. Be specific about what those attributes *do* achieve, so that the answer is not simply "they are useless".',
+       NULL, NULL, NULL, '{"modelAnswer":"They achieve something real and something narrow: they catch honest mistakes early, in the browser, before a request is made — better error messages, fewer round trips, a kinder form. What they do not do is validate anything, because every one of them is enforced by the browser and an attacker does not need to use one. The request can be sent by hand with any value at all. So the field is validated for people who are trying to get it right, and completely unvalidated against anyone who is not. The server must check the same things again, and its check is the only one that counts."}'::jsonb
+from public.lessons where slug = 'html-security';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'recall'::public.block_type, 'From memory', 'Close the page. From memory, list every markup-level security measure this lesson covered — and beside each one, say what it prevents.',
+       NULL, NULL, NULL, '{"points":["`rel=\"noopener noreferrer\"` on `target=\"_blank\"` — stops the opened page controlling the tab it came from, and stops your address being passed on.","`sandbox` on every iframe, granting the minimum — the embed runs someone else''s code inside your page.","`title` on every iframe — without it the embed is announced as an unnamed frame.","A referrer policy — stops full URLs, which may carry tokens or identifiers, leaking to third parties.","`rel=\"nofollow ugc\"` on user-submitted links — refuses to lend your site''s standing to content you did not write.","No secrets in hidden inputs, comments or data attributes — all of it is plainly readable.","Subresource integrity on third-party scripts — guarantees you got the code you agreed to.","And the boundary itself: none of this authenticates, authorises or validates. That is the server''s job, always."]}'::jsonb
+from public.lessons where slug = 'html-security';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 15, 'checklist'::public.block_type, 'The markup-level security checklist', NULL,
        NULL, NULL, NULL, '{"items":["`rel=\"noopener noreferrer\"` on every `target=\"_blank\"`","`sandbox` on every iframe, granting the minimum","`title` on every iframe","A referrer policy set page-wide","`rel=\"nofollow ugc\"` on user-submitted links","No secrets in hidden inputs, comments or data attributes","Forms served and submitted over HTTPS"]}'::jsonb
 from public.lessons where slug = 'html-security';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 14, 'progressive_detail'::public.block_type, 'What about `integrity`?', 'Subresource Integrity lets you pin the exact contents of a third-party file: `<script src="https://cdn.example/lib.js" integrity="sha384-…" crossorigin="anonymous"></script>`. If the file changes by so much as a byte, the browser refuses to run it. It is genuinely useful when loading code from a CDN you do not control. It is also a good illustration of HTML''s role in security: it does not make the code safe, it just guarantees you got the code you agreed to.',
+select id, 16, 'progressive_detail'::public.block_type, 'What about `integrity`?', 'Subresource Integrity lets you pin the exact contents of a third-party file: `<script src="https://cdn.example/lib.js" integrity="sha384-…" crossorigin="anonymous"></script>`. If the file changes by so much as a byte, the browser refuses to run it. It is genuinely useful when loading code from a CDN you do not control. It is also a good illustration of HTML''s role in security: it does not make the code safe, it just guarantees you got the code you agreed to.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'html-security';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 17, 'interactive_demo'::public.block_type, 'The same external link, three ways', 'Only one of these is safe and honest about what it does.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Safe","code":"<a href=\"https://example.org/report\" target=\"_blank\" rel=\"noopener noreferrer\">The 2026 cycling report (opens in a new tab)</a>","note":"The opened page gets no reference back to your tab and no referrer, and the visitor is told a new tab is coming."},{"label":"No rel","code":"<a href=\"https://example.org/report\" target=\"_blank\">The 2026 cycling report</a>","note":"Modern browsers imply noopener, so this is no longer the hole it once was — but it still leaks your full URL as the referrer, and still surprises the visitor."},{"label":"Same tab","code":"<a href=\"https://example.org/report\">The 2026 cycling report</a>","note":"Often the best answer. Nothing to leak, nothing to warn about, and the Back button still works."}]}'::jsonb
+from public.lessons where slug = 'html-security';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 18, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`rel=\"noopener noreferrer\"` on every external link opened in a new tab.","Sandbox every iframe, granting the minimum it needs.","Set a referrer policy so URLs do not leak to third parties.","HTML avoids self-inflicted wounds; it does not provide security."],"nextUp":"Next: the Level 10 milestone."}'::jsonb
 from public.lessons where slug = 'html-security';
 
@@ -14409,10 +16129,268 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'As a meta tag, always', false, NULL
 from public.quiz_questions where slug = 'q-csp-header';
 
+-- lesson: Third-party content and embeds
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'third-party-and-embeds', 3, 'Third-party content and embeds', 'The code you did not write, running on your page', 'Almost every slow site is slow because of things someone else wrote. Here is what markup can do about it.',
+       ARRAY['Explain what an embed actually costs', 'Defer and sandbox third-party frames', 'Use `preconnect` and `dns-prefetch` where they genuinely help']::text[], 15, 40, (select id from public.skills where slug = 'performance'), 0.7
+from public.modules m where m.slug = 'html-performance'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A page embeds one video player from another site. Roughly how much does that typically add before the visitor has watched anything?',
+       NULL, NULL, NULL, '{"options":["Often more than the entire rest of the page combined","A few kilobytes — it is only an iframe","Nothing until the visitor presses play","It depends only on your own server"],"answer":"Often more than everything else on the page put together. A typical embedded player pulls in its own HTML, its own scripts, its own styles, frequently its own analytics, and connects to several additional hosts — all before anyone presses play. This is why \"the site is slow\" so often traces back to something nobody on the team wrote, and why deciding *when* an embed loads is one of the highest-value markup decisions available to you."}'::jsonb
+from public.lessons where slug = 'third-party-and-embeds';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Weigh the real cost of an embed before adding one","Defer offscreen frames and restrict what they may do","Warm up connections to hosts you will definitely use"]}'::jsonb
+from public.lessons where slug = 'third-party-and-embeds';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, NULL, 'An `<iframe>` is not a picture of another page. It is another whole page, with its own network requests, its own scripts and its own memory, rendered inside yours. Treat it as such.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'third-party-and-embeds';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'annotated_code'::public.block_type, 'Line by line', NULL,
+       '<iframe
+  src="https://example.org/player/12345"
+  title="Introduction to sourdough, 4 minutes"
+  loading="lazy"
+  sandbox="allow-scripts allow-same-origin allow-presentation"
+  referrerpolicy="no-referrer"
+  width="560" height="315"></iframe>', 'html', NULL, '{"annotations":[{"line":"3","text":"`title` is not optional. Without it the frame is announced as an unnamed frame, and a page with three of them becomes unnavigable."},{"line":"4","text":"`loading=\"lazy\"` on an offscreen embed is the single biggest win available here — it moves the entire cost until the visitor scrolls to it."},{"line":"5","text":"Start from nothing and grant back only what the embed genuinely needs. Note what is *not* granted: no top-navigation, so it cannot redirect your page; no popups; no downloads."},{"line":"6","text":"`no-referrer` means the third party is told nothing about which page the visitor came from."},{"line":"7","text":"Dimensions, for the same reason images need them — otherwise the page jumps when the frame resolves."}]}'::jsonb
+from public.lessons where slug = 'third-party-and-embeds';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, '`allow-scripts` plus `allow-same-origin` removes most of the protection', 'Granted together, a frame from *your own origin* can reach out and remove its own sandbox attribute. For same-origin embeds, that combination is close to no sandbox at all. It is fine for a genuinely third-party origin, which cannot touch your document either way — but know which case you are in rather than copying the pair by habit.',
+       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
+from public.lessons where slug = 'third-party-and-embeds';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'interactive_demo'::public.block_type, 'Where an embed loads', 'The same video embed, placed and configured three ways.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Lazy, below the fold","code":"<h1>How we bake</h1>\n<p>Fifteen hours, start to finish.</p>\n<iframe src=\"about:blank\" title=\"Introduction to sourdough\" loading=\"lazy\" width=\"560\" height=\"315\"></iframe>","note":"Costs nothing until the visitor scrolls to it. The right default for any embed that is not the point of the page."},{"label":"Eager, at the top","code":"<iframe src=\"about:blank\" title=\"Introduction to sourdough\" width=\"560\" height=\"315\"></iframe>\n<h1>How we bake</h1>","note":"Correct only when the embed *is* the page — a video the visitor came specifically to watch."},{"label":"No title, no dimensions","code":"<iframe src=\"about:blank\"></iframe>","note":"Announced as an unnamed frame, and the page jumps when it resolves. Two bugs in one line."}]}'::jsonb
+from public.lessons where slug = 'third-party-and-embeds';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'callout'::public.block_type, 'Resource hints, applied to embeds', 'You met `preconnect` and `dns-prefetch` in the loading-strategy lesson. Embeds are the case where they pay off most, because a third-party frame reaches hosts the browser cannot discover until the frame itself has loaded. One `preconnect` to the embed provider is often worthwhile — and the same limit applies as before: two or three hosts, not ten, because prioritising everything prioritises nothing.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'third-party-and-embeds';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'self_explain'::public.block_type, 'Explain it in your own words', 'Your team wants to add three embeds to the homepage: a video, a map, and a social feed. Write the case you would make. Do not say "embeds are slow" — be specific about what each one costs and what you would do about it if the answer is that they stay.',
+       NULL, NULL, NULL, '{"modelAnswer":"Each one is a whole page loaded inside yours: its own scripts, styles, connections and often its own analytics, typically dwarfing everything the team actually wrote. Three of them means three of that. If they stay, the markup can still do a great deal — every one gets `loading=\"lazy\"` so nothing loads until it is scrolled to, a `title` so the page stays navigable, dimensions so it does not shift the layout, a minimal `sandbox`, and `referrerpolicy=\"no-referrer\"` so three third parties are not told the visitor''s exact page. The stronger option for the map and the feed is a static image that links out, loading the real embed only when someone asks for it — which costs nothing for the large majority who never interact with either."}'::jsonb
+from public.lessons where slug = 'third-party-and-embeds';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'progressive_detail'::public.block_type, 'The placeholder pattern', 'For a map or a social feed, the strongest option is not a better-configured embed — it is no embed until someone asks for one. Show a static image with a link or a button, and load the real thing only on interaction. Most visitors never interact, so most visitors pay nothing at all. The markup is ordinary: an `<img>`, an `<a>` or `<button>`, and the embed added afterwards. This is the one performance technique on the page that can remove a cost entirely rather than merely moving it.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'third-party-and-embeds';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'checklist'::public.block_type, 'Before you accept an embed', NULL,
+       NULL, NULL, NULL, '{"items":["Does the page genuinely need it, or would a linked image do?","Does it have a `title`?","Is it `loading=\"lazy\"` unless it is the point of the page?","Does it have `width` and `height`?","Is it sandboxed to the minimum it needs?","Does it have a referrer policy?","Are you preconnecting to at most two or three hosts?"]}'::jsonb
+from public.lessons where slug = 'third-party-and-embeds';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["An embed is another whole page, and usually costs more than everything you wrote.","`loading=\"lazy\"`, `title`, dimensions and `sandbox` are the four attributes every frame wants.","`allow-scripts` with `allow-same-origin` is close to no sandbox for a same-origin frame.","A static placeholder that loads the embed on interaction removes the cost rather than deferring it."],"nextUp":"Next: the Level 10 milestone."}'::jsonb
+from public.lessons where slug = 'third-party-and-embeds';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What does an embedded player actually cost, before anyone interacts with it?","Name the four attributes every `<iframe>` should carry, and why.","Why is a static placeholder stronger than a well-configured embed?"],"points":["Its own HTML, scripts, styles, analytics and extra host connections — frequently more than the entire rest of the page combined.","`title` so it is announced and navigable; `loading=\"lazy\"` so an offscreen frame costs nothing until reached; `width`/`height` so the layout does not shift; `sandbox` so it can only do what it needs.","Because it removes the cost rather than moving it. A lazy embed still loads in full for anyone who scrolls to it; a placeholder loads the embed only for the minority who actually interact, so most visitors pay nothing at all."]}'::jsonb
+from public.lessons where slug = 'third-party-and-embeds';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'embed-hardening-guided', 1, 'guided'::public.exercise_kind, 'Make an embed behave',
+       'The embed below sits well down a long page. Give it a `title` describing what it is, make it lazy, add its `width` and `height` (560 by 315), sandbox it to scripts and presentation only, and stop it leaking the referrer.', '<h1>How we bake</h1>
+<p>Fifteen hours from mix to cooling rack.</p>
+<iframe src="https://example.org/player/12345"></iframe>', '<h1>How we bake</h1>
+<p>Fifteen hours from mix to cooling rack.</p>
+<iframe src="https://example.org/player/12345"
+        title="Introduction to sourdough, 4 minutes"
+        loading="lazy"
+        sandbox="allow-scripts allow-presentation"
+        referrerpolicy="no-referrer"
+        width="560" height="315"></iframe>', ARRAY['The title should say what the embed contains, not just "video".', 'loading="lazy" is what stops it costing anything until scrolled to.', 'sandbox takes a space-separated list of permissions to grant back.', 'referrerpolicy="no-referrer" sends the third party nothing.']::text[],
+       45, 3,
+       (select id from public.skills where slug = 'performance'), false
+from public.lessons l where l.slug = 'third-party-and-embeds'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_present'::public.requirement_kind, 'iframe', NULL,
+       NULL, NULL, NULL, NULL,
+       'The embed is still there', NULL, 1, true
+from public.exercises e where e.slug = 'embed-hardening-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'attribute_present'::public.requirement_kind, 'iframe', 'title',
+       NULL, NULL, NULL, NULL,
+       'The frame has a title', NULL, 1, true
+from public.exercises e where e.slug = 'embed-hardening-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'attribute_matches'::public.requirement_kind, 'iframe', 'title',
+       '.{10,}', NULL, NULL, NULL,
+       'The title actually describes the embed', NULL, 1, true
+from public.exercises e where e.slug = 'embed-hardening-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'attribute_value'::public.requirement_kind, 'iframe', 'loading',
+       'lazy', NULL, NULL, NULL,
+       'The frame is lazy-loaded', NULL, 1, true
+from public.exercises e where e.slug = 'embed-hardening-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'attribute_present'::public.requirement_kind, 'iframe', 'sandbox',
+       NULL, NULL, NULL, NULL,
+       'The frame is sandboxed', NULL, 1, true
+from public.exercises e where e.slug = 'embed-hardening-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'attribute_value'::public.requirement_kind, 'iframe', 'referrerpolicy',
+       'no-referrer', NULL, NULL, NULL,
+       'The frame sends no referrer', NULL, 1, true
+from public.exercises e where e.slug = 'embed-hardening-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 7, 'attribute_present'::public.requirement_kind, 'iframe', 'width',
+       NULL, NULL, NULL, NULL,
+       'The frame declares its width', NULL, 1, true
+from public.exercises e where e.slug = 'embed-hardening-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 8, 'attribute_present'::public.requirement_kind, 'iframe', 'height',
+       NULL, NULL, NULL, NULL,
+       'The frame declares its height', NULL, 1, true
+from public.exercises e where e.slug = 'embed-hardening-guided';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'third-party-debug', 2, 'debug'::public.exercise_kind, 'A homepage full of other people''s code',
+       'Three problems: an unnamed eager iframe, a render-blocking script in the head, and eight preconnects. Give the frame a title and make it lazy, defer the script, and cut the preconnects down to the one host that is genuinely certain.', '<head>
+  <link rel="preconnect" href="https://a.example.com">
+  <link rel="preconnect" href="https://b.example.com">
+  <link rel="preconnect" href="https://c.example.com">
+  <script src="/analytics.js"></script>
+</head>
+<body>
+  <h1>Riverside Bakery</h1>
+  <iframe src="https://example.org/map"></iframe>
+</body>', '<head>
+  <link rel="preconnect" href="https://a.example.com">
+  <script src="/analytics.js" defer></script>
+</head>
+<body>
+  <h1>Riverside Bakery</h1>
+  <iframe src="https://example.org/map" title="Map of the bakery location"
+          loading="lazy" width="560" height="315"></iframe>
+</body>', ARRAY['Keep one preconnect and delete the rest.', 'Adding defer to the script stops it blocking the parser.', 'The iframe needs a title, loading="lazy" and dimensions.']::text[],
+       55, 4,
+       (select id from public.skills where slug = 'performance'), false
+from public.lessons l where l.slug = 'third-party-and-embeds'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_count'::public.requirement_kind, 'link[rel="preconnect"]', NULL,
+       NULL, NULL, 1, 1,
+       'Only one host is preconnected', NULL, 1, true
+from public.exercises e where e.slug = 'third-party-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'attribute_present'::public.requirement_kind, 'script', 'defer',
+       NULL, NULL, NULL, NULL,
+       'The script no longer blocks parsing', NULL, 1, true
+from public.exercises e where e.slug = 'third-party-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'attribute_present'::public.requirement_kind, 'iframe', 'title',
+       NULL, NULL, NULL, NULL,
+       'The frame has a title', NULL, 1, true
+from public.exercises e where e.slug = 'third-party-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'attribute_value'::public.requirement_kind, 'iframe', 'loading',
+       'lazy', NULL, NULL, NULL,
+       'The frame is lazy-loaded', NULL, 1, true
+from public.exercises e where e.slug = 'third-party-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'attribute_present'::public.requirement_kind, 'iframe', 'width',
+       NULL, NULL, NULL, NULL,
+       'The frame declares its dimensions', NULL, 1, true
+from public.exercises e where e.slug = 'third-party-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'third-party-and-embeds'), NULL, 'q-iframe-cost', 1, 'single'::public.question_kind,
+        'What is an `<iframe>` embed, in resource terms?', 'It is another complete page — its own requests, scripts, styles and memory — rendered inside yours.', (select id from public.skills where slug = 'performance'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'A lightweight reference costing a few kilobytes', false, NULL
+from public.quiz_questions where slug = 'q-iframe-cost';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A copy of content fetched by your own server', false, NULL
+from public.quiz_questions where slug = 'q-iframe-cost';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Another complete page, with its own requests and scripts', true, NULL
+from public.quiz_questions where slug = 'q-iframe-cost';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A static image of another page', false, NULL
+from public.quiz_questions where slug = 'q-iframe-cost';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'third-party-and-embeds'), NULL, 'q-sandbox-combination', 2, 'single'::public.question_kind,
+        'Why is `sandbox="allow-scripts allow-same-origin"` weak on a same-origin frame?', 'Together they let the framed document reach out and remove its own sandbox attribute.', (select id from public.skills where slug = 'security'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Browsers ignore sandbox when two values are given', false, NULL
+from public.quiz_questions where slug = 'q-sandbox-combination';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It blocks the frame from loading at all', false, NULL
+from public.quiz_questions where slug = 'q-sandbox-combination';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It is fine — the combination is the recommended default', false, NULL
+from public.quiz_questions where slug = 'q-sandbox-combination';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The frame can remove its own sandbox attribute', true, NULL
+from public.quiz_questions where slug = 'q-sandbox-combination';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'third-party-and-embeds'), NULL, 'q-defer-vs-async', 3, 'single'::public.question_kind,
+        'What does `defer` do that `async` does not?', '`defer` runs scripts after parsing in document order. `async` runs each as soon as it arrives, in no predictable order.', (select id from public.skills where slug = 'performance'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Runs the script before the parser starts', false, NULL
+from public.quiz_questions where slug = 'q-defer-vs-async';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Runs after parsing, preserving document order', true, NULL
+from public.quiz_questions where slug = 'q-defer-vs-async';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Downloads the script faster', false, NULL
+from public.quiz_questions where slug = 'q-defer-vs-async';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Prevents the script from running at all', false, NULL
+from public.quiz_questions where slug = 'q-defer-vs-async';
+
 -- lesson: Milestone: repair a slow, unsafe page
 insert into public.lessons
   (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'performance-milestone', 3, 'Milestone: repair a slow, unsafe page', 'Every problem from this level, on one page', 'The page in this milestone is slow, jumps as it loads, and hands data to third parties.',
+select m.id, 'performance-milestone', 4, 'Milestone: repair a slow, unsafe page', 'Every problem from this level, on one page', 'The page in this milestone is slow, jumps as it loads, and hands data to third parties.',
        ARRAY['Diagnose performance and security problems from markup alone', 'Apply the correct fix for each', 'Improve your own capstone site the same way']::text[], 25, 40, (select id from public.skills where slug = 'performance'), 0.8
 from public.modules m where m.slug = 'html-performance'
 on conflict (slug) do update set
@@ -14441,7 +16419,21 @@ select id, 5, 'checklist'::public.block_type, 'Review any page against these', N
        NULL, NULL, NULL, '{"items":["Every image, video and iframe has `width` and `height`","Below-the-fold images and iframes are lazy-loaded","The hero image is not lazy-loaded, and is `fetchpriority=\"high\"`","Scripts use `defer` unless there is a specific reason not to","Video uses `preload=\"metadata\"` or `none`, never `auto`","External links opened in a new tab carry `rel=\"noopener noreferrer\"`","Every iframe has a `title` and a `sandbox`","A referrer policy is set","No secrets anywhere in the markup"]}'::jsonb
 from public.lessons where slug = 'performance-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 6, 'media_example'::public.block_type, 'The image that decides how fast the page feels', 'On a page like this the banner *is* the perceived load time. It gets dimensions so nothing shifts, a priority hint so it is fetched first, and deliberately no `loading="lazy"` — the two would contradict each other.',
+       '<img src="/learning-media/images/vehicle-hire.jpg"
+     alt="A blue five-door car photographed side-on, parked on an open road"
+     width="1600" height="900" fetchpriority="high">', 'html', 'vehicle-hire', '{}'::jsonb
+from public.lessons where slug = 'performance-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'interactive_demo'::public.block_type, 'The same repair, measured', 'What each change actually buys.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Repaired","code":"<img src=\"/learning-media/images/vehicle-hire.jpg\" alt=\"A blue five-door car parked on an open road\" width=\"1600\" height=\"900\" fetchpriority=\"high\">\n<iframe src=\"https://example.org/map\" title=\"Location map\" loading=\"lazy\" width=\"560\" height=\"315\"></iframe>","note":"Nothing shifts, the banner is fetched first, and the map costs nothing until somebody scrolls to it."},{"label":"As found","code":"<img src=\"/learning-media/images/vehicle-hire.jpg\" alt=\"car\" loading=\"lazy\" fetchpriority=\"high\">\n<iframe src=\"https://example.org/map\"></iframe>","note":"No dimensions so the page jumps; lazy and high-priority contradicting each other on the banner; and an unnamed frame loading immediately."}]}'::jsonb
+from public.lessons where slug = 'performance-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'recall'::public.block_type, 'The performance you already wrote', 'Most of this repair is applying earlier lessons with a new motive. From memory: which decisions from Levels 4 and 9 turn out to be performance decisions too?',
+       NULL, NULL, NULL, '{"points":["Level 4 — `srcset` and `sizes` stop a phone downloading a 1600-pixel file to display it at 400.","Level 4 — `<picture>` offers a modern format with a fallback, which is usually the single largest byte saving available.","Level 4 — `width` and `height` on every image, which you learned for layout and which also stops the page shifting as it loads.","Level 9 — `<link rel=\"canonical\">` and clean metadata keep duplicate URLs from competing, so caching and crawling both do less work.","This level — `loading`, `fetchpriority` and `decoding` decide *when* and *in what order*, not how much."]}'::jsonb
+from public.lessons where slug = 'performance-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Most HTML performance work is about not making things worse.","Most HTML security work is about not handing over an opening.","Both take minutes and both are checkable from the markup alone."],"nextUp":"Level 11 next: validation and debugging."}'::jsonb
 from public.lessons where slug = 'performance-milestone';
 
@@ -15207,7 +17199,11 @@ select id, 9, 'progressive_detail'::public.block_type, 'Debugging as a method', 
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'developer-tools';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 10, 'interactive_demo'::public.block_type, 'What the inspector shows that the source does not', 'The browser repairs broken markup before you ever see it.',
+       NULL, NULL, NULL, '{"variants":[{"label":"What you wrote","code":"<p>Fresh bread\n<div>Every morning</div>\n</p>","note":"A <div> inside a <p>, which is not legal. This is the source you would read in your editor."},{"label":"What the browser built","code":"<p>Fresh bread</p>\n<div>Every morning</div>\n<p></p>","note":"The parser closed the paragraph before the div and left an empty one behind. This is what the inspector shows — and why comparing the two is the fastest way to find a nesting fault."}]}'::jsonb
+from public.lessons where slug = 'developer-tools';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Elements shows the repaired DOM — indentation reveals unclosed tags.","Network shows broken paths as 404s with the exact URL requested.","The Accessibility panel shows computed names and roles.","Change one thing at a time, and narrow before you fix."],"nextUp":"Next: repair a whole broken site."}'::jsonb
 from public.lessons where slug = 'developer-tools';
 
@@ -15324,10 +17320,279 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'To keep the file smaller', false, NULL
 from public.quiz_questions where slug = 'q-one-change';
 
+-- lesson: A method that finds anything
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'a-method-for-debugging', 3, 'A method that finds anything', 'Bisection, minimal reproductions, and why guessing is slower', 'Most people debug by staring and guessing. There is a method that finds any fault in a bounded number of steps, and it does not require you to be clever.',
+       ARRAY['Cut a problem in half repeatedly instead of scanning it', 'Reduce a broken page to a minimal reproduction', 'State a hypothesis before changing anything']::text[], 16, 40, (select id from public.skills where slug = 'debugging'), 0.7
+from public.modules m where m.slug = 'validation-and-tools'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A 400-line page renders wrongly somewhere. Deleting half of it and checking is a strange-looking way to start. Roughly how many checks does that take to find the fault?',
+       NULL, NULL, NULL, '{"options":["About nine — each check halves what is left","About 200 — you still have to read most of it","It depends entirely on how experienced you are","Bisection does not work on markup"],"answer":"About nine. Halving 400 lines takes roughly log₂(400) ≈ 9 steps to reach a single line, regardless of how the fault looks or how much you know about it. That is the whole appeal: the method is indifferent to your familiarity with the code, it terminates in a predictable number of steps, and it cannot be defeated by a fault you would not have thought to look for."}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Apply bisection to any broken document","Build a minimal reproduction and know why it is worth the time","Debug by hypothesis rather than by alteration"]}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, NULL, 'Debugging feels like an intuition problem and is really a search problem. The fault is somewhere in a space, and your job is to shrink that space as fast as possible. Reading from the top shrinks it one line at a time. Halving it shrinks it exponentially.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'term'::public.block_type, 'Bisection', 'Repeatedly cutting the search space in half. Remove half the page; if the fault survives, it was in the half you kept — if it vanishes, it was in the half you removed. Either answer is progress.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'worked_example'::public.block_type, 'Finding one fault in a long page', 'A page where everything after the third section renders inside the previous heading. The cause could be anywhere. Here is the method, which never needs a guess.',
+       NULL, NULL, NULL, '{"steps":[{"title":"Confirm the fault, precisely","code":"Symptom: everything from \"Prices\" onwards is\ninside the <h2> above it.","reasoning":"Write the symptom down in one sentence before touching anything. Half of all long debugging sessions are someone fixing a different problem from the one that was reported, and this step costs ten seconds."},{"title":"Delete the second half","code":"<!-- keep lines 1-200, delete 201-400 -->","reasoning":"Do not read it. Delete it. If the fault is still there, it lives in the first half; if it is gone, in the second. One action has eliminated 200 lines either way."},{"title":"Repeat on whichever half still fails","code":"1-200 → still broken\n1-100 → still broken\n1-50  → fine\n50-100 → still broken","reasoning":"Each step costs one check and halves what is left. Four steps in, the fault is somewhere in fifty lines. Notice that no understanding of the fault has been required yet — which is exactly why the method works on code you have never seen."},{"title":"Read only what is left, then state a hypothesis","code":"<h2>Prices  ← no closing tag\n\nHypothesis: the unclosed h2 swallows\neverything until the browser closes it.","reasoning":"Now reading is cheap, because there are fifty lines instead of four hundred. State what you think is wrong and what fixing it should change *before* you edit — otherwise a fix that appears to work may just have moved the symptom somewhere you are not looking."}]}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'callout'::public.block_type, 'Keep a copy before you start cutting', 'Bisection means deliberately destroying the page to learn where the fault is. Copy the file first — or commit it — so that when you have found the answer you can go back to the real thing and fix that one line, rather than trying to reconstruct 400 lines from memory.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'term'::public.block_type, 'Minimal reproduction', 'The smallest piece of markup that still shows the fault. Producing one is often what solves the problem, because everything you removed was, by definition, not the cause.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'interactive_demo'::public.block_type, 'The same fault, at three sizes', 'Each of these shows the identical bug. Only one is easy to think about.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Minimal","code":"<h2>Prices\n<p>From £6 an hour.</p>","note":"Two lines. The missing closing tag is obvious the moment everything else is gone."},{"label":"In context","code":"<header><nav aria-label=\"Main\"><a href=\"index.html\">Home</a></nav></header>\n<main>\n  <h2>Prices\n  <p>From £6 an hour.</p>\n  <p>Helmets included.</p>\n</main>","note":"Still findable, but you are now reading past four elements that have nothing to do with it."},{"label":"The real page","code":"<header><nav aria-label=\"Main\"><a href=\"index.html\">Home</a> <a href=\"menu.html\">Menu</a> <a href=\"contact.html\">Contact</a></nav></header>\n<main>\n  <h1>Riverside Cycle Hire</h1>\n  <p>Open seven days.</p>\n  <section><h2>Routes</h2><p>Three waymarked loops.</p></section>\n  <h2>Prices\n  <p>From £6 an hour.</p>\n</main>\n<footer><p>© 2026</p></footer>","note":"The same single fault, now surrounded by correct markup that all looks equally suspicious."}]}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'callout'::public.block_type, 'Changing several things at once', 'When a fix does not work, the temptation is to change three more things and try again. Now you have four alterations and no idea which helped, which did nothing, and which introduced a second fault. Change one thing. Check. Undo it if it did not help. It feels slower and it is reliably faster.',
+       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'predict_check'::public.block_type, 'Predict, then check', 'None of these list items is closed. Before you run it: does this render as three items, one item, or fail to render?',
+       '<ul>
+  <li>Sourdough
+  <li>Rye
+  <li>Seeded
+</ul>', 'html', NULL, '{"outcome":"Three items, correctly. `</li>` is genuinely optional in the HTML specification — the parser closes each item when the next one begins. This matters for debugging in a way that catches people out: when you are hunting a fault, \"there is no closing tag\" is *sometimes* the bug and sometimes entirely legal. `<li>`, `<p>`, `<td>` and `<option>` all have optional closing tags; `<div>`, `<h2>` and `<a>` do not. The validator is the reliable way to tell the two cases apart — which is why it comes before the guessing."}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'self_explain'::public.block_type, 'Explain it in your own words', 'A colleague spends an hour on a rendering fault, trying things until one works, and says bisection would have been slower because "it wastes time deleting code that is obviously fine". Write your reply.',
+       NULL, NULL, NULL, '{"modelAnswer":"The word doing the work in their sentence is \"obviously\". If the fault were in code that looked wrong, they would have found it in five minutes — the reason it took an hour is precisely that the cause is somewhere they had already dismissed. Bisection is valuable because it does not care what looks fine: it eliminates half the page per check whether you understand the code or not, and reaches a single line in around nine steps for a 400-line file. Trying things until one works has no bound at all, produces no knowledge of *why* it worked, and frequently leaves a second fault behind — because several things were changed and only the symptom was checked."}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'checklist'::public.block_type, 'The method, in order', NULL,
+       NULL, NULL, NULL, '{"items":["Write the symptom down in one sentence","Copy the file before you start cutting","Validate first — it may simply tell you the answer","Halve, check, halve again","Reduce to a minimal reproduction","State a hypothesis before editing","Change one thing, then check","Restore the real file and apply the single fix"]}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Debugging is a search problem: shrink the space, do not scan it.","Bisection finds a fault in a 400-line file in about nine checks, whatever the fault is.","A minimal reproduction often solves the problem by itself.","One change at a time, with a hypothesis stated first."],"nextUp":"Next: the faults you will actually meet, and how each one looks."}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why does bisection beat reading from the top?","What should you do before you start deleting, and why?","Why change only one thing at a time?"],"points":["Reading eliminates one line per step; halving eliminates half the remaining file per step — about nine checks for 400 lines — and it works on code you have never seen, because it does not depend on recognising the fault.","Write the symptom down, and copy or commit the file. Bisection destroys the page deliberately, and you need the original back to apply the real fix.","Because with four simultaneous changes you cannot tell which one helped, which did nothing, and which quietly introduced a second fault."]}'::jsonb
+from public.lessons where slug = 'a-method-for-debugging';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'bisection-debug', 1, 'debug'::public.exercise_kind, 'One fault, found by halving',
+       'Everything below the "Prices" heading is being swallowed by it. Use the method: find the single unclosed element and close it. Change nothing else.', '<main>
+  <h1>Riverside Cycle Hire</h1>
+  <p>Open seven days a week.</p>
+  <section>
+    <h2>Routes</h2>
+    <p>Three waymarked loops from the door.</p>
+  </section>
+  <h2>Prices
+  <p>From £6 an hour.</p>
+  <p>Helmets and route maps included.</p>
+</main>', '<main>
+  <h1>Riverside Cycle Hire</h1>
+  <p>Open seven days a week.</p>
+  <section>
+    <h2>Routes</h2>
+    <p>Three waymarked loops from the door.</p>
+  </section>
+  <h2>Prices</h2>
+  <p>From £6 an hour.</p>
+  <p>Helmets and route maps included.</p>
+</main>', ARRAY['Delete the second half of the main and see whether the fault survives.', 'The fault is a heading that is never closed.', 'Add </h2> immediately after the word Prices.']::text[],
+       45, 3,
+       (select id from public.skills where slug = 'debugging'), false
+from public.lessons l where l.slug = 'a-method-for-debugging'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_count'::public.requirement_kind, 'h2', NULL,
+       NULL, NULL, 2, 2,
+       'Both headings are present and correctly closed', NULL, 1, true
+from public.exercises e where e.slug = 'bisection-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'element_count'::public.requirement_kind, 'h2 p', NULL,
+       NULL, NULL, 0, 0,
+       'No paragraph has been swallowed by a heading', NULL, 1, true
+from public.exercises e where e.slug = 'bisection-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'element_count'::public.requirement_kind, 'main > p', NULL,
+       NULL, NULL, 3, 3,
+       'All three paragraphs sit directly in <main>', NULL, 1, true
+from public.exercises e where e.slug = 'bisection-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'heading_order'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'The heading hierarchy is correct: one <h1>, and no skipped levels', 'Start with a single <h1>, then step down one level at a time — h2 before h3.', 1, true
+from public.exercises e where e.slug = 'bisection-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'valid_nesting'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
+from public.exercises e where e.slug = 'bisection-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'unique_element'::public.requirement_kind, 'main', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is exactly one <main>', NULL, 1, true
+from public.exercises e where e.slug = 'bisection-debug';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'minimal-reproduction-challenge', 2, 'challenge'::public.exercise_kind, 'Reduce it, then repair it',
+       'This page has one structural fault. Do it the methodical way: strip out everything that is not the cause until you are left with the smallest fragment containing it — then fix that fragment. Your answer should be the reduced, repaired fragment and nothing else. Everything you can delete without losing the fault was, by definition, not the problem.', '<header>
+  <nav aria-label="Main"><a href="index.html">Home</a></nav>
+</header>
+<main>
+  <h1>Menu</h1>
+  <p>Baked fresh each morning.</p>
+  <section>
+    <h2>Loaves</h2>
+    <ul>
+      <li>Sourdough</li>
+      <li>Rye</li>
+    </ul>
+  </section>
+  <div class="notice">
+    <p>Closed Mondays.</p>
+</main>', '<div class="notice">
+  <p>Closed Mondays.</p>
+</div>', ARRAY['Everything in the header, the h1 and the section renders correctly — remove it all.', 'The list is fine: <li> may legally omit its closing tag, so it is not the fault.', 'What remains is the div that is never closed. Close it.']::text[],
+       55, 4,
+       (select id from public.skills where slug = 'debugging'), false
+from public.lessons l where l.slug = 'a-method-for-debugging'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_count'::public.requirement_kind, 'div', NULL,
+       NULL, NULL, 1, 1,
+       'The reproduction contains the single suspect element', NULL, 1, true
+from public.exercises e where e.slug = 'minimal-reproduction-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'element_count'::public.requirement_kind, 'div > p', NULL,
+       NULL, NULL, 1, 1,
+       'The paragraph is inside the div, which is now closed', NULL, 1, true
+from public.exercises e where e.slug = 'minimal-reproduction-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'element_count'::public.requirement_kind, 'nav', NULL,
+       NULL, NULL, 0, 0,
+       'The navigation has been removed as irrelevant', NULL, 1, true
+from public.exercises e where e.slug = 'minimal-reproduction-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'element_count'::public.requirement_kind, 'h1, h2', NULL,
+       NULL, NULL, 0, 0,
+       'The headings have been removed as irrelevant', NULL, 1, true
+from public.exercises e where e.slug = 'minimal-reproduction-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'element_count'::public.requirement_kind, 'ul, li', NULL,
+       NULL, NULL, 0, 0,
+       'The list has been removed as irrelevant', NULL, 1, true
+from public.exercises e where e.slug = 'minimal-reproduction-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'valid_nesting'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
+from public.exercises e where e.slug = 'minimal-reproduction-challenge';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'a-method-for-debugging'), NULL, 'q-bisection-steps', 1, 'single'::public.question_kind,
+        'Roughly how many checks does bisection need to locate a fault in a 400-line file?', 'Each check halves what remains, so it takes about log₂(400) ≈ 9 steps regardless of the fault.', (select id from public.skills where slug = 'debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'About nine', true, NULL
+from public.quiz_questions where slug = 'q-bisection-steps';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'About twenty', false, NULL
+from public.quiz_questions where slug = 'q-bisection-steps';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'About two hundred', false, NULL
+from public.quiz_questions where slug = 'q-bisection-steps';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It cannot be predicted', false, NULL
+from public.quiz_questions where slug = 'q-bisection-steps';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'a-method-for-debugging'), NULL, 'q-minimal-repro-value', 2, 'single'::public.question_kind,
+        'Why does building a minimal reproduction often solve the problem outright?', 'Everything you were able to remove was, by definition, not the cause — so what is left is the cause.', (select id from public.skills where slug = 'debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Browsers validate short documents more strictly', false, NULL
+from public.quiz_questions where slug = 'q-minimal-repro-value';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It forces the browser to re-parse the page', false, NULL
+from public.quiz_questions where slug = 'q-minimal-repro-value';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Everything removable was not the cause, so what remains is', true, NULL
+from public.quiz_questions where slug = 'q-minimal-repro-value';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Smaller files load faster, revealing timing bugs', false, NULL
+from public.quiz_questions where slug = 'q-minimal-repro-value';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'a-method-for-debugging'), NULL, 'q-one-change-at-a-time', 3, 'single'::public.question_kind,
+        'Why change only one thing between checks?', 'With several simultaneous changes you cannot attribute the result, and you may introduce a new fault while masking the original.', (select id from public.skills where slug = 'debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Browsers cache multiple edits incorrectly', false, NULL
+from public.quiz_questions where slug = 'q-one-change-at-a-time';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The validator only reports one error at a time', false, NULL
+from public.quiz_questions where slug = 'q-one-change-at-a-time';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It is only a stylistic preference', false, NULL
+from public.quiz_questions where slug = 'q-one-change-at-a-time';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Otherwise you cannot tell which change was responsible', true, NULL
+from public.quiz_questions where slug = 'q-one-change-at-a-time';
+
 -- lesson: Milestone: repair a broken site
 insert into public.lessons
   (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'debugging-milestone', 3, 'Milestone: repair a broken site', 'Every category of fault, one page', 'A page with structural, semantic, accessibility, media and validation faults. Repair all of them.',
+select m.id, 'debugging-milestone', 4, 'Milestone: repair a broken site', 'Every category of fault, one page', 'A page with structural, semantic, accessibility, media and validation faults. Repair all of them.',
        ARRAY['Diagnose faults across every category covered so far', 'Repair methodically rather than by guessing', 'Verify with the checklist']::text[], 30, 40, (select id from public.skills where slug = 'debugging'), 0.85
 from public.modules m where m.slug = 'validation-and-tools'
 on conflict (slug) do update set
@@ -15365,7 +17630,15 @@ select id, 5, 'comparison'::public.block_type, 'One mistake, many error messages
        NULL, NULL, NULL, '{"good":{"label":"The validator output","code":"Line 14: End tag \"main\" seen, but there were open elements.\nLine 9:  Unclosed element \"section\".\nLine 15: Stray end tag \"div\".","why":"Three messages. Fix the one on line 9 and re-run — the other two usually vanish with it."},"bad":{"label":"The actual fault","code":"<main>\n  <section>          ← opened on line 9\n    <h2>Routes</h2>\n</main>              ← never closed","why":"A single missing closing tag. This is why you fix the first error and re-validate rather than working down the list."}}'::jsonb
 from public.lessons where slug = 'debugging-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 6, 'interactive_demo'::public.block_type, 'Where each kind of fault shows up', 'The same page, seen through three different tools.',
+       NULL, NULL, NULL, '{"variants":[{"label":"The validator finds it","code":"<main>\n  <section>\n    <h2>Routes</h2>\n</main>","note":"Unclosed section. A grammar fault, so the validator names it directly — always the cheapest check to run first."},{"label":"Only the keyboard finds it","code":"<main>\n  <h1>Book a table</h1>\n  <div class=\"button\">Book now</div>\n</main>","note":"Perfectly valid. Nothing but tabbing through the page reveals that the control cannot be reached at all."},{"label":"Only the network panel finds it","code":"<img src=\"/learning-media/images/does-not-exist.jpg\" alt=\"A tidy studio desk\" width=\"800\" height=\"600\">","note":"Valid markup, sensible alt, and a 404. No validator checks whether a path resolves — the Network panel is the only place this appears."}]}'::jsonb
+from public.lessons where slug = 'debugging-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'recall'::public.block_type, 'The rules behind the faults', 'Every fault in this milestone is a rule you already know, broken. From memory, name the rule each of these would violate — before you look at the page.',
+       NULL, NULL, NULL, '{"points":["Level 1 — elements must nest, never overlap: `<strong><em>…</strong></em>` is the classic.","Level 2 — one `<h1>`, and no skipped levels between headings.","Level 3 — a relative path is read from the file you are in, so `../` means up one folder.","Level 4 — every image needs an `alt`, and every media path must actually resolve.","Level 5 — exactly one `<main>`, and it does not sit inside a header, footer or article.","Level 6 — every control needs a label with a matching `for` and `id`.","Level 8 — every id on the page is unique, or labels and ARIA references point at the wrong element."]}'::jsonb
+from public.lessons where slug = 'debugging-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Structure first, then validation, then content-level faults.","Verify each fix; do not assume.","This is the single most employable skill in the whole course."],"nextUp":"Level 12 next: the capstone."}'::jsonb
 from public.lessons where slug = 'debugging-milestone';
 
@@ -16052,7 +18325,22 @@ select id, 8, 'checklist'::public.block_type, 'Before moving on, confirm', NULL,
        NULL, NULL, NULL, '{"items":["Five pages exist, each with its own title and description","Every page uses the identical shell","`aria-current=\"page\"` is correct on each","Every internal link resolves — click all of them","All assets are in `assets/`, with lowercase hyphenated names","A favicon exists and is linked from every page"]}'::jsonb
 from public.lessons where slug = 'assembling-the-site';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 9, 'media_example'::public.block_type, 'A real page, assembled from everything so far', 'Every element here has been covered: a landmark, a heading, a described image with dimensions, and a link whose text works on its own. Assembly is not a new skill — it is the point at which the previous eleven levels stop being separate.',
+       '<main>
+  <h1>The workshop</h1>
+  <img src="/learning-media/images/workshop-tools.jpg"
+       alt="Hand tools hanging in rows on a workshop wall above a wooden workbench"
+       width="1600" height="900" loading="lazy" decoding="async">
+  <p>Every repair is done here, by hand.</p>
+  <a href="repairs.html">See what a service includes</a>
+</main>', 'html', 'workshop-tools', '{}'::jsonb
+from public.lessons where slug = 'assembling-the-site';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'interactive_demo'::public.block_type, 'A page section, before and after the course', 'The same content as a beginner writes it, and as you write it now.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Now","code":"<main>\n  <h1>Repairs</h1>\n  <img src=\"/learning-media/images/workshop-tools.jpg\" alt=\"Hand tools hanging in rows on a workshop wall\" width=\"1600\" height=\"900\" loading=\"lazy\">\n  <p>Booked in and returned within a week.</p>\n  <a href=\"repairs.html\">See what a service includes</a>\n</main>","note":"A landmark, one h1, described image with reserved space, deferred loading, and link text that works alone."},{"label":"Before","code":"<div class=\"content\">\n  <div class=\"title\">Repairs</div>\n  <img src=\"workshop.jpg\">\n  <div>Booked in and returned within a week.</div>\n  <a href=\"repairs.html\">Click here</a>\n</div>","note":"Renders almost identically and fails on every count: no landmark, no heading, no alt, no dimensions, and link text that means nothing in a list."}]}'::jsonb
+from public.lessons where slug = 'assembling-the-site';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Five pages, one shell, differing only in metadata and main content.","`aria-current` moves per page.","Check every internal link by clicking it."],"nextUp":"Next: the final review."}'::jsonb
 from public.lessons where slug = 'assembling-the-site';
 
@@ -16289,7 +18577,22 @@ select id, 6, 'visual'::public.block_type, NULL, 'The landmark structure every p
        NULL, NULL, 'semantic-landmarks', '{}'::jsonb
 from public.lessons where slug = 'capstone-build';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 7, 'media_example'::public.block_type, 'A product entry, marked up properly', 'A single item on a shop or menu page. Note what it does *not* need: no ARIA, no roles, no wrappers. Correct elements, and the accessibility comes free.',
+       '<article>
+  <h3>Stoneware bottle</h3>
+  <img src="/learning-media/images/product-bottle.jpg"
+       alt="A dark green ceramic bottle with a cork stopper"
+       width="1200" height="1200" loading="lazy" decoding="async">
+  <p>Hand-thrown, 500ml. <strong>£28</strong></p>
+  <a href="bottle.html">Read more about the stoneware bottle</a>
+</article>', 'html', 'product-bottle', '{}'::jsonb
+from public.lessons where slug = 'capstone-build';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'interactive_demo'::public.block_type, 'Three states of the same project page', 'What "finished" actually means, checked against the course.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Finished","code":"<main id=\"main\" tabindex=\"-1\">\n  <h1>Stoneware bottle</h1>\n  <img src=\"/learning-media/images/product-bottle.jpg\" alt=\"A dark green ceramic bottle with a cork stopper\" width=\"1200\" height=\"1200\" loading=\"lazy\">\n  <p>Hand-thrown, 500ml. <strong>£28</strong></p>\n  <a href=\"shop.html\">Back to the full range</a>\n</main>","note":"Landmark, one h1, described image with reserved space, deferred loading, and link text that stands alone."},{"label":"Nearly","code":"<main>\n  <h1>Stoneware bottle</h1>\n  <img src=\"/learning-media/images/product-bottle.jpg\" alt=\"bottle\" width=\"1200\" height=\"1200\">\n  <p>Hand-thrown, 500ml. £28</p>\n  <a href=\"shop.html\">Click here</a>\n</main>","note":"Valid, and three faults: alt that names the object rather than describing it, no loading strategy, and link text that means nothing in a list."},{"label":"Not started","code":"<div class=\"page\">\n  <div class=\"title\">Stoneware bottle</div>\n  <img src=\"bottle.jpg\">\n  <div>Hand-thrown, 500ml. £28</div>\n</div>","note":"No landmark, no heading, no alt, no dimensions, no link. It renders — and fails every check in the final review."}]}'::jsonb
+from public.lessons where slug = 'capstone-build';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["The capstone is the assembly of twelve levels of work.","Every requirement maps to a module you have already completed.","The standard is markup that survives professional review."],"nextUp":"Next: the final review and publishing."}'::jsonb
 from public.lessons where slug = 'capstone-build';
 
@@ -16814,8 +19117,26 @@ select id, 6, 'checklist'::public.block_type, 'Before you publish', NULL,
        NULL, NULL, NULL, '{"items":["Every page validates with zero errors","Keyboard test passes on every page","Zero 404s in the Network panel","Every page has its own title and description","Favicon present and linked everywhere","Tested on a real phone","No placeholder text left anywhere"]}'::jsonb
 from public.lessons where slug = 'final-review';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 7, 'media_example'::public.block_type, 'The last thing to check: does it work on a real device?', 'Every review stage before this one can be done at your desk. This one cannot — pick the page up on a phone, on real data, and tap the things people will tap.',
+       '<img src="/learning-media/images/restaurant-plate.jpg"
+     alt="An overhead view of a colourful plated dish on a white plate"
+     width="1200" height="1200" loading="lazy" decoding="async">', 'html', 'restaurant-plate', '{}'::jsonb
+from public.lessons where slug = 'final-review';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'interactive_demo'::public.block_type, 'The five reviews, in order', 'Each stage assumes the one before it is clean.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Validation first","code":"<!DOCTYPE html>\n<html lang=\"en\">\n  <head><meta charset=\"utf-8\"><title>Menu — Riverside</title></head>\n  <body><main><h1>Menu</h1></main></body>\n</html>","note":"Zero errors before anything else. Measuring the performance of a page whose markup is broken measures the wrong page."},{"label":"Then the keyboard","code":"<a href=\"#main-content\">Skip to main content</a>\n<nav aria-label=\"Main\"><a href=\"index.html\">Home</a></nav>\n<main id=\"main-content\" tabindex=\"-1\"><h1>Menu</h1></main>","note":"Tab from the top. Everything reachable, focus always visible, and the skip link lands somewhere that can hold focus."},{"label":"Then media and performance","code":"<img src=\"/learning-media/images/restaurant-plate.jpg\" alt=\"An overhead view of a colourful plated dish\" width=\"1200\" height=\"1200\" loading=\"lazy\" decoding=\"async\">","note":"Every asset resolves, every image has dimensions and an appropriate loading strategy. Only now is a measurement meaningful."}]}'::jsonb
+from public.lessons where slug = 'final-review';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'recall'::public.block_type, 'Everything, from memory', 'The last retrieval of the course. Close everything and write down what you would check on any page you were handed tomorrow — from memory, grouped however you like. Aim for fifteen items before you look.',
+       NULL, NULL, NULL, '{"points":["Structure — doctype, `<html lang>`, charset first in the head, one unique title and description per page.","Headings — exactly one `<h1>`, no skipped levels, headings describing structure rather than chosen for size.","Landmarks — header, nav, main, footer; exactly one `<main>`; a skip link whose target can take focus.","Links — text that works read alone; `rel=\"noopener noreferrer\"` with `target=\"_blank\"`; every internal path resolving.","Images — an `alt` on every one, empty for decoration; `width` and `height` everywhere; `loading=\"lazy\"` below the fold and never above it.","Forms — a label per control, groups in a `<fieldset>` with a `<legend>`, `autocomplete` on fields about the user, errors connected and announced.","ARIA — as little as possible; native elements first; `aria-current` on the current nav item.","Keyboard — everything reachable, focus always visible, nothing trapped, Enter and Space both working on buttons.","Validation — zero errors, no duplicate ids, no obsolete elements, legal nesting throughout.","Performance — one priority image, dimensions everywhere, embeds lazy, titled and sandboxed.","Metadata — canonical URL, favicon, Open Graph title, description and a described image.","And the one no tool can check: does the alt text, the link text and the heading order describe what is actually on the page?"]}'::jsonb
+from public.lessons where slug = 'final-review';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Five reviews, in order: validation, accessibility, media, performance, real device.","Each stage assumes the previous one is clean.","A static HTML site publishes with no build step at all."],"nextUp":"Finally: the course assessment."}'::jsonb
+from public.lessons where slug = 'final-review';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Name the five reviews in order, and say why that order and not another.","For each one, name the single check you would run first if you only had five minutes.","What does it mean that a page passes validation but fails the keyboard test?"],"points":["Validation, accessibility, media, performance, real device. Each stage assumes the previous one is clean — there is no point measuring the performance of a page whose markup is still broken, because fixing the markup changes the measurement.","Validation: run the page through the W3C validator. Accessibility: tab through it from top to bottom. Media: check for 404s in the Network panel. Performance: check image dimensions and formats. Device: open it on a real phone.","That valid markup and usable markup are different claims. Validation checks that the document is well formed; it cannot tell whether a control can be reached, whether focus is visible, or whether the reading order makes sense. A page can be perfectly valid and completely unusable without a mouse."]}'::jsonb
 from public.lessons where slug = 'final-review';
 
 insert into public.exercises
@@ -17438,11 +19759,11 @@ from public.quiz_questions where slug = 'final-q12';
 -- Remove content deleted from the curriculum
 -- --------------------------------------------------------------------------
 
-delete from public.quiz_questions where slug not in ('a1-q1', 'a1-q2', 'a1-q3', 'a1-q4', 'a1-q5', 'a1-q6', 'a1-q7', 'a1-q8', 'a1-q9', 'a1-q10', 'q-what-is-html', 'q-html-purpose', 'q-tag-vs-element', 'q-attribute-syntax', 'q-void-elements', 'q-nesting-order', 'q-dom-meaning', 'q-comments', 'q-doctype-purpose', 'q-head-vs-body', 'q-viewport', 'q-charset', 'q-index-html', 'q-one-h1', 'a2-q1', 'a2-q2', 'a2-q3', 'a2-q4', 'a2-q5', 'a2-q6', 'a2-q7', 'a2-q8', 'q-heading-skip', 'q-heading-purpose', 'q-whitespace', 'q-br-use', 'q-hr-meaning', 'q-strong-vs-em', 'q-small-meaning', 'q-cite-meaning', 'q-datetime-format', 'q-q-quotes', 'q-entity-lt', 'q-list-choice', 'q-nested-list', 'q-semantic-choice', 'a3-q1', 'a3-q2', 'a3-q3', 'a3-q4', 'a3-q5', 'a3-q6', 'a3-q7', 'a3-q8', 'q-link-text', 'q-noopener', 'q-dotdot', 'q-leading-slash', 'q-fragment-case', 'q-tel-format', 'q-download-attr', 'q-nav-list', 'q-skip-link-position', 'q-aria-current', 'q-filenames', 'q-nav-consistency', 'a4-q1', 'a4-q2', 'a4-q3', 'a4-q4', 'a4-q5', 'a4-q6', 'a4-q7', 'a4-q8', 'a4-q9', 'q-img-dimensions', 'q-hotlinking', 'q-empty-alt', 'q-alt-vs-caption', 'q-missing-alt', 'q-srcset-w', 'q-sizes-purpose', 'q-picture-img', 'q-lazy-hero', 'q-picture-vs-srcset', 'q-video-controls', 'q-track-kind', 'q-fallback-placement', 'q-iframe-title', 'q-sandbox', 'a5-q1', 'a5-q2', 'a5-q3', 'a5-q4', 'a5-q5', 'a5-q6', 'a5-q7', 'a5-q8', 'q-semantic-meaning', 'q-main-count', 'q-article-test', 'q-section-heading', 'q-outline-algorithm', 'q-case-sensitivity', 'q-comments-value', 'q-footer-placement', 'a6-q1', 'a6-q2', 'a6-q3', 'a6-q4', 'a6-q5', 'a6-q6', 'a6-q7', 'a6-q8', 'a6-q9', 'a6-q10', 'q-scope-col', 'q-caption-position', 'q-layout-tables', 'q-label-for', 'q-placeholder', 'q-number-type', 'q-name-attribute', 'q-radio-group', 'q-button-type', 'q-legend-position', 'q-client-validation', 'q-get-vs-post', 'q-aria-describedby', 'a7-q1', 'a7-q2', 'a7-q3', 'a7-q4', 'a7-q5', 'a7-q6', 'a7-q7', 'q-summary-position', 'q-details-name', 'q-dialog-close', 'q-popover-js', 'q-modal-content', 'q-progress-vs-meter', 'q-datalist-restrict', 'a8-q1', 'a8-q2', 'a8-q3', 'a8-q4', 'a8-q5', 'a8-q6', 'a8-q7', 'a8-q8', 'a8-q9', 'q-a11y-tree', 'q-keyboard-test', 'q-div-button', 'q-aria-first-rule', 'q-aria-behaviour', 'q-labelledby-vs-label', 'q-audit-order', 'q-duplicate-id-impact', 'a9-q1', 'a9-q2', 'a9-q3', 'a9-q4', 'a9-q5', 'a9-q6', 'a9-q7', 'a9-q8', 'q-title-length', 'q-canonical', 'q-noindex-security', 'q-og-property', 'q-structured-data-ranking', 'q-og-image-url', 'q-metadata-order', 'a10-q1', 'a10-q2', 'a10-q3', 'a10-q4', 'a10-q5', 'a10-q6', 'a10-q7', 'a10-q8', 'q-layout-shift', 'q-defer-async', 'q-preload-overuse', 'q-noopener-why', 'q-hidden-input', 'q-csp-header', 'q-preload-auto', 'a11-q1', 'a11-q2', 'a11-q3', 'a11-q4', 'a11-q5', 'a11-q6', 'a11-q7', 'q-validator-order', 'q-validator-limits', 'q-duplicate-id-effect', 'q-elements-panel', 'q-network-404', 'q-one-change', 'q-repair-order', 'final-q1', 'final-q2', 'final-q3', 'final-q4', 'final-q5', 'final-q6', 'final-q7', 'final-q8', 'final-q9', 'final-q10', 'final-q11', 'final-q12', 'q-shell-difference', 'q-capstone-media', 'q-review-order', 'q-publishing');
-delete from public.exercises where slug not in ('first-markup-guided', 'first-markup-debug', 'attributes-guided', 'attributes-challenge', 'attributes-debug', 'nesting-guided', 'nesting-debug', 'skeleton-guided', 'skeleton-debug', 'first-page-milestone', 'first-page-mission', 'headings-guided', 'headings-debug', 'paragraphs-guided', 'paragraphs-debug', 'emphasis-guided', 'emphasis-challenge', 'quotes-guided', 'quotes-debug', 'lists-guided', 'entities-debug', 'article-milestone-build', 'article-mission', 'links-guided', 'links-debug', 'paths-guided', 'fragments-challenge', 'paths-debug', 'special-links-guided', 'nav-guided', 'skip-link-challenge', 'nav-debug', 'multipage-milestone-build', 'navigation-mission', 'img-guided', 'img-debug', 'alt-guided', 'figure-challenge', 'srcset-guided', 'srcset-debug', 'picture-guided', 'lazy-challenge', 'video-guided', 'video-debug', 'iframe-guided', 'media-milestone', 'media-mission', 'landmarks-guided', 'section-article-guided', 'section-debug', 'patterns-guided', 'semantic-rebuild', 'semantic-mission', 'table-guided', 'table-debug', 'labels-guided', 'input-types-debug', 'fieldset-guided', 'controls-challenge', 'validation-guided', 'form-milestone', 'form-mission', 'details-guided', 'popover-guided', 'dialog-debug', 'datalist-guided', 'native-milestone', 'native-mission', 'keyboard-debug', 'aria-guided', 'aria-debug', 'a11y-audit-milestone', 'a11y-mission', 'metadata-guided', 'metadata-debug', 'og-guided', 'jsonld-challenge', 'seo-milestone-build', 'seo-mission', 'perf-guided', 'security-debug', 'performance-milestone-build', 'performance-mission', 'validation-debug', 'devtools-debug', 'repair-milestone', 'validation-mission', 'shell-guided', 'capstone-main-build', 'final-review-exercise', 'capstone-final-mission');
-delete from public.lessons where slug not in ('what-happens-when-you-open-a-page', 'tags-elements-attributes', 'nesting-and-the-document-tree', 'doctype-html-head-body', 'your-first-complete-page', 'heading-hierarchy', 'paragraphs-breaks-rules', 'emphasis-and-importance', 'quotes-abbreviations-dates', 'code-entities-and-lists', 'article-milestone', 'anchors-and-link-text', 'relative-and-absolute-paths', 'special-links', 'navigation-menus', 'multi-page-milestone', 'the-img-element', 'writing-alt-text', 'srcset-and-sizes', 'picture-and-formats', 'video-and-audio', 'iframes-and-media-milestone', 'semantic-vs-non-semantic', 'section-article-aside', 'file-organisation-and-patterns', 'semantic-rebuild-milestone', 'building-a-table', 'labels-and-inputs', 'grouping-and-controls', 'validation-and-form-milestone', 'details-and-summary', 'dialog-and-popover', 'progress-meter-datalist-milestone', 'how-assistive-tech-reads-a-page', 'aria-fundamentals', 'accessibility-audit-milestone', 'titles-descriptions-canonicals', 'social-and-structured-data', 'seo-milestone', 'loading-strategy', 'html-security', 'performance-milestone', 'reading-validation-output', 'developer-tools', 'debugging-milestone', 'assembling-the-site', 'capstone-build', 'final-review');
+delete from public.quiz_questions where slug not in ('a1-q1', 'a1-q2', 'a1-q3', 'a1-q4', 'a1-q5', 'a1-q6', 'a1-q7', 'a1-q8', 'a1-q9', 'a1-q10', 'q-what-is-html', 'q-html-purpose', 'q-tag-vs-element', 'q-attribute-syntax', 'q-void-elements', 'q-nesting-order', 'q-dom-meaning', 'q-comments', 'q-doctype-purpose', 'q-head-vs-body', 'q-viewport', 'q-charset', 'q-index-html', 'q-one-h1', 'a2-q1', 'a2-q2', 'a2-q3', 'a2-q4', 'a2-q5', 'a2-q6', 'a2-q7', 'a2-q8', 'q-heading-skip', 'q-heading-purpose', 'q-whitespace', 'q-br-use', 'q-hr-meaning', 'q-strong-vs-em', 'q-small-meaning', 'q-cite-meaning', 'q-datetime-format', 'q-q-quotes', 'q-entity-lt', 'q-list-choice', 'q-nested-list', 'q-semantic-choice', 'a3-q1', 'a3-q2', 'a3-q3', 'a3-q4', 'a3-q5', 'a3-q6', 'a3-q7', 'a3-q8', 'q-link-text', 'q-noopener', 'q-dotdot', 'q-leading-slash', 'q-fragment-case', 'q-tel-format', 'q-download-attr', 'q-nav-list', 'q-skip-link-position', 'q-aria-current', 'q-filenames', 'q-nav-consistency', 'a4-q1', 'a4-q2', 'a4-q3', 'a4-q4', 'a4-q5', 'a4-q6', 'a4-q7', 'a4-q8', 'a4-q9', 'q-img-dimensions', 'q-hotlinking', 'q-empty-alt', 'q-alt-vs-caption', 'q-missing-alt', 'q-srcset-w', 'q-sizes-purpose', 'q-picture-img', 'q-lazy-hero', 'q-picture-vs-srcset', 'q-video-controls', 'q-track-kind', 'q-fallback-placement', 'q-iframe-title', 'q-sandbox', 'a5-q1', 'a5-q2', 'a5-q3', 'a5-q4', 'a5-q5', 'a5-q6', 'a5-q7', 'a5-q8', 'q-semantic-meaning', 'q-main-count', 'q-article-test', 'q-section-heading', 'q-outline-algorithm', 'q-case-sensitivity', 'q-comments-value', 'q-footer-placement', 'a6-q1', 'a6-q2', 'a6-q3', 'a6-q4', 'a6-q5', 'a6-q6', 'a6-q7', 'a6-q8', 'a6-q9', 'a6-q10', 'q-scope-col', 'q-caption-position', 'q-layout-tables', 'q-label-for', 'q-placeholder', 'q-number-type', 'q-name-attribute', 'q-radio-group', 'q-button-type', 'q-legend-position', 'q-client-validation', 'q-get-vs-post', 'q-aria-describedby', 'a7-q1', 'a7-q2', 'a7-q3', 'a7-q4', 'a7-q5', 'a7-q6', 'a7-q7', 'q-summary-position', 'q-details-name', 'q-dialog-close', 'q-popover-js', 'q-modal-content', 'q-progress-vs-meter', 'q-datalist-restrict', 'a8-q1', 'a8-q2', 'a8-q3', 'a8-q4', 'a8-q5', 'a8-q6', 'a8-q7', 'a8-q8', 'a8-q9', 'q-a11y-tree', 'q-keyboard-test', 'q-div-button', 'q-focusable-defaults', 'q-tabindex-negative', 'q-positive-tabindex', 'q-name-order', 'q-alt-empty-vs-missing', 'q-link-text-alone', 'q-aria-first-rule', 'q-aria-behaviour', 'q-labelledby-vs-label', 'q-aria-current-page', 'q-live-region-timing', 'q-assertive-vs-polite', 'q-placeholder-not-label', 'q-fieldset-legend', 'q-autocomplete-requirement', 'q-audit-order', 'q-duplicate-id-impact', 'a9-q1', 'a9-q2', 'a9-q3', 'a9-q4', 'a9-q5', 'a9-q6', 'a9-q7', 'a9-q8', 'q-title-length', 'q-canonical', 'q-noindex-security', 'q-og-property', 'q-structured-data-ranking', 'q-og-image-url', 'q-lang-missing-effect', 'q-wrong-lang-worse', 'q-dir-auto', 'q-metadata-order', 'a10-q1', 'a10-q2', 'a10-q3', 'a10-q4', 'a10-q5', 'a10-q6', 'a10-q7', 'a10-q8', 'q-layout-shift', 'q-defer-async', 'q-preload-overuse', 'q-noopener-why', 'q-hidden-input', 'q-csp-header', 'q-iframe-cost', 'q-sandbox-combination', 'q-defer-vs-async', 'q-preload-auto', 'a11-q1', 'a11-q2', 'a11-q3', 'a11-q4', 'a11-q5', 'a11-q6', 'a11-q7', 'q-validator-order', 'q-validator-limits', 'q-duplicate-id-effect', 'q-elements-panel', 'q-network-404', 'q-one-change', 'q-bisection-steps', 'q-minimal-repro-value', 'q-one-change-at-a-time', 'q-repair-order', 'final-q1', 'final-q2', 'final-q3', 'final-q4', 'final-q5', 'final-q6', 'final-q7', 'final-q8', 'final-q9', 'final-q10', 'final-q11', 'final-q12', 'q-shell-difference', 'q-capstone-media', 'q-review-order', 'q-publishing');
+delete from public.exercises where slug not in ('first-markup-guided', 'first-markup-debug', 'attributes-guided', 'attributes-challenge', 'attributes-debug', 'nesting-guided', 'nesting-debug', 'skeleton-guided', 'skeleton-debug', 'first-page-milestone', 'first-page-mission', 'headings-guided', 'headings-debug', 'paragraphs-guided', 'paragraphs-debug', 'emphasis-guided', 'emphasis-challenge', 'quotes-guided', 'quotes-debug', 'lists-guided', 'entities-debug', 'article-milestone-build', 'article-mission', 'links-guided', 'links-debug', 'paths-guided', 'fragments-challenge', 'paths-debug', 'special-links-guided', 'nav-guided', 'skip-link-challenge', 'nav-debug', 'multipage-milestone-build', 'navigation-mission', 'img-guided', 'img-debug', 'alt-guided', 'figure-challenge', 'srcset-guided', 'srcset-debug', 'picture-guided', 'lazy-challenge', 'video-guided', 'video-debug', 'iframe-guided', 'media-milestone', 'media-mission', 'landmarks-guided', 'section-article-guided', 'section-debug', 'patterns-guided', 'semantic-rebuild', 'semantic-mission', 'table-guided', 'table-debug', 'labels-guided', 'input-types-debug', 'fieldset-guided', 'controls-challenge', 'validation-guided', 'form-milestone', 'form-mission', 'details-guided', 'popover-guided', 'dialog-debug', 'datalist-guided', 'native-milestone', 'native-mission', 'keyboard-debug', 'keyboard-skip-link-guided', 'keyboard-operability-debug', 'accessible-names-challenge', 'accessible-names-debug', 'aria-guided', 'aria-debug', 'aria-state-guided', 'aria-state-debug', 'accessible-form-challenge', 'accessible-form-debug', 'a11y-audit-milestone', 'a11y-mission', 'metadata-guided', 'metadata-debug', 'og-guided', 'jsonld-challenge', 'lang-guided', 'lang-debug', 'seo-milestone-build', 'seo-mission', 'perf-guided', 'security-debug', 'embed-hardening-guided', 'third-party-debug', 'performance-milestone-build', 'performance-mission', 'validation-debug', 'devtools-debug', 'bisection-debug', 'minimal-reproduction-challenge', 'repair-milestone', 'validation-mission', 'shell-guided', 'capstone-main-build', 'final-review-exercise', 'capstone-final-mission');
+delete from public.lessons where slug not in ('what-happens-when-you-open-a-page', 'tags-elements-attributes', 'nesting-and-the-document-tree', 'doctype-html-head-body', 'your-first-complete-page', 'heading-hierarchy', 'paragraphs-breaks-rules', 'emphasis-and-importance', 'quotes-abbreviations-dates', 'code-entities-and-lists', 'article-milestone', 'anchors-and-link-text', 'relative-and-absolute-paths', 'special-links', 'navigation-menus', 'multi-page-milestone', 'the-img-element', 'writing-alt-text', 'srcset-and-sizes', 'picture-and-formats', 'video-and-audio', 'iframes-and-media-milestone', 'semantic-vs-non-semantic', 'section-article-aside', 'file-organisation-and-patterns', 'semantic-rebuild-milestone', 'building-a-table', 'labels-and-inputs', 'grouping-and-controls', 'validation-and-form-milestone', 'details-and-summary', 'dialog-and-popover', 'progress-meter-datalist-milestone', 'how-assistive-tech-reads-a-page', 'keyboard-and-focus-management', 'accessible-names-in-depth', 'aria-fundamentals', 'aria-live-and-state', 'accessible-forms-in-depth', 'accessibility-audit-milestone', 'titles-descriptions-canonicals', 'social-and-structured-data', 'language-and-internationalisation', 'seo-milestone', 'loading-strategy', 'html-security', 'third-party-and-embeds', 'performance-milestone', 'reading-validation-output', 'developer-tools', 'a-method-for-debugging', 'debugging-milestone', 'assembling-the-site', 'capstone-build', 'final-review');
 delete from public.assessments where slug not in ('level-1-milestone', 'level-2-milestone', 'level-3-milestone', 'level-4-milestone', 'level-5-milestone', 'level-6-milestone', 'level-7-milestone', 'level-8-milestone', 'level-9-milestone', 'level-10-milestone', 'level-11-milestone', 'html-hero-final');
-delete from public.modules where slug not in ('how-the-web-works', 'the-html-skeleton', 'headings-and-paragraphs', 'text-level-semantics', 'links-and-paths', 'site-navigation', 'images-and-alt-text', 'responsive-images', 'video-audio-embeds', 'semantic-landmarks', 'organising-a-project', 'data-tables', 'form-foundations', 'disclosure-and-dialog', 'accessibility-foundations', 'page-metadata', 'html-performance', 'validation-and-tools', 'completing-the-site', 'review-and-publish');
+delete from public.modules where slug not in ('how-the-web-works', 'the-html-skeleton', 'headings-and-paragraphs', 'text-level-semantics', 'links-and-paths', 'site-navigation', 'images-and-alt-text', 'responsive-images', 'video-audio-embeds', 'semantic-landmarks', 'organising-a-project', 'data-tables', 'form-foundations', 'disclosure-and-dialog', 'accessibility-foundations', 'aria-and-accessible-forms', 'page-metadata', 'html-performance', 'validation-and-tools', 'completing-the-site', 'review-and-publish');
 delete from public.levels where slug not in ('html-explorer', 'content-builder', 'navigation-architect', 'media-specialist', 'structure-professional', 'data-and-forms', 'native-interaction', 'accessibility-champion', 'metadata-and-seo', 'performance-and-security', 'debugging-and-validation', 'html-hero-capstone');
 
 -- --------------------------------------------------------------------------
@@ -18782,6 +21103,96 @@ on conflict (slug) do update set
   skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
   exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
 insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-focusable-defaults', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'keyboard-and-focus-management' and qq.slug = 'q-focusable-defaults'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-tabindex-negative', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'keyboard-and-focus-management' and qq.slug = 'q-tabindex-negative'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-positive-tabindex', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'keyboard-and-focus-management' and qq.slug = 'q-positive-tabindex'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-keyboard-skip-link-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'keyboard-and-focus-management' and e.slug = 'keyboard-skip-link-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-keyboard-operability-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'keyboard-and-focus-management' and e.slug = 'keyboard-operability-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-name-order', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'accessible-names-in-depth' and qq.slug = 'q-name-order'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-alt-empty-vs-missing', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'accessible-names-in-depth' and qq.slug = 'q-alt-empty-vs-missing'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-link-text-alone', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'accessible-names-in-depth' and qq.slug = 'q-link-text-alone'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-accessible-names-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'accessible-names-in-depth' and e.slug = 'accessible-names-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-accessible-names-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'accessible-names-in-depth' and e.slug = 'accessible-names-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
 select 'rv-q-q-aria-first-rule', 'question'::public.review_item_kind,
        (select id from public.skills where slug = 'aria'),
        l.id, qq.id, 2
@@ -18823,6 +21234,96 @@ select 'rv-e-aria-debug', 'exercise'::public.review_item_kind,
        l.id, e.id, 3
 from public.lessons l, public.exercises e
 where l.slug = 'aria-fundamentals' and e.slug = 'aria-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-aria-current-page', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'aria'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'aria-live-and-state' and qq.slug = 'q-aria-current-page'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-live-region-timing', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'aria'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'aria-live-and-state' and qq.slug = 'q-live-region-timing'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-assertive-vs-polite', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'aria'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'aria-live-and-state' and qq.slug = 'q-assertive-vs-polite'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-aria-state-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'aria'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'aria-live-and-state' and e.slug = 'aria-state-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-aria-state-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'aria'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'aria-live-and-state' and e.slug = 'aria-state-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-placeholder-not-label', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'accessible-forms-in-depth' and qq.slug = 'q-placeholder-not-label'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-fieldset-legend', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'accessible-forms-in-depth' and qq.slug = 'q-fieldset-legend'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-autocomplete-requirement', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'accessible-forms-in-depth' and qq.slug = 'q-autocomplete-requirement'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-accessible-form-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'accessible-forms-in-depth' and e.slug = 'accessible-form-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-accessible-form-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'accessibility'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'accessible-forms-in-depth' and e.slug = 'accessible-form-debug'
 on conflict (slug) do update set
   skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
   exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
@@ -18944,6 +21445,51 @@ on conflict (slug) do update set
   skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
   exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
 insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-lang-missing-effect', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'metadata'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'language-and-internationalisation' and qq.slug = 'q-lang-missing-effect'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-wrong-lang-worse', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'metadata'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'language-and-internationalisation' and qq.slug = 'q-wrong-lang-worse'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-dir-auto', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'metadata'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'language-and-internationalisation' and qq.slug = 'q-dir-auto'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-lang-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'metadata'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'language-and-internationalisation' and e.slug = 'lang-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-lang-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'metadata'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'language-and-internationalisation' and e.slug = 'lang-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
 select 'rv-q-q-metadata-order', 'question'::public.review_item_kind,
        (select id from public.skills where slug = 'metadata'),
        l.id, qq.id, 2
@@ -19030,6 +21576,51 @@ select 'rv-e-security-debug', 'exercise'::public.review_item_kind,
        l.id, e.id, 4
 from public.lessons l, public.exercises e
 where l.slug = 'html-security' and e.slug = 'security-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-iframe-cost', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'performance'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'third-party-and-embeds' and qq.slug = 'q-iframe-cost'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-sandbox-combination', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'security'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'third-party-and-embeds' and qq.slug = 'q-sandbox-combination'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-defer-vs-async', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'performance'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'third-party-and-embeds' and qq.slug = 'q-defer-vs-async'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-embed-hardening-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'performance'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'third-party-and-embeds' and e.slug = 'embed-hardening-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-third-party-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'performance'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'third-party-and-embeds' and e.slug = 'third-party-debug'
 on conflict (slug) do update set
   skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
   exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
@@ -19124,6 +21715,51 @@ on conflict (slug) do update set
   skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
   exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
 insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-bisection-steps', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'debugging'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'a-method-for-debugging' and qq.slug = 'q-bisection-steps'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-minimal-repro-value', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'debugging'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'a-method-for-debugging' and qq.slug = 'q-minimal-repro-value'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-one-change-at-a-time', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'debugging'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'a-method-for-debugging' and qq.slug = 'q-one-change-at-a-time'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-bisection-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'debugging'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'a-method-for-debugging' and e.slug = 'bisection-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-minimal-reproduction-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'debugging'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'a-method-for-debugging' and e.slug = 'minimal-reproduction-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
 select 'rv-q-q-repair-order', 'question'::public.review_item_kind,
        (select id from public.skills where slug = 'debugging'),
        l.id, qq.id, 2
@@ -19206,6 +21842,6 @@ on conflict (slug) do update set
   exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
 
 -- Items whose question or exercise has left the curriculum.
-delete from public.review_items where slug not in ('rv-q-q-what-is-html', 'rv-q-q-html-purpose', 'rv-e-first-markup-guided', 'rv-e-first-markup-debug', 'rv-q-q-tag-vs-element', 'rv-q-q-attribute-syntax', 'rv-q-q-void-elements', 'rv-e-attributes-guided', 'rv-e-attributes-challenge', 'rv-e-attributes-debug', 'rv-q-q-nesting-order', 'rv-q-q-dom-meaning', 'rv-q-q-comments', 'rv-e-nesting-guided', 'rv-e-nesting-debug', 'rv-q-q-doctype-purpose', 'rv-q-q-head-vs-body', 'rv-q-q-viewport', 'rv-q-q-charset', 'rv-e-skeleton-guided', 'rv-e-skeleton-debug', 'rv-q-q-index-html', 'rv-q-q-one-h1', 'rv-e-first-page-milestone', 'rv-q-q-heading-skip', 'rv-q-q-heading-purpose', 'rv-e-headings-guided', 'rv-e-headings-debug', 'rv-q-q-whitespace', 'rv-q-q-br-use', 'rv-q-q-hr-meaning', 'rv-e-paragraphs-guided', 'rv-e-paragraphs-debug', 'rv-q-q-strong-vs-em', 'rv-q-q-small-meaning', 'rv-e-emphasis-guided', 'rv-e-emphasis-challenge', 'rv-q-q-cite-meaning', 'rv-q-q-datetime-format', 'rv-q-q-q-quotes', 'rv-e-quotes-guided', 'rv-e-quotes-debug', 'rv-q-q-entity-lt', 'rv-q-q-list-choice', 'rv-q-q-nested-list', 'rv-e-lists-guided', 'rv-e-entities-debug', 'rv-q-q-semantic-choice', 'rv-e-article-milestone-build', 'rv-q-q-link-text', 'rv-q-q-noopener', 'rv-e-links-guided', 'rv-e-links-debug', 'rv-q-q-dotdot', 'rv-q-q-leading-slash', 'rv-q-q-fragment-case', 'rv-e-paths-guided', 'rv-e-fragments-challenge', 'rv-e-paths-debug', 'rv-q-q-tel-format', 'rv-q-q-download-attr', 'rv-e-special-links-guided', 'rv-q-q-nav-list', 'rv-q-q-skip-link-position', 'rv-q-q-aria-current', 'rv-e-nav-guided', 'rv-e-skip-link-challenge', 'rv-e-nav-debug', 'rv-q-q-filenames', 'rv-q-q-nav-consistency', 'rv-e-multipage-milestone-build', 'rv-q-q-img-dimensions', 'rv-q-q-hotlinking', 'rv-e-img-guided', 'rv-e-img-debug', 'rv-q-q-empty-alt', 'rv-q-q-alt-vs-caption', 'rv-q-q-missing-alt', 'rv-e-alt-guided', 'rv-e-figure-challenge', 'rv-q-q-srcset-w', 'rv-q-q-sizes-purpose', 'rv-e-srcset-guided', 'rv-e-srcset-debug', 'rv-q-q-picture-img', 'rv-q-q-lazy-hero', 'rv-q-q-picture-vs-srcset', 'rv-e-picture-guided', 'rv-e-lazy-challenge', 'rv-q-q-video-controls', 'rv-q-q-track-kind', 'rv-q-q-fallback-placement', 'rv-e-video-guided', 'rv-e-video-debug', 'rv-q-q-iframe-title', 'rv-q-q-sandbox', 'rv-e-iframe-guided', 'rv-e-media-milestone', 'rv-q-q-semantic-meaning', 'rv-q-q-main-count', 'rv-e-landmarks-guided', 'rv-q-q-article-test', 'rv-q-q-section-heading', 'rv-q-q-outline-algorithm', 'rv-e-section-article-guided', 'rv-e-section-debug', 'rv-q-q-case-sensitivity', 'rv-q-q-comments-value', 'rv-e-patterns-guided', 'rv-q-q-footer-placement', 'rv-e-semantic-rebuild', 'rv-q-q-scope-col', 'rv-q-q-caption-position', 'rv-q-q-layout-tables', 'rv-e-table-guided', 'rv-e-table-debug', 'rv-q-q-label-for', 'rv-q-q-placeholder', 'rv-q-q-number-type', 'rv-q-q-name-attribute', 'rv-e-labels-guided', 'rv-e-input-types-debug', 'rv-q-q-radio-group', 'rv-q-q-button-type', 'rv-q-q-legend-position', 'rv-e-fieldset-guided', 'rv-e-controls-challenge', 'rv-q-q-client-validation', 'rv-q-q-get-vs-post', 'rv-q-q-aria-describedby', 'rv-e-validation-guided', 'rv-e-form-milestone', 'rv-q-q-summary-position', 'rv-q-q-details-name', 'rv-e-details-guided', 'rv-q-q-dialog-close', 'rv-q-q-popover-js', 'rv-q-q-modal-content', 'rv-e-popover-guided', 'rv-e-dialog-debug', 'rv-q-q-progress-vs-meter', 'rv-q-q-datalist-restrict', 'rv-e-datalist-guided', 'rv-e-native-milestone', 'rv-q-q-a11y-tree', 'rv-q-q-keyboard-test', 'rv-q-q-div-button', 'rv-e-keyboard-debug', 'rv-q-q-aria-first-rule', 'rv-q-q-aria-behaviour', 'rv-q-q-labelledby-vs-label', 'rv-e-aria-guided', 'rv-e-aria-debug', 'rv-q-q-audit-order', 'rv-q-q-duplicate-id-impact', 'rv-e-a11y-audit-milestone', 'rv-q-q-title-length', 'rv-q-q-canonical', 'rv-q-q-noindex-security', 'rv-e-metadata-guided', 'rv-e-metadata-debug', 'rv-q-q-og-property', 'rv-q-q-structured-data-ranking', 'rv-q-q-og-image-url', 'rv-e-og-guided', 'rv-e-jsonld-challenge', 'rv-q-q-metadata-order', 'rv-e-seo-milestone-build', 'rv-q-q-layout-shift', 'rv-q-q-defer-async', 'rv-q-q-preload-overuse', 'rv-e-perf-guided', 'rv-q-q-noopener-why', 'rv-q-q-hidden-input', 'rv-q-q-csp-header', 'rv-e-security-debug', 'rv-q-q-preload-auto', 'rv-e-performance-milestone-build', 'rv-q-q-validator-order', 'rv-q-q-validator-limits', 'rv-q-q-duplicate-id-effect', 'rv-e-validation-debug', 'rv-q-q-elements-panel', 'rv-q-q-network-404', 'rv-q-q-one-change', 'rv-e-devtools-debug', 'rv-q-q-repair-order', 'rv-e-repair-milestone', 'rv-q-q-shell-difference', 'rv-e-shell-guided', 'rv-q-q-capstone-media', 'rv-e-capstone-main-build', 'rv-q-q-review-order', 'rv-q-q-publishing', 'rv-e-final-review-exercise');
+delete from public.review_items where slug not in ('rv-q-q-what-is-html', 'rv-q-q-html-purpose', 'rv-e-first-markup-guided', 'rv-e-first-markup-debug', 'rv-q-q-tag-vs-element', 'rv-q-q-attribute-syntax', 'rv-q-q-void-elements', 'rv-e-attributes-guided', 'rv-e-attributes-challenge', 'rv-e-attributes-debug', 'rv-q-q-nesting-order', 'rv-q-q-dom-meaning', 'rv-q-q-comments', 'rv-e-nesting-guided', 'rv-e-nesting-debug', 'rv-q-q-doctype-purpose', 'rv-q-q-head-vs-body', 'rv-q-q-viewport', 'rv-q-q-charset', 'rv-e-skeleton-guided', 'rv-e-skeleton-debug', 'rv-q-q-index-html', 'rv-q-q-one-h1', 'rv-e-first-page-milestone', 'rv-q-q-heading-skip', 'rv-q-q-heading-purpose', 'rv-e-headings-guided', 'rv-e-headings-debug', 'rv-q-q-whitespace', 'rv-q-q-br-use', 'rv-q-q-hr-meaning', 'rv-e-paragraphs-guided', 'rv-e-paragraphs-debug', 'rv-q-q-strong-vs-em', 'rv-q-q-small-meaning', 'rv-e-emphasis-guided', 'rv-e-emphasis-challenge', 'rv-q-q-cite-meaning', 'rv-q-q-datetime-format', 'rv-q-q-q-quotes', 'rv-e-quotes-guided', 'rv-e-quotes-debug', 'rv-q-q-entity-lt', 'rv-q-q-list-choice', 'rv-q-q-nested-list', 'rv-e-lists-guided', 'rv-e-entities-debug', 'rv-q-q-semantic-choice', 'rv-e-article-milestone-build', 'rv-q-q-link-text', 'rv-q-q-noopener', 'rv-e-links-guided', 'rv-e-links-debug', 'rv-q-q-dotdot', 'rv-q-q-leading-slash', 'rv-q-q-fragment-case', 'rv-e-paths-guided', 'rv-e-fragments-challenge', 'rv-e-paths-debug', 'rv-q-q-tel-format', 'rv-q-q-download-attr', 'rv-e-special-links-guided', 'rv-q-q-nav-list', 'rv-q-q-skip-link-position', 'rv-q-q-aria-current', 'rv-e-nav-guided', 'rv-e-skip-link-challenge', 'rv-e-nav-debug', 'rv-q-q-filenames', 'rv-q-q-nav-consistency', 'rv-e-multipage-milestone-build', 'rv-q-q-img-dimensions', 'rv-q-q-hotlinking', 'rv-e-img-guided', 'rv-e-img-debug', 'rv-q-q-empty-alt', 'rv-q-q-alt-vs-caption', 'rv-q-q-missing-alt', 'rv-e-alt-guided', 'rv-e-figure-challenge', 'rv-q-q-srcset-w', 'rv-q-q-sizes-purpose', 'rv-e-srcset-guided', 'rv-e-srcset-debug', 'rv-q-q-picture-img', 'rv-q-q-lazy-hero', 'rv-q-q-picture-vs-srcset', 'rv-e-picture-guided', 'rv-e-lazy-challenge', 'rv-q-q-video-controls', 'rv-q-q-track-kind', 'rv-q-q-fallback-placement', 'rv-e-video-guided', 'rv-e-video-debug', 'rv-q-q-iframe-title', 'rv-q-q-sandbox', 'rv-e-iframe-guided', 'rv-e-media-milestone', 'rv-q-q-semantic-meaning', 'rv-q-q-main-count', 'rv-e-landmarks-guided', 'rv-q-q-article-test', 'rv-q-q-section-heading', 'rv-q-q-outline-algorithm', 'rv-e-section-article-guided', 'rv-e-section-debug', 'rv-q-q-case-sensitivity', 'rv-q-q-comments-value', 'rv-e-patterns-guided', 'rv-q-q-footer-placement', 'rv-e-semantic-rebuild', 'rv-q-q-scope-col', 'rv-q-q-caption-position', 'rv-q-q-layout-tables', 'rv-e-table-guided', 'rv-e-table-debug', 'rv-q-q-label-for', 'rv-q-q-placeholder', 'rv-q-q-number-type', 'rv-q-q-name-attribute', 'rv-e-labels-guided', 'rv-e-input-types-debug', 'rv-q-q-radio-group', 'rv-q-q-button-type', 'rv-q-q-legend-position', 'rv-e-fieldset-guided', 'rv-e-controls-challenge', 'rv-q-q-client-validation', 'rv-q-q-get-vs-post', 'rv-q-q-aria-describedby', 'rv-e-validation-guided', 'rv-e-form-milestone', 'rv-q-q-summary-position', 'rv-q-q-details-name', 'rv-e-details-guided', 'rv-q-q-dialog-close', 'rv-q-q-popover-js', 'rv-q-q-modal-content', 'rv-e-popover-guided', 'rv-e-dialog-debug', 'rv-q-q-progress-vs-meter', 'rv-q-q-datalist-restrict', 'rv-e-datalist-guided', 'rv-e-native-milestone', 'rv-q-q-a11y-tree', 'rv-q-q-keyboard-test', 'rv-q-q-div-button', 'rv-e-keyboard-debug', 'rv-q-q-focusable-defaults', 'rv-q-q-tabindex-negative', 'rv-q-q-positive-tabindex', 'rv-e-keyboard-skip-link-guided', 'rv-e-keyboard-operability-debug', 'rv-q-q-name-order', 'rv-q-q-alt-empty-vs-missing', 'rv-q-q-link-text-alone', 'rv-e-accessible-names-challenge', 'rv-e-accessible-names-debug', 'rv-q-q-aria-first-rule', 'rv-q-q-aria-behaviour', 'rv-q-q-labelledby-vs-label', 'rv-e-aria-guided', 'rv-e-aria-debug', 'rv-q-q-aria-current-page', 'rv-q-q-live-region-timing', 'rv-q-q-assertive-vs-polite', 'rv-e-aria-state-guided', 'rv-e-aria-state-debug', 'rv-q-q-placeholder-not-label', 'rv-q-q-fieldset-legend', 'rv-q-q-autocomplete-requirement', 'rv-e-accessible-form-challenge', 'rv-e-accessible-form-debug', 'rv-q-q-audit-order', 'rv-q-q-duplicate-id-impact', 'rv-e-a11y-audit-milestone', 'rv-q-q-title-length', 'rv-q-q-canonical', 'rv-q-q-noindex-security', 'rv-e-metadata-guided', 'rv-e-metadata-debug', 'rv-q-q-og-property', 'rv-q-q-structured-data-ranking', 'rv-q-q-og-image-url', 'rv-e-og-guided', 'rv-e-jsonld-challenge', 'rv-q-q-lang-missing-effect', 'rv-q-q-wrong-lang-worse', 'rv-q-q-dir-auto', 'rv-e-lang-guided', 'rv-e-lang-debug', 'rv-q-q-metadata-order', 'rv-e-seo-milestone-build', 'rv-q-q-layout-shift', 'rv-q-q-defer-async', 'rv-q-q-preload-overuse', 'rv-e-perf-guided', 'rv-q-q-noopener-why', 'rv-q-q-hidden-input', 'rv-q-q-csp-header', 'rv-e-security-debug', 'rv-q-q-iframe-cost', 'rv-q-q-sandbox-combination', 'rv-q-q-defer-vs-async', 'rv-e-embed-hardening-guided', 'rv-e-third-party-debug', 'rv-q-q-preload-auto', 'rv-e-performance-milestone-build', 'rv-q-q-validator-order', 'rv-q-q-validator-limits', 'rv-q-q-duplicate-id-effect', 'rv-e-validation-debug', 'rv-q-q-elements-panel', 'rv-q-q-network-404', 'rv-q-q-one-change', 'rv-e-devtools-debug', 'rv-q-q-bisection-steps', 'rv-q-q-minimal-repro-value', 'rv-q-q-one-change-at-a-time', 'rv-e-bisection-debug', 'rv-e-minimal-reproduction-challenge', 'rv-q-q-repair-order', 'rv-e-repair-milestone', 'rv-q-q-shell-difference', 'rv-e-shell-guided', 'rv-q-q-capstone-media', 'rv-e-capstone-main-build', 'rv-q-q-review-order', 'rv-q-q-publishing', 'rv-e-final-review-exercise');
 
 commit;

@@ -3,6 +3,34 @@ export function cx(...values: (string | false | null | undefined)[]): string {
   return values.filter(Boolean).join(' ');
 }
 
+/**
+ * Renders the inline emphasis used throughout the authored curriculum:
+ * `code`, **bold** and *italic*.
+ *
+ * Deliberately tiny. Lesson text is authored in this repository, not by users,
+ * and a full markdown parser would be a dependency that has not earned its
+ * place. Everything is HTML-escaped *first*, so no authored string can inject
+ * markup even by accident — which matters, because course content is full of
+ * literal tags like `<p>` that must render as text.
+ *
+ * Content uses backticks in roughly 450 places — question prompts, answer
+ * explanations, exercise briefs, summary points and checklists. Any render site
+ * that prints one of those as a plain string shows the backticks to the
+ * learner, so this lives here rather than inside one component, and
+ * `InlineText` in the UI primitives is the component that applies it.
+ */
+export function inlineFormat(text: string): string {
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  return escaped
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+}
+
 /** Clamps a number into a range. */
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));

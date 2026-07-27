@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { CodeEditor } from './code-editor';
 import { Preview } from './preview';
 import { MediaPicker } from './media-picker';
-import { Badge, Button, Callout, ProgressBar } from '@/components/ui';
+import { Badge, Button, Callout, InlineText, ProgressBar } from '@/components/ui';
 import {
   AlertIcon,
   CheckCircleIcon,
@@ -52,6 +52,7 @@ export interface WorkbenchExercise {
 
 const KIND_LABEL: Record<ExerciseKind, { label: string; tone: 'accent' | 'warning' | 'success' | 'neutral' }> = {
   guided: { label: 'Guided exercise', tone: 'accent' },
+  completion: { label: 'Finish the code', tone: 'accent' },
   challenge: { label: 'Challenge', tone: 'success' },
   debug: { label: 'Debugging challenge', tone: 'warning' },
   project_mission: { label: 'Project mission', tone: 'accent' },
@@ -191,7 +192,9 @@ export function Workbench({
         <h3 id={`exercise-${exercise.slug}`} className="mt-2.5 text-lg font-bold text-ink">
           {exercise.title}
         </h3>
-        <p className="mt-1.5 text-sm text-muted lesson-prose">{exercise.brief}</p>
+        <p className="mt-1.5 text-sm text-muted lesson-prose">
+          <InlineText text={exercise.brief} />
+        </p>
 
         <details className="mt-3">
           <summary className="cursor-pointer text-sm font-semibold text-accent">

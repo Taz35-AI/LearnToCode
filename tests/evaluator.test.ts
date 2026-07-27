@@ -3,7 +3,8 @@ import { evaluateSubmission, findInvalidNesting, findIssues } from '@/lib/evalua
 import { parseDocument, scanSource } from '@/lib/evaluator/parse';
 import { accessibleName, assessAltText, labelTextFor } from '@/lib/evaluator/accessible-name';
 import { mediaPathExists } from '@/lib/evaluator/media-index';
-import type { Requirement } from '@/lib/evaluator/types';
+import { requirementFromRow, type Requirement } from '@/lib/evaluator/types';
+import type { ExerciseRequirementRow } from '@/lib/supabase/database.types';
 
 /**
  * Evaluator tests.
@@ -32,6 +33,73 @@ function req(partial: Partial<Requirement> & { kind: Requirement['kind'] }): Req
     ...partial,
   };
 }
+
+/**
+ * The stored-row → requirement mapping.
+ *
+ * Two callers grade the same exercises: the lesson page and the review queue.
+ * They share this function, because a learner who passes an exercise in a
+ * lesson and then fails its review on identical markup would rightly conclude
+ * the checker is arbitrary.
+ */
+describe('requirements loaded from the database', () => {
+  const row: ExerciseRequirementRow = {
+    id: 'row-1',
+    exercise_id: 'exercise-1',
+    ordinal: 2,
+    kind: 'element_count',
+    selector: 'p',
+    attribute: null,
+    expected_value: null,
+    ancestor_selector: null,
+    min_count: 2,
+    max_count: 2,
+    message: 'Two paragraphs',
+    hint: 'Add a second <p>.',
+    // Postgres returns numeric as a string through PostgREST, which is why the
+    // mapping coerces rather than trusting the type.
+    weight: 0.5 as unknown as number,
+    is_critical: false,
+    created_at: '2026-01-01T00:00:00Z',
+  };
+
+  it('carries every field the evaluator grades on', () => {
+    expect(requirementFromRow(row)).toEqual({
+      id: 'row-1',
+      ordinal: 2,
+      kind: 'element_count',
+      selector: 'p',
+      attribute: null,
+      expectedValue: null,
+      ancestorSelector: null,
+      minCount: 2,
+      maxCount: 2,
+      message: 'Two paragraphs',
+      hint: 'Add a second <p>.',
+      weight: 0.5,
+      isCritical: false,
+    });
+  });
+
+  it('coerces a numeric weight arriving as a string', () => {
+    const asString = { ...row, weight: '0.5' as unknown as number };
+    expect(requirementFromRow(asString).weight).toBe(0.5);
+  });
+
+  it('grades a review of an exercise exactly as its lesson would', () => {
+    const requirements = [requirementFromRow(row)];
+    const submission = '<p>One</p><p>Two</p>';
+
+    // Same rows, same mapping, same evaluator — so the verdict cannot differ
+    // between the two surfaces that call it.
+    const inLesson = evaluateSubmission(submission, requirements);
+    const inReview = evaluateSubmission(submission, requirements);
+
+    expect(inReview.passed).toBe(inLesson.passed);
+    expect(inReview.score).toBe(inLesson.score);
+    expect(inLesson.passed).toBe(true);
+  });
+});
 
 describe('structural evaluation, not string comparison', () => {
   const requirements = [

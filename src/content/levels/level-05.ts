@@ -17,6 +17,7 @@ import {
   present,
   prose,
   recap,
+  selfExplain,
   term,
   unique,
   uniqueIds,
@@ -136,6 +137,10 @@ export const LEVEL_05: LevelSpec = {
             detail(
               'Do landmarks replace ARIA roles?',
               'Yes, and that is the point. `<header>` already has the `banner` role, `<nav>` has `navigation`, `<main>` has `main`, `<footer>` has `contentinfo`. Writing `<div role="banner">` achieves the same thing with more code and none of the other behaviour the real element brings. This is the first appearance of a rule that runs through the rest of the course: native HTML first, ARIA only where HTML cannot express what you mean.',
+            ),
+            selfExplain(
+              'A colleague says: "Both pages look identical in the browser, so semantic elements are just a style preference." Write your answer to them. Do not list the landmark elements — explain *who or what* is worse off with the div version, and why looking the same is not the same as being the same.',
+              'Looking identical is exactly the point: the difference is invisible to someone who can see the page, and decisive for everything that cannot. A screen-reader user can jump straight to `main` or list the page\'s regions; with divs there are no regions, so the only way through is to read from the top every time. Search engines, reader modes and browser translation all read the same structure. And a `<div class="header">` tells the next developer nothing that the class name has not already promised — a promise nothing enforces. "It looks the same" is a statement about one way of using a page, by one kind of user, on one device.',
             ),
             recap(
               [
@@ -622,6 +627,24 @@ export const LEVEL_05: LevelSpec = {
               'Avoiding unnecessary containers',
               'Every extra wrapper is a line someone has to read, and a level of nesting that makes a missing closing tag harder to find. Before adding a `<div>`, check whether the element you already have could carry the styling instead. A page that is five levels deep where three would do is not "more structured" — it is just harder to change.',
             ),
+            demo('Where a file lives changes every path in it', 'The same link, written from three different places in the project.', [
+              {
+                label: 'From index.html, at the top',
+                code: '<a href="projects/first.html">First project</a>\n<img src="images/logo.svg" alt="Riverside Bakery" width="200" height="60">',
+                note: 'Both targets are below the current file, so both paths simply step down into a folder.',
+              },
+              {
+                label: 'From projects/first.html',
+                code: '<a href="../index.html">Home</a>\n<img src="../images/logo.svg" alt="Riverside Bakery" width="200" height="60">',
+                note: 'One folder deep, so both need ../ first. Read it back as a sentence: up one, into images, take logo.svg.',
+              },
+              {
+                label: 'A leading slash',
+                code: '<img src="/images/logo.svg" alt="Riverside Bakery" width="200" height="60">',
+                note: 'Means "from the site root". Correct on a server, broken when you open the file directly from your computer.',
+              },
+            ]),
+            visual('studio-desk', 'A project folder is a desk. Everything has a place, and you can find things without remembering where you put them.'),
             recap(
               [
                 'Lowercase, hyphenated filenames avoid an entire class of deployment bug.',
@@ -757,6 +780,18 @@ export const LEVEL_05: LevelSpec = {
               },
             ),
             visual('semantic-landmarks', 'The structure you are rebuilding towards.'),
+            demo('Div soup and its replacement, side by side', 'Identical on screen. Not remotely identical to software.', [
+              {
+                label: 'Rebuilt',
+                code: '<header><nav aria-label="Main"><ul><li><a href="index.html">Home</a></li></ul></nav></header>\n<main><h1>Prices</h1><p>From £6 an hour.</p></main>\n<footer><p>© 2026</p></footer>',
+                note: 'Four landmarks a screen-reader user can jump between, and a heading that describes the page.',
+              },
+              {
+                label: 'The original',
+                code: '<div class="header"><div class="nav"><ul><li><a href="index.html">Home</a></li></ul></div></div>\n<div class="main"><div class="h1">Prices</div><p>From £6 an hour.</p></div>\n<div class="footer"><p>© 2026</p></div>',
+                note: 'No landmarks, no heading. The class names describe the intent perfectly and communicate it to nothing.',
+              },
+            ]),
             recap(
               [
                 'You can now read an unstructured page and see the structure it should have had.',

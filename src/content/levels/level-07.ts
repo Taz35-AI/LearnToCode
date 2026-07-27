@@ -325,6 +325,23 @@ export const LEVEL_07: LevelSpec = {
               'Browser support, and how to think about it',
               '`<details>` has been supported everywhere for years. `<dialog>` reached every current browser in 2022. The `popover` attribute reached every current browser in 2024. For a public site, the sensible approach is: use `<details>` freely; use `<dialog>` and `popover` where the content underneath is still reachable if the feature does nothing. That is progressive enhancement in one sentence, and it is a more useful habit than memorising a support table that changes every few months.',
             ),
+            demo('Native disclosure versus a hand-built one', 'The same control, with and without the browser doing the work.', [
+              {
+                label: 'Native details',
+                code: '<details>\n  <summary>Opening hours</summary>\n  <p>Tuesday to Sunday, 8am to 6pm.</p>\n</details>',
+                note: 'Focusable, keyboard-operable, and its expanded state is maintained by the browser — so it can never fall out of step with what is on screen.',
+              },
+              {
+                label: 'Hand-built, state maintained',
+                code: '<button type="button" aria-expanded="false" aria-controls="hours">Opening hours</button>\n<div id="hours" hidden>\n  <p>Tuesday to Sunday, 8am to 6pm.</p>\n</div>',
+                note: 'Correct as written — but only stays correct if the script updates aria-expanded on every toggle, forever.',
+              },
+              {
+                label: 'Hand-built, state forgotten',
+                code: '<div class="toggle">Opening hours</div>\n<div id="hours" hidden>\n  <p>Tuesday to Sunday, 8am to 6pm.</p>\n</div>',
+                note: 'Not focusable, no role, no state. Sighted mouse users see a working control; nobody else has one at all.',
+              },
+            ]),
             recap(
               [
                 '`<dialog>` gives focus trapping, Escape-to-close and inert background — but opening it needs one line of JavaScript.',
@@ -525,6 +542,23 @@ export const LEVEL_07: LevelSpec = {
               'A `<meter>` element with a label',
               'An input backed by a `<datalist>`',
               'No `<script>` elements anywhere',
+            ]),
+            demo('Three elements people reach for JavaScript to build', 'All three are native, and all three come with keyboard and screen-reader support already.', [
+              {
+                label: 'progress',
+                code: '<label for="upload">Upload</label>\n<progress id="upload" value="70" max="100">70%</progress>',
+                note: 'A task in progress towards completion. The text inside is what older browsers show.',
+              },
+              {
+                label: 'meter',
+                code: '<label for="stock">In stock</label>\n<meter id="stock" value="3" min="0" max="20" low="5" high="15" optimum="20">3 of 20</meter>',
+                note: 'A measurement within a known range — not progress. The low, high and optimum values let the browser signal whether the reading is good.',
+              },
+              {
+                label: 'datalist',
+                code: '<label for="route">Route</label>\n<input list="routes" id="route" name="route">\n<datalist id="routes">\n  <option value="Riverside loop">\n  <option value="Hill circuit">\n</datalist>',
+                note: 'Suggestions that do not restrict the answer — unlike a select, the visitor may still type something else entirely.',
+              },
             ]),
             recap(
               [

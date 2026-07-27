@@ -21,9 +21,25 @@ export type BlockType =
   | 'media_example'
   | 'progressive_detail'
   | 'checklist'
-  | 'summary';
+  | 'summary'
+  // Added by migration 0006. These six are the retrieval-practice blocks: each
+  // asks the learner to produce something from memory before it shows them
+  // anything, which is the difference between practising and reading.
+  | 'pretest'
+  | 'recall'
+  | 'predict_check'
+  | 'self_explain'
+  | 'worked_example'
+  | 'recap';
 
-export type ExerciseKind = 'guided' | 'challenge' | 'debug' | 'project_mission' | 'bonus';
+export type ExerciseKind =
+  | 'guided'
+  | 'challenge'
+  | 'debug'
+  | 'project_mission'
+  | 'bonus'
+  // Added by migration 0006: finish a partly written solution.
+  | 'completion';
 
 export type RequirementKind =
   | 'doctype'
@@ -60,7 +76,10 @@ export type XpSource =
   | 'achievement'
   | 'streak'
   | 'project'
-  | 'bonus';
+  | 'bonus'
+  // Added by migration 0006. Present so the enum matches the database; review
+  // deliberately awards no XP — see `answerReviewItemAction`.
+  | 'review';
 export type MediaKind = 'photo' | 'illustration' | 'icon' | 'video' | 'audio' | 'poster' | 'captions';
 export type AssessmentKind = 'milestone' | 'final';
 export type ExperienceLevel = 'none' | 'some_html' | 'other_language';

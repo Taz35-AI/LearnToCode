@@ -23,6 +23,7 @@ import {
   composeReviewSession,
   dueNowCount,
   reviewForecast,
+  warmUpSkillsFor,
   type ReviewCandidate,
 } from '@/lib/review/session';
 import {
@@ -440,6 +441,131 @@ describe('lesson warm-up', () => {
       candidate(`i${i}`, 'tags', { card: scheduled(10, 20) }),
     );
     expect(composeLessonWarmUp(many, ['tags'], baseOptions).length).toBeLessThanOrEqual(3);
+  });
+});
+
+describe('which skills a warm-up may draw on', () => {
+  //   syntax → tags → text
+  //   forms  → labels
+  const graph = new Map<string, string[]>([
+    ['syntax', ['tags']],
+    ['tags', ['text']],
+    ['forms', ['labels']],
+  ]);
+
+  it('always includes the skill the lesson itself builds', () => {
+    // Otherwise the first lesson to revisit a skill could never warm up on it.
+    expect(
+      warmUpSkillsFor({ lessonSkill: 'forms', moduleSkills: [], skillPrerequisites: new Map() }),
+    ).toEqual(['forms']);
+  });
+
+  it('follows the prerequisite chain, so the warm-up primes this lesson', () => {
+    expect(
+      warmUpSkillsFor({ lessonSkill: 'syntax', moduleSkills: [], skillPrerequisites: graph }),
+    ).toEqual(['syntax', 'tags', 'text']);
+  });
+
+  it('stops at the configured depth rather than walking to the root', () => {
+    // Following the chain all the way back eventually reaches "what a tag is",
+    // which primes nothing by Level 9.
+    expect(
+      warmUpSkillsFor({
+        lessonSkill: 'syntax',
+        moduleSkills: [],
+        skillPrerequisites: graph,
+        depth: 1,
+      }),
+    ).toEqual(['syntax', 'tags']);
+
+    expect(
+      warmUpSkillsFor({
+        lessonSkill: 'syntax',
+        moduleSkills: [],
+        skillPrerequisites: graph,
+        depth: 0,
+      }),
+    ).toEqual(['syntax']);
+  });
+
+  it('includes what the module declares it teaches, and their prerequisites', () => {
+    expect(
+      warmUpSkillsFor({
+        lessonSkill: 'syntax',
+        moduleSkills: ['forms'],
+        skillPrerequisites: graph,
+        depth: 1,
+      }),
+    ).toEqual(['forms', 'labels', 'syntax', 'tags']);
+  });
+
+  it('terminates on a cyclic graph rather than looping forever', () => {
+    const cyclic = new Map<string, string[]>([
+      ['a', ['b']],
+      ['b', ['a']],
+    ]);
+    expect(
+      warmUpSkillsFor({ lessonSkill: 'a', moduleSkills: [], skillPrerequisites: cyclic, depth: 9 }),
+    ).toEqual(['a', 'b']);
+  });
+
+  it('is stable regardless of the order the graph is walked', () => {
+    const forwards = warmUpSkillsFor({
+      lessonSkill: 'syntax',
+      moduleSkills: ['forms'],
+      skillPrerequisites: graph,
+    });
+    const backwards = warmUpSkillsFor({
+      lessonSkill: 'syntax',
+      moduleSkills: ['forms'],
+      skillPrerequisites: new Map([...graph].reverse()),
+    });
+    expect(forwards).toEqual(backwards);
+  });
+});
+
+/**
+ * Module recall and level cumulative review.
+ *
+ * Both narrow the candidate pool and then run the same composer as the daily
+ * queue. These assert the two properties that make them worth having as
+ * separate screens rather than as a filter on the queue.
+ */
+describe('module and level review', () => {
+  const pool = [
+    candidate('m1-a', 'tags', { moduleSlug: 'basics', lessonSlug: 'l1', card: scheduled(10, 20) }),
+    candidate('m1-b', 'text', { moduleSlug: 'basics', lessonSlug: 'l2', card: scheduled(10, 20) }),
+    candidate('m2-a', 'links', { moduleSlug: 'linking', lessonSlug: 'l3', card: scheduled(10, 20) }),
+  ];
+
+  it('a module pass covers only that module', () => {
+    const selected = composeReviewSession(
+      pool.filter((c) => c.moduleSlug === 'basics'),
+      baseOptions,
+    );
+    expect(selected.map((s) => s.candidate.itemId).sort()).toEqual(['m1-a', 'm1-b']);
+  });
+
+  it('a level pass mixes across its modules rather than walking them in order', () => {
+    // Answering inside one module means the topic is given. Answering across a
+    // level means working out which idea applies first, which is the
+    // discrimination the real task demands.
+    const selected = composeReviewSession(pool, { ...baseOptions, maxConsecutivePerSkill: 1 });
+    const skills = selected.map((s) => s.candidate.skillSlug);
+    for (let i = 1; i < skills.length; i += 1) {
+      expect(skills[i]).not.toBe(skills[i - 1]);
+    }
+    expect(selected).toHaveLength(3);
+  });
+
+  it('holds a module pass to a shorter ceiling than a level pass', () => {
+    const many = Array.from({ length: 30 }, (_, i) =>
+      candidate(`i${i}`, `skill-${i % 5}`, { card: scheduled(10, 20) }),
+    );
+    // A queue abandoned halfway is worse than a shorter one: the unreviewed
+    // remainder decays while appearing to be in progress.
+    expect(composeReviewSession(many, { ...baseOptions, maxItems: 12 })).toHaveLength(12);
+    expect(composeReviewSession(many, { ...baseOptions, maxItems: 20 })).toHaveLength(20);
   });
 });
 

@@ -287,6 +287,26 @@ describe('submission validation', () => {
     expect(answerQuestionSchema.safeParse({ questionId: uuid, optionIds: [uuid] }).success).toBe(true);
   });
 
+  it('accepts a confidence rating on a lesson answer, and only a valid one', () => {
+    const answer = (confidence: unknown) =>
+      answerQuestionSchema.safeParse({ questionId: uuid, optionIds: [uuid], confidence });
+
+    for (const rating of [1, 2, 3, 4]) {
+      expect(answer(rating).success, `confidence ${rating}`).toBe(true);
+    }
+    // The database constrains this column to 1..4; anything else would be
+    // rejected there, so it is rejected here where the error is useful.
+    expect(answer(0).success).toBe(false);
+    expect(answer(5).success).toBe(false);
+    expect(answer('4').success).toBe(false);
+
+    // Optional at the boundary: answers recorded before confidence existed
+    // have none, and a replayed request should not be rejected as malformed.
+    expect(answerQuestionSchema.safeParse({ questionId: uuid, optionIds: [uuid] }).success).toBe(
+      true,
+    );
+  });
+
   it('validates lesson completion input', () => {
     expect(completeLessonSchema.safeParse({ lessonId: uuid, secondsSpent: 300 }).success).toBe(true);
     expect(completeLessonSchema.safeParse({ lessonId: 'x', secondsSpent: 300 }).success).toBe(false);

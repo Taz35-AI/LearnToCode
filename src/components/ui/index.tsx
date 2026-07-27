@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
 import Link from 'next/link';
-import { cx } from '@/lib/utils';
+import { cx, inlineFormat } from '@/lib/utils';
 
 /**
  * The shared component vocabulary.
@@ -9,6 +9,28 @@ import { cx } from '@/lib/utils';
  * Every interactive element inherits the single focus ring defined there, so
  * keyboard visibility is consistent without each component restating it.
  */
+
+// --- Authored text ---------------------------------------------------------
+
+/**
+ * One line of authored course text, with its inline emphasis rendered.
+ *
+ * Use this anywhere a string from `src/content/` reaches the page: a question
+ * prompt, an answer explanation, an exercise brief, a summary point, an option
+ * label. Printing such a string directly shows the learner raw backticks and
+ * asterisks, which is how this component came to exist.
+ *
+ * A `<span>`, so it is safe inside a `<legend>`, a `<label>` or an `<li>` —
+ * `Prose` wraps in `<p>` and cannot go in any of those.
+ */
+export function InlineText({ text }: { text: string }) {
+  return (
+    // `inlineFormat` HTML-escapes its input before adding any markup back, so
+    // authored content containing literal tags renders as text rather than
+    // becoming markup.
+    <span dangerouslySetInnerHTML={{ __html: inlineFormat(text) }} />
+  );
+}
 
 // --- Button ----------------------------------------------------------------
 
@@ -303,7 +325,8 @@ export function Callout({
   children,
 }: {
   tone?: keyof typeof CALLOUT_STYLES;
-  title?: string;
+  /** A plain string is formatted for inline emphasis; a node is used as given. */
+  title?: ReactNode;
   children: ReactNode;
 }) {
   const style = CALLOUT_STYLES[tone] ?? CALLOUT_STYLES.note;
@@ -312,7 +335,14 @@ export function Callout({
   return (
     <aside className={cx('rounded-[var(--radius-card)] border p-4', style.border, style.bg)}>
       <p className={cx('text-xs font-bold uppercase tracking-wide', style.tone)}>{style.label}</p>
-      {title ? <p className="mt-1 font-semibold text-ink">{title}</p> : null}
+      {title ? (
+        <p className="mt-1 font-semibold text-ink">
+          {/* Authored titles use backticks for element names — twenty of them
+              do across the course — so they go through the same formatter as
+              the body rather than being printed raw. */}
+          {typeof title === 'string' ? <InlineText text={title} /> : title}
+        </p>
+      ) : null}
       <div className="mt-1 text-sm text-ink lesson-prose">{children}</div>
     </aside>
   );

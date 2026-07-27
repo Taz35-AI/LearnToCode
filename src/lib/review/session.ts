@@ -262,6 +262,59 @@ export function composeLessonWarmUp(
   });
 }
 
+export interface WarmUpSkillInput {
+  /** The skill the lesson about to be studied chiefly builds. */
+  lessonSkill: string;
+  /** Skills the lesson's module declares it teaches. */
+  moduleSkills: readonly string[];
+  /** skill slug → the skills it is built on, from `skill_prerequisites`. */
+  skillPrerequisites: ReadonlyMap<string, readonly string[]>;
+  /** How many links of the prerequisite chain to follow. */
+  depth?: number;
+}
+
+/** One step further back than the immediate prerequisites, and no further. */
+export const DEFAULT_WARM_UP_DEPTH = 2;
+
+/**
+ * Which skills a lesson's warm-up may draw on.
+ *
+ * The warm-up has to prime *this* lesson, so it cannot be a general quiz: an
+ * unrelated question answered immediately before new material competes with it
+ * rather than supporting it. Equally it cannot be only the lesson's own skill,
+ * because the first lesson to teach a skill would then have nothing to retrieve.
+ *
+ * So the set is the lesson's own skill, the skills its module declares, and the
+ * prerequisite chain behind them — walked to a fixed depth. Depth is bounded
+ * because following the chain to its root eventually reaches "what a tag is",
+ * which is not priming anything by Level 9.
+ *
+ * Pure: the caller supplies the graph, so the same lesson always yields the
+ * same set and a test can assert it exactly.
+ */
+export function warmUpSkillsFor(input: WarmUpSkillInput): string[] {
+  const depth = Math.max(0, input.depth ?? DEFAULT_WARM_UP_DEPTH);
+  const collected = new Set<string>([input.lessonSkill, ...input.moduleSkills]);
+
+  let frontier = [...collected];
+  for (let step = 0; step < depth; step += 1) {
+    const next: string[] = [];
+    for (const skill of frontier) {
+      for (const prerequisite of input.skillPrerequisites.get(skill) ?? []) {
+        if (collected.has(prerequisite)) continue;
+        collected.add(prerequisite);
+        next.push(prerequisite);
+      }
+    }
+    if (next.length === 0) break;
+    frontier = next;
+  }
+
+  // Sorted so the set is stable regardless of graph iteration order — the
+  // warm-up's shuffle seed should be the only source of variation.
+  return [...collected].sort();
+}
+
 export interface ReviewForecastDay {
   date: string;
   dueCount: number;

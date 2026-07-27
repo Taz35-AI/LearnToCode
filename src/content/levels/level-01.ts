@@ -1,4 +1,5 @@
 import {
+  activeRecap,
   annotated,
   attrValue,
   callout,
@@ -14,7 +15,9 @@ import {
   legalNesting,
   notEmpty,
   objectives,
+  predictCheck,
   present,
+  pretest,
   prose,
   recap,
   term,
@@ -102,6 +105,18 @@ export const LEVEL_01: LevelSpec = {
               'What about CSS and JavaScript?',
               'A finished website usually involves three languages. HTML describes the structure and meaning. CSS controls the appearance — colours, spacing, layout. JavaScript adds behaviour — things that respond and change. This course is about HTML, which is the foundation the other two are attached to. While you learn, HTML Hero supplies a professional stylesheet for your previews so your work looks good without you needing to know any CSS yet. You will see exactly where that boundary sits, clearly labelled, on every preview.',
             ),
+            demo('The same words, with and without labels', 'This is the whole idea of HTML, in two panels.', [
+              {
+                label: 'Plain text',
+                code: 'Fresh bread, every morning\nWe open at 6am and bake until we sell out.',
+                note: 'The browser has been told nothing about what these words are, so it runs them together as one undifferentiated block.',
+              },
+              {
+                label: 'With labels',
+                code: '<h1>Fresh bread, every morning</h1>\n<p>We open at 6am and bake until we sell out.</p>',
+                note: 'Identical words. The labels say what each part *is*, and the browser decides how to show it — larger and bolder for the heading, normal for the paragraph.',
+              },
+            ]),
             recap(
               [
                 'A browser fetches a file from a server and draws it on screen.',
@@ -205,6 +220,16 @@ We open at 6am and bake until we sell out.`,
           estimatedMinutes: 14,
           skill: 'syntax',
           blocks: [
+            pretest(
+              'You have seen `<h1>Fresh bread</h1>` already. Which part of that would you call the *element*?',
+              [
+                'The whole thing: `<h1>Fresh bread</h1>`',
+                'Just `<h1>`',
+                'Just the words `Fresh bread`',
+                'Just `</h1>`',
+              ],
+              'The element is the whole thing — opening tag, content and closing tag together. `<h1>` on its own is a *tag*. The distinction sounds pedantic and is not: nearly every error message you will ever read talks about one or the other, and they mean different things.',
+            ),
             objectives([
               'Explain the difference between a tag and an element',
               'Add an attribute to an element with the correct syntax',
@@ -222,7 +247,9 @@ We open at 6am and bake until we sell out.`,
             term(
               'Attribute',
               'Extra information written inside the opening tag, as `name="value"`. It tells the browser something the tag alone cannot.',
-              '<a href="about.html">About us</a> — here `href` is the attribute name and `about.html` is its value.',
+              // No backticks: this field is a code sample rendered verbatim in a
+              // <pre>, where everything is already monospace.
+              '<a href="about.html">About us</a> — here href is the attribute name and about.html is its value.',
             ),
             annotated(
               `<a href="about.html" title="Learn about our bakery">About us</a>`,
@@ -291,6 +318,12 @@ We open at 6am and bake until we sell out.`,
                 why: 'Spaces around the equals sign and no quotation marks. Browsers sometimes forgive this, but it breaks the moment the value contains a space.',
               },
             ),
+            predictCheck(
+              `<p>Fresh bread<br>every morning</p>
+<p>Fresh bread</br>every morning</p>`,
+              'Two paragraphs, almost identical. `<br>` is a void element, so the second one closes a tag that was never open. Before you run it: will the browser refuse the second paragraph, or do something else?',
+              'It does something else. Browsers do not reject broken HTML — they repair it and carry on, so `</br>` is silently treated as `<br>` and both paragraphs look identical. That is why a page can look perfect and still be wrong, and why this course checks your markup rather than trusting how it looks.',
+            ),
             checklist('Before you move on, you can', [
               'Point at a tag and an element and say which is which',
               'Write an attribute with its quotation marks',
@@ -303,6 +336,18 @@ We open at 6am and bake until we sell out.`,
                 'Void elements such as `<br>`, `<hr>` and `<img>` have no closing tag because they wrap nothing.',
               ],
               'Next: how elements sit inside one another.',
+            ),
+            activeRecap(
+              [
+                'What is the difference between a tag and an element?',
+                'Write out the anatomy of a link to `about.html` with the text "About us", from memory.',
+                'Name two void elements and say what makes them void.',
+              ],
+              [
+                'A tag is one label in angle brackets. An element is the opening tag, the content and the closing tag together.',
+                '`<a href="about.html">About us</a>` — element name, attribute as `name="value"` in quotation marks, content, then a closing tag with a slash.',
+                '`<br>`, `<hr>`, `<img>`, `<input>`, `<meta>` and `<link>` are all void: they wrap no content, so there is nothing for a closing tag to close.',
+              ],
             ),
           ],
           exercises: [
@@ -512,6 +557,23 @@ We open at 6am and bake until we sell out.`,
               'What browsers do with broken nesting',
               'The HTML specification defines a detailed error-recovery algorithm, so a browser will always produce *something* from broken markup rather than showing an error. That sounds helpful, and it is — but the repair it chooses may not be the page you intended, and CSS and JavaScript written against the structure you meant will then fail in confusing ways. This is why the checker in this course reports overlapping tags as errors even though the preview still renders.',
             ),
+            demo('Nesting, correct and crossed', 'The same four tags, opened in the same order and closed in different ones.', [
+              {
+                label: 'Nested correctly',
+                code: '<p>Baked <strong>every <em>single</em> morning</strong>.</p>',
+                note: 'Each element closes inside the one that contains it. The tree is unambiguous, and every browser agrees on it.',
+              },
+              {
+                label: 'Crossed over',
+                code: '<p>Baked <strong>every <em>single</strong> morning</em>.</p>',
+                note: 'The strong closes while the em is still open. The browser repairs this silently, and the structure it invents may not be the one you meant.',
+              },
+              {
+                label: 'Never closed',
+                code: '<p>Baked <strong>every single morning.</p>\n<p>Open seven days.</p>',
+                note: 'The strong is never closed, so the browser keeps it open — and the second paragraph is bold too.',
+              },
+            ]),
             recap(
               [
                 'Elements nest inside one another and must close in reverse order.',
@@ -944,6 +1006,23 @@ We open at 6am and bake until we sell out.`,
               'Why "real content" matters',
               'It is tempting to type "text here" and move on. Resist it. Writing plausible content forces you to make structural decisions — is this a heading or a paragraph? does this sentence belong in the same paragraph as the last one? — and those decisions are the actual skill. Lorem ipsum teaches you nothing, and every professional habit you build now saves you time later.',
             ),
+            demo('What each part of the skeleton does', 'Remove one piece at a time and watch what changes.', [
+              {
+                label: 'Complete',
+                code: '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8">\n    <title>Riverside Bakery</title>\n  </head>\n  <body>\n    <h1>Riverside Bakery</h1>\n    <p>Open seven days a week.</p>\n  </body>\n</html>',
+                note: 'Every required part present. The tab shows a title, the text is decoded correctly, and assistive technology knows the language.',
+              },
+              {
+                label: 'No charset',
+                code: '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <title>Riverside Bakery</title>\n  </head>\n  <body>\n    <h1>Café Riverside</h1>\n    <p>Open seven days — from £6.</p>\n  </body>\n</html>',
+                note: 'Accented characters, dashes and currency symbols are the first casualties. Often it happens to look fine until someone types an é.',
+              },
+              {
+                label: 'No title',
+                code: '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8">\n  </head>\n  <body>\n    <h1>Riverside Bakery</h1>\n  </body>\n</html>',
+                note: 'The page still renders, but the tab shows the file name, a bookmark is meaningless, and a search result has nothing to display.',
+              },
+            ]),
             recap(
               [
                 'You can now build a valid HTML document from an empty file.',

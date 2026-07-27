@@ -1,4 +1,5 @@
 import {
+  activeRecap,
   annotated,
   attr,
   attrValue,
@@ -18,13 +19,18 @@ import {
   noObsolete,
   notEmpty,
   objectives,
+  predictCheck,
   present,
+  pretest,
   prose,
   recap,
+  selfExplain,
   term,
   unique,
   uniqueIds,
+  workedExample,
   type LevelSpec,
+  recall,
 } from '../types';
 
 export const LEVEL_11: LevelSpec = {
@@ -330,6 +336,18 @@ Accessibility
               'Debugging as a method',
               'The method that works is boring and reliable. Change one thing. Test. If it did not help, put it back. Beginners often change four things at once, see the page improve, and have no idea which change did it — so the next similar bug takes just as long. Narrow the problem before fixing it: delete half the page and see if the bug persists; if it does, the cause is in the remaining half. Three or four rounds of that will locate almost anything.',
             ),
+            demo('What the inspector shows that the source does not', 'The browser repairs broken markup before you ever see it.', [
+              {
+                label: 'What you wrote',
+                code: '<p>Fresh bread\n<div>Every morning</div>\n</p>',
+                note: 'A <div> inside a <p>, which is not legal. This is the source you would read in your editor.',
+              },
+              {
+                label: 'What the browser built',
+                code: '<p>Fresh bread</p>\n<div>Every morning</div>\n<p></p>',
+                note: 'The parser closed the paragraph before the div and left an empty one behind. This is what the inspector shows — and why comparing the two is the fastest way to find a nesting fault.',
+              },
+            ]),
             recap(
               [
                 'Elements shows the repaired DOM — indentation reveals unclosed tags.',
@@ -418,6 +436,286 @@ Accessibility
           ],
         },
         {
+          slug: 'a-method-for-debugging',
+          title: 'A method that finds anything',
+          subtitle: 'Bisection, minimal reproductions, and why guessing is slower',
+          summary:
+            'Most people debug by staring and guessing. There is a method that finds any fault in a bounded number of steps, and it does not require you to be clever.',
+          objectives: [
+            'Cut a problem in half repeatedly instead of scanning it',
+            'Reduce a broken page to a minimal reproduction',
+            'State a hypothesis before changing anything',
+          ],
+          estimatedMinutes: 16,
+          skill: 'debugging',
+          blocks: [
+            pretest(
+              'A 400-line page renders wrongly somewhere. Deleting half of it and checking is a strange-looking way to start. Roughly how many checks does that take to find the fault?',
+              [
+                'About nine — each check halves what is left',
+                'About 200 — you still have to read most of it',
+                'It depends entirely on how experienced you are',
+                'Bisection does not work on markup',
+              ],
+              'About nine. Halving 400 lines takes roughly log₂(400) ≈ 9 steps to reach a single line, regardless of how the fault looks or how much you know about it. That is the whole appeal: the method is indifferent to your familiarity with the code, it terminates in a predictable number of steps, and it cannot be defeated by a fault you would not have thought to look for.',
+            ),
+            objectives([
+              'Apply bisection to any broken document',
+              'Build a minimal reproduction and know why it is worth the time',
+              'Debug by hypothesis rather than by alteration',
+            ]),
+            prose(
+              'Debugging feels like an intuition problem and is really a search problem. The fault is somewhere in a space, and your job is to shrink that space as fast as possible. Reading from the top shrinks it one line at a time. Halving it shrinks it exponentially.',
+            ),
+            term(
+              'Bisection',
+              'Repeatedly cutting the search space in half. Remove half the page; if the fault survives, it was in the half you kept — if it vanishes, it was in the half you removed. Either answer is progress.',
+            ),
+            workedExample(
+              'Finding one fault in a long page',
+              'A page where everything after the third section renders inside the previous heading. The cause could be anywhere. Here is the method, which never needs a guess.',
+              [
+                {
+                  title: 'Confirm the fault, precisely',
+                  code: `Symptom: everything from "Prices" onwards is
+inside the <h2> above it.`,
+                  reasoning:
+                    'Write the symptom down in one sentence before touching anything. Half of all long debugging sessions are someone fixing a different problem from the one that was reported, and this step costs ten seconds.',
+                },
+                {
+                  title: 'Delete the second half',
+                  code: `<!-- keep lines 1-200, delete 201-400 -->`,
+                  reasoning:
+                    'Do not read it. Delete it. If the fault is still there, it lives in the first half; if it is gone, in the second. One action has eliminated 200 lines either way.',
+                },
+                {
+                  title: 'Repeat on whichever half still fails',
+                  code: `1-200 → still broken
+1-100 → still broken
+1-50  → fine
+50-100 → still broken`,
+                  reasoning:
+                    'Each step costs one check and halves what is left. Four steps in, the fault is somewhere in fifty lines. Notice that no understanding of the fault has been required yet — which is exactly why the method works on code you have never seen.',
+                },
+                {
+                  title: 'Read only what is left, then state a hypothesis',
+                  code: `<h2>Prices  ← no closing tag
+
+Hypothesis: the unclosed h2 swallows
+everything until the browser closes it.`,
+                  reasoning:
+                    'Now reading is cheap, because there are fifty lines instead of four hundred. State what you think is wrong and what fixing it should change *before* you edit — otherwise a fix that appears to work may just have moved the symptom somewhere you are not looking.',
+                },
+              ],
+            ),
+            callout(
+              'tip',
+              'Keep a copy before you start cutting',
+              'Bisection means deliberately destroying the page to learn where the fault is. Copy the file first — or commit it — so that when you have found the answer you can go back to the real thing and fix that one line, rather than trying to reconstruct 400 lines from memory.',
+            ),
+            term(
+              'Minimal reproduction',
+              'The smallest piece of markup that still shows the fault. Producing one is often what solves the problem, because everything you removed was, by definition, not the cause.',
+            ),
+            demo('The same fault, at three sizes', 'Each of these shows the identical bug. Only one is easy to think about.', [
+              {
+                label: 'Minimal',
+                code: '<h2>Prices\n<p>From £6 an hour.</p>',
+                note: 'Two lines. The missing closing tag is obvious the moment everything else is gone.',
+              },
+              {
+                label: 'In context',
+                code: '<header><nav aria-label="Main"><a href="index.html">Home</a></nav></header>\n<main>\n  <h2>Prices\n  <p>From £6 an hour.</p>\n  <p>Helmets included.</p>\n</main>',
+                note: 'Still findable, but you are now reading past four elements that have nothing to do with it.',
+              },
+              {
+                label: 'The real page',
+                code: '<header><nav aria-label="Main"><a href="index.html">Home</a> <a href="menu.html">Menu</a> <a href="contact.html">Contact</a></nav></header>\n<main>\n  <h1>Riverside Cycle Hire</h1>\n  <p>Open seven days.</p>\n  <section><h2>Routes</h2><p>Three waymarked loops.</p></section>\n  <h2>Prices\n  <p>From £6 an hour.</p>\n</main>\n<footer><p>© 2026</p></footer>',
+                note: 'The same single fault, now surrounded by correct markup that all looks equally suspicious.',
+              },
+            ]),
+            callout(
+              'mistake',
+              'Changing several things at once',
+              'When a fix does not work, the temptation is to change three more things and try again. Now you have four alterations and no idea which helped, which did nothing, and which introduced a second fault. Change one thing. Check. Undo it if it did not help. It feels slower and it is reliably faster.',
+            ),
+            predictCheck(
+              `<ul>
+  <li>Sourdough
+  <li>Rye
+  <li>Seeded
+</ul>`,
+              'None of these list items is closed. Before you run it: does this render as three items, one item, or fail to render?',
+              'Three items, correctly. `</li>` is genuinely optional in the HTML specification — the parser closes each item when the next one begins. This matters for debugging in a way that catches people out: when you are hunting a fault, "there is no closing tag" is *sometimes* the bug and sometimes entirely legal. `<li>`, `<p>`, `<td>` and `<option>` all have optional closing tags; `<div>`, `<h2>` and `<a>` do not. The validator is the reliable way to tell the two cases apart — which is why it comes before the guessing.',
+            ),
+            selfExplain(
+              'A colleague spends an hour on a rendering fault, trying things until one works, and says bisection would have been slower because "it wastes time deleting code that is obviously fine". Write your reply.',
+              'The word doing the work in their sentence is "obviously". If the fault were in code that looked wrong, they would have found it in five minutes — the reason it took an hour is precisely that the cause is somewhere they had already dismissed. Bisection is valuable because it does not care what looks fine: it eliminates half the page per check whether you understand the code or not, and reaches a single line in around nine steps for a 400-line file. Trying things until one works has no bound at all, produces no knowledge of *why* it worked, and frequently leaves a second fault behind — because several things were changed and only the symptom was checked.',
+            ),
+            checklist('The method, in order', [
+              'Write the symptom down in one sentence',
+              'Copy the file before you start cutting',
+              'Validate first — it may simply tell you the answer',
+              'Halve, check, halve again',
+              'Reduce to a minimal reproduction',
+              'State a hypothesis before editing',
+              'Change one thing, then check',
+              'Restore the real file and apply the single fix',
+            ]),
+            recap(
+              [
+                'Debugging is a search problem: shrink the space, do not scan it.',
+                'Bisection finds a fault in a 400-line file in about nine checks, whatever the fault is.',
+                'A minimal reproduction often solves the problem by itself.',
+                'One change at a time, with a hypothesis stated first.',
+              ],
+              'Next: the faults you will actually meet, and how each one looks.',
+            ),
+            activeRecap(
+              [
+                'Why does bisection beat reading from the top?',
+                'What should you do before you start deleting, and why?',
+                'Why change only one thing at a time?',
+              ],
+              [
+                'Reading eliminates one line per step; halving eliminates half the remaining file per step — about nine checks for 400 lines — and it works on code you have never seen, because it does not depend on recognising the fault.',
+                'Write the symptom down, and copy or commit the file. Bisection destroys the page deliberately, and you need the original back to apply the real fix.',
+                'Because with four simultaneous changes you cannot tell which one helped, which did nothing, and which quietly introduced a second fault.',
+              ],
+            ),
+          ],
+          exercises: [
+            {
+              slug: 'bisection-debug',
+              kind: 'debug',
+              title: 'One fault, found by halving',
+              brief:
+                'Everything below the "Prices" heading is being swallowed by it. Use the method: find the single unclosed element and close it. Change nothing else.',
+              starterCode: `<main>
+  <h1>Riverside Cycle Hire</h1>
+  <p>Open seven days a week.</p>
+  <section>
+    <h2>Routes</h2>
+    <p>Three waymarked loops from the door.</p>
+  </section>
+  <h2>Prices
+  <p>From £6 an hour.</p>
+  <p>Helmets and route maps included.</p>
+</main>`,
+              referenceSolution: `<main>
+  <h1>Riverside Cycle Hire</h1>
+  <p>Open seven days a week.</p>
+  <section>
+    <h2>Routes</h2>
+    <p>Three waymarked loops from the door.</p>
+  </section>
+  <h2>Prices</h2>
+  <p>From £6 an hour.</p>
+  <p>Helmets and route maps included.</p>
+</main>`,
+              hints: [
+                'Delete the second half of the main and see whether the fault survives.',
+                'The fault is a heading that is never closed.',
+                'Add </h2> immediately after the word Prices.',
+              ],
+              requirements: [
+                count('h2', 2, 2, 'Both headings are present and correctly closed'),
+                count('h2 p', 0, 0, 'No paragraph has been swallowed by a heading'),
+                count('main > p', 3, 3, 'All three paragraphs sit directly in <main>'),
+                headingOrder(),
+                legalNesting(),
+                unique('main', 'There is exactly one <main>'),
+              ],
+              difficulty: 3,
+              xp: 45,
+              skill: 'debugging',
+            },
+            {
+              slug: 'minimal-reproduction-challenge',
+              kind: 'challenge',
+              title: 'Reduce it, then repair it',
+              brief:
+                'This page has one structural fault. Do it the methodical way: strip out everything that is not the cause until you are left with the smallest fragment containing it — then fix that fragment. Your answer should be the reduced, repaired fragment and nothing else. Everything you can delete without losing the fault was, by definition, not the problem.',
+              starterCode: `<header>
+  <nav aria-label="Main"><a href="index.html">Home</a></nav>
+</header>
+<main>
+  <h1>Menu</h1>
+  <p>Baked fresh each morning.</p>
+  <section>
+    <h2>Loaves</h2>
+    <ul>
+      <li>Sourdough</li>
+      <li>Rye</li>
+    </ul>
+  </section>
+  <div class="notice">
+    <p>Closed Mondays.</p>
+</main>`,
+              referenceSolution: `<div class="notice">
+  <p>Closed Mondays.</p>
+</div>`,
+              hints: [
+                'Everything in the header, the h1 and the section renders correctly — remove it all.',
+                'The list is fine: <li> may legally omit its closing tag, so it is not the fault.',
+                'What remains is the div that is never closed. Close it.',
+              ],
+              requirements: [
+                count('div', 1, 1, 'The reproduction contains the single suspect element'),
+                count('div > p', 1, 1, 'The paragraph is inside the div, which is now closed'),
+                count('nav', 0, 0, 'The navigation has been removed as irrelevant'),
+                count('h1, h2', 0, 0, 'The headings have been removed as irrelevant'),
+                count('ul, li', 0, 0, 'The list has been removed as irrelevant'),
+                legalNesting(),
+              ],
+              difficulty: 4,
+              xp: 55,
+              skill: 'debugging',
+            },
+          ],
+          quiz: [
+            {
+              slug: 'q-bisection-steps',
+              prompt: 'Roughly how many checks does bisection need to locate a fault in a 400-line file?',
+              explanation:
+                'Each check halves what remains, so it takes about log₂(400) ≈ 9 steps regardless of the fault.',
+              options: [
+                { label: 'About nine', correct: true },
+                { label: 'About twenty' },
+                { label: 'About two hundred' },
+                { label: 'It cannot be predicted' },
+              ],
+              skill: 'debugging',
+            },
+            {
+              slug: 'q-minimal-repro-value',
+              prompt: 'Why does building a minimal reproduction often solve the problem outright?',
+              explanation:
+                'Everything you were able to remove was, by definition, not the cause — so what is left is the cause.',
+              options: [
+                { label: 'Everything removable was not the cause, so what remains is', correct: true },
+                { label: 'Smaller files load faster, revealing timing bugs' },
+                { label: 'Browsers validate short documents more strictly' },
+                { label: 'It forces the browser to re-parse the page' },
+              ],
+              skill: 'debugging',
+            },
+            {
+              slug: 'q-one-change-at-a-time',
+              prompt: 'Why change only one thing between checks?',
+              explanation:
+                'With several simultaneous changes you cannot attribute the result, and you may introduce a new fault while masking the original.',
+              options: [
+                { label: 'Otherwise you cannot tell which change was responsible', correct: true },
+                { label: 'Browsers cache multiple edits incorrectly' },
+                { label: 'The validator only reports one error at a time' },
+                { label: 'It is only a stylistic preference' },
+              ],
+              skill: 'debugging',
+            },
+          ],
+        },
+        {
           slug: 'debugging-milestone',
           title: 'Milestone: repair a broken site',
           subtitle: 'Every category of fault, one page',
@@ -482,6 +780,36 @@ Line 15: Stray end tag "div".`,
 </main>              ← never closed`,
                 why: 'A single missing closing tag. This is why you fix the first error and re-validate rather than working down the list.',
               },
+            ),
+            demo('Where each kind of fault shows up', 'The same page, seen through three different tools.', [
+              {
+                label: 'The validator finds it',
+                code: '<main>\n  <section>\n    <h2>Routes</h2>\n</main>',
+                note: 'Unclosed section. A grammar fault, so the validator names it directly — always the cheapest check to run first.',
+              },
+              {
+                label: 'Only the keyboard finds it',
+                code: '<main>\n  <h1>Book a table</h1>\n  <div class="button">Book now</div>\n</main>',
+                note: 'Perfectly valid. Nothing but tabbing through the page reveals that the control cannot be reached at all.',
+              },
+              {
+                label: 'Only the network panel finds it',
+                code: '<img src="/learning-media/images/does-not-exist.jpg" alt="A tidy studio desk" width="800" height="600">',
+                note: 'Valid markup, sensible alt, and a 404. No validator checks whether a path resolves — the Network panel is the only place this appears.',
+              },
+            ]),
+            recall(
+              'Every fault in this milestone is a rule you already know, broken. From memory, name the rule each of these would violate — before you look at the page.',
+              [
+                'Level 1 — elements must nest, never overlap: `<strong><em>…</strong></em>` is the classic.',
+                'Level 2 — one `<h1>`, and no skipped levels between headings.',
+                'Level 3 — a relative path is read from the file you are in, so `../` means up one folder.',
+                'Level 4 — every image needs an `alt`, and every media path must actually resolve.',
+                'Level 5 — exactly one `<main>`, and it does not sit inside a header, footer or article.',
+                'Level 6 — every control needs a label with a matching `for` and `id`.',
+                'Level 8 — every id on the page is unique, or labels and ARIA references point at the wrong element.',
+              ],
+              'The rules behind the faults',
             ),
             recap(
               [

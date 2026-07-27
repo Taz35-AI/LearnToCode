@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { COURSE, LEVELS, allLessons, allModules, courseStats, totalCourseMinutes } from '@/content/course';
 import { SKILLS } from '@/content/skills';
@@ -6,7 +8,19 @@ import { PROJECT_TEMPLATES } from '@/content/projects';
 import { MEDIA_ASSETS, allMediaPaths, getMedia } from '@/content/media/manifest';
 import { evaluateSubmission } from '@/lib/evaluator/evaluate';
 import type { Requirement } from '@/lib/evaluator/types';
-import { orderedOptions, type RequirementSpec } from '@/content/types';
+import {
+  RETRIEVAL_BLOCK_TYPES,
+  activeRecap,
+  blockProblems,
+  orderedOptions,
+  predictCheck,
+  pretest,
+  recall,
+  selfExplain,
+  workedExample,
+  type BlockSpec,
+  type RequirementSpec,
+} from '@/content/types';
 
 /**
  * Curriculum integrity.
@@ -304,6 +318,179 @@ describe('skills and gating', () => {
     for (const skill of SKILLS) {
       expect(taught.has(skill.slug), `${skill.slug} is never taught`).toBe(true);
     }
+  });
+});
+
+/**
+ * The retrieval-practice block builders.
+ *
+ * These blocks fail *quietly* when they are malformed — a pretest with no
+ * options renders as a question nobody can answer, a worked example with no
+ * steps renders as nothing at all. A lesson that silently teaches nothing is
+ * worse than a build that stops, so the validation has to be the thing that
+ * catches it, and these are the tests that keep the validation honest.
+ */
+describe('retrieval-practice blocks', () => {
+  it('produces a valid block from every builder', () => {
+    const built: BlockSpec[] = [
+      pretest('Which part is the element?', ['The whole thing', 'The opening tag'], 'The whole thing.'),
+      recall('What do you remember about void elements?', ['They wrap no content']),
+      predictCheck('<p>One</p>', 'What happens?', 'The browser repairs it.'),
+      selfExplain('Why does this matter?', 'Because the difference is invisible.'),
+      workedExample('Working out a path', 'Four steps.', [
+        { title: 'Say where you are', code: 'projects/first.html', reasoning: 'Everything is measured from there.' },
+      ]),
+      activeRecap(['What is an element?'], ['Opening tag, content, closing tag.']),
+    ];
+
+    for (const block of built) {
+      expect(blockProblems(block), `${block.type} should be valid`).toEqual([]);
+      expect(RETRIEVAL_BLOCK_TYPES.has(block.type)).toBe(true);
+    }
+
+    // All six of the types migration 0006 added are covered by a builder.
+    expect(new Set(built.map((b) => b.type)).size).toBe(RETRIEVAL_BLOCK_TYPES.size);
+  });
+
+  it('rejects a pretest that cannot be answered or cannot be checked', () => {
+    expect(blockProblems({ type: 'pretest', body: 'A question', data: { options: ['Only one'], answer: 'x' } }))
+      .toContain('pretest block needs at least two options');
+    expect(blockProblems({ type: 'pretest', body: 'A question', data: { options: ['a', 'b'] } }))
+      .toContain('pretest block has no answer to reveal');
+    expect(blockProblems({ type: 'pretest', data: { options: ['a', 'b'], answer: 'x' } }))
+      .toContain('pretest block has no question');
+  });
+
+  it('rejects retrieval blocks with nothing to reveal', () => {
+    expect(blockProblems({ type: 'recall', body: 'Remember?', data: { points: [] } }))
+      .toContain('recall block lists no expected points');
+    expect(blockProblems({ type: 'self_explain', body: 'Explain', data: {} }))
+      .toContain('self_explain block has no model answer');
+    expect(blockProblems({ type: 'predict_check', body: 'Predict', code: '<p>x</p>', data: {} }))
+      .toContain('predict_check block does not say what happens');
+    expect(blockProblems({ type: 'recap', data: { prompts: ['Ask'], points: [] } }))
+      .toContain('recap block reveals nothing');
+  });
+
+  it('insists a worked example explains why, not only what', () => {
+    const missingReasoning = blockProblems({
+      type: 'worked_example',
+      title: 'Example',
+      data: { steps: [{ title: 'Step one', code: 'x' }] },
+    });
+    // A step with code and no reasoning is a finished solution in disguise,
+    // which is the format a beginner learns least from.
+    expect(missingReasoning).toContain('worked_example step 1 explains what but not why');
+
+    expect(blockProblems({ type: 'worked_example', title: 'Example', data: { steps: [] } }))
+      .toContain('worked_example block has no steps');
+  });
+
+  it('leaves the existing block types alone', () => {
+    // Validation must not start rejecting the 498 blocks that were already
+    // authored against the original types.
+    for (const lesson of allLessons()) {
+      for (const authored of lesson.blocks) {
+        expect(blockProblems(authored), `${lesson.slug} / ${authored.type}`).toEqual([]);
+      }
+    }
+  });
+
+  it('is actually used by the curriculum, not merely available', () => {
+    const stats = courseStats();
+    expect(stats.retrievalBlocks).toBeGreaterThan(0);
+    expect(stats.lessonsWithRetrieval).toBeGreaterThan(0);
+
+    // Every one of the six types appears somewhere, so none of them ships
+    // having never been rendered by the real application.
+    const used = new Set(
+      allLessons()
+        .flatMap((lesson) => lesson.blocks)
+        .map((authored) => authored.type)
+        .filter((type) => RETRIEVAL_BLOCK_TYPES.has(type)),
+    );
+    expect(used.size).toBe(RETRIEVAL_BLOCK_TYPES.size);
+  });
+});
+
+/**
+ * The database health check hard-codes how much content should be present, so
+ * that a half-loaded seed fails loudly rather than looking fine. The cost of
+ * that precision is that every authoring change makes it stale — and a check
+ * that cries wolf after every lesson is a check people stop reading.
+ *
+ * So the numbers are asserted here. Adding a lesson now fails this test, in the
+ * same run as the seed generator, instead of failing silently against a live
+ * database days later.
+ */
+describe('the database health check matches the curriculum', () => {
+  // Read from the project root: vitest runs there, and `import.meta.url` is
+  // not a file URL under the jsdom environment this suite uses.
+  const sql = readFileSync(join(process.cwd(), 'supabase/tests/verify-database.sql'), 'utf8');
+
+  /** Reads the number a given expectation is compared against. */
+  const expected = (pattern: RegExp): number => {
+    const match = sql.match(pattern);
+    expect(match, `verify-database.sql no longer contains ${pattern}`).not.toBeNull();
+    return Number(match?.[1]);
+  };
+
+  const stats = courseStats();
+  const lessons = allLessons();
+
+  it('expects the right number of lessons, questions and blocks', () => {
+    expect(expected(/\(select count\(\*\) from lessons\) = (\d+)/)).toBe(lessons.length);
+    expect(expected(/\(select count\(\*\) from lesson_blocks\) = (\d+)/)).toBe(stats.blocks);
+    expect(expected(/\(select count\(\*\) from quiz_questions\) = (\d+)/)).toBe(stats.quizQuestions);
+  });
+
+  it('expects the right number of levels and modules', () => {
+    expect(expected(/\(select count\(\*\) from levels\) = (\d+)/)).toBe(stats.levels);
+    expect(expected(/\(select count\(\*\) from modules\) = (\d+)/)).toBe(stats.modules);
+  });
+
+  it('expects the right number of reviewable items', () => {
+    // Mirrors `emitReviewItems`: every lesson question, and every exercise
+    // except project missions, which are not repeatable practice.
+    const reviewQuestions = lessons.flatMap((lesson) => lesson.quiz).length;
+    const reviewExercises = lessons
+      .flatMap((lesson) => lesson.exercises)
+      .filter((exercise) => exercise.kind !== 'project_mission').length;
+
+    expect(expected(/\(select count\(\*\) from review_items\) = (\d+)/)).toBe(
+      reviewQuestions + reviewExercises,
+    );
+    expect(expected(/where kind = 'question'\) = (\d+)/)).toBe(reviewQuestions);
+    expect(expected(/where kind = 'exercise'\) = (\d+)/)).toBe(reviewExercises);
+  });
+});
+
+describe('authored emphasis is only used where it is rendered', () => {
+  // Prose-bearing fields go through `inlineFormat`, so backticks there become
+  // <code>. Code-bearing fields are printed verbatim inside <pre>, where a
+  // backtick is shown to the learner as a backtick — and where everything is
+  // monospace already, so it buys nothing.
+  it('never puts backticks in a field rendered as raw code', () => {
+    const offenders: string[] = [];
+
+    for (const lesson of allLessons()) {
+      for (const authored of lesson.blocks) {
+        if (authored.code?.includes('`')) {
+          offenders.push(`lesson "${lesson.slug}" block "${authored.type}" code`);
+        }
+        const example = (authored.data as Record<string, unknown> | undefined)?.example;
+        if (typeof example === 'string' && example.includes('`')) {
+          offenders.push(`lesson "${lesson.slug}" term "${authored.title}" example`);
+        }
+      }
+      for (const exercise of lesson.exercises) {
+        if (exercise.starterCode?.includes('`') || exercise.referenceSolution.includes('`')) {
+          offenders.push(`exercise "${exercise.slug}" code`);
+        }
+      }
+    }
+
+    expect(offenders).toEqual([]);
   });
 });
 

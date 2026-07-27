@@ -87,6 +87,14 @@ export const saveCodeSchema = z.object({
 export const answerQuestionSchema = z.object({
   questionId: z.string().uuid(),
   optionIds: z.array(z.string().uuid()).min(1, 'Choose an answer'),
+  /**
+   * How sure the learner said they were, captured before the answer was shown.
+   *
+   * Optional at the boundary rather than required, because answers recorded
+   * before this existed have none and a stricter schema would reject a replayed
+   * request rather than a malformed one. The interface asks for it every time.
+   */
+  confidence: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
 });
 
 export const completeLessonSchema = z.object({

@@ -17,12 +17,14 @@ import {
   named,
   notEmpty,
   objectives,
+  predictCheck,
   present,
   prose,
   recap,
   term,
   unique,
   visual,
+  workedExample,
   type LevelSpec,
 } from '../types';
 
@@ -121,6 +123,23 @@ export const LEVEL_03: LevelSpec = {
               'When should a link open in a new tab at all?',
               'The honest answer is: rarely. Taking control of the user\'s window away from them is a decision they did not make, and it breaks the Back button, which is the most-used control in any browser. The defensible cases are narrow — a reference the user needs while completing a form, or a link that would lose unsaved work. When in doubt, let the link open normally; anyone who wants a new tab can middle-click or use their browser\'s menu.',
             ),
+            demo('Link text, heard on its own', 'Screen-reader users often pull up a list of links. This is what each version sounds like there.', [
+              {
+                label: 'Names the destination',
+                code: '<h3>Sourdough workshop</h3>\n<p>Six hours, small groups.</p>\n<a href="sourdough.html">Book the sourdough workshop</a>',
+                note: 'In a link list it reads "Book the sourdough workshop" — unambiguous with the page removed.',
+              },
+              {
+                label: 'Read more',
+                code: '<h3>Sourdough workshop</h3>\n<p>Six hours, small groups.</p>\n<a href="sourdough.html">Read more</a>',
+                note: 'Reads "Read more", identical to every other such link on the site. The list becomes useless.',
+              },
+              {
+                label: 'The bare URL',
+                code: '<p>Details: <a href="https://example.org/workshops/sourdough.html">https://example.org/workshops/sourdough.html</a></p>',
+                note: 'Announced character by character in some configurations. Long, unreadable, and it tells the reader nothing a sentence would not.',
+              },
+            ]),
             recap(
               [
                 '`<a href="…">` creates a link; the content between the tags is what people see.',
@@ -275,6 +294,36 @@ From projects/first.html (one folder deep):
               'The leading slash trap',
               'Writing `/images/logo.svg` with a leading slash means "start from the very top of the website", not "start from my folder". On a live server that is often what you want; but when you open a file directly from your computer it means the root of your hard drive, and the image will not load. While you are learning, prefer relative paths with no leading slash.',
             ),
+            workedExample(
+              'Working out one path, step by step',
+              'The question: you are editing `projects/first.html` and you want to show `images/logo.svg`, which sits at the top level. Rather than guessing and refreshing, here is the reasoning — it is the same four steps every time, and it never fails.',
+              [
+                {
+                  title: 'Say where you are, out loud',
+                  code: `projects/first.html`,
+                  reasoning:
+                    'You are *inside* the `projects` folder. Everything that follows is measured from there, not from the top of the project. This is the step people skip, and skipping it is why paths feel like guesswork.',
+                },
+                {
+                  title: 'Say where the file is',
+                  code: `images/logo.svg`,
+                  reasoning:
+                    'The image lives inside `images`, which sits at the top level — beside `projects`, not inside it. So the two folders are siblings, and you cannot reach one from inside the other by going further down.',
+                },
+                {
+                  title: 'Climb out until you can see it',
+                  code: `../`,
+                  reasoning:
+                    'One `../` takes you up from `projects` to the top level. From there `images` is visible. You needed exactly one, because you were exactly one folder deep — count the folders, do not guess the dots.',
+                },
+                {
+                  title: 'Then walk down to the file',
+                  code: `<img src="../images/logo.svg" alt="Company logo">`,
+                  reasoning:
+                    'Up one, into `images`, take `logo.svg`. Read it back as a sentence — "go up one folder, into images, then logo.svg" — and if the sentence is true, the path is right.',
+                },
+              ],
+            ),
             demo('Same link, three ways', 'Each of these can be correct — it depends where you are.', [
               {
                 label: 'Relative',
@@ -323,6 +372,17 @@ From projects/first.html (one folder deep):
             detail(
               'Linking to a section on another page',
               'Combine a path with a fragment: `<a href="prices.html#day-rates">Day rates</a>` loads prices.html and jumps to the element with `id="day-rates"`. This works with relative paths and absolute URLs alike. The `#top` fragment, and an empty `href="#"`, both scroll to the top of the current page — though `href="#"` on a real link is usually a sign that something is missing.',
+            ),
+            predictCheck(
+              `<h2 id="rates">Rates</h2>
+<p>From £6 an hour.</p>
+
+<h2 id="rates">Off-peak rates</h2>
+<p>From £4 an hour after 4pm.</p>
+
+<p><a href="#rates">Jump to rates</a></p>`,
+              'Two headings have been given the same `id`, which is not allowed. Before you run it: does the link fail, jump to the first heading, or jump to the second?',
+              'It jumps to the *first* one, silently. Nothing warns you, and the second `id="rates"` is simply unreachable — no link can ever reach it. Duplicate ids are one of the few HTML mistakes with no visible symptom at all, which is exactly why the checker in this course looks for them.',
             ),
             checklist('Path rules to remember', [
               'No slash at the start = start from where I am',
@@ -549,6 +609,23 @@ From projects/first.html (one folder deep):
               'Does the download attribute always work?',
               'It applies only to same-origin files — you cannot force a download of a file hosted on someone else\'s domain, for good security reasons. If the file is on your own site it works everywhere current. If the browser ignores it, the link still works; it just opens the file instead of saving it, which is a perfectly acceptable fallback.',
             ),
+            demo('Three protocols, three behaviours', 'The scheme at the start of the href decides what happens on click.', [
+              {
+                label: 'Email',
+                code: '<a href="mailto:hello@example.org?subject=Workshop%20booking">Email the bakery</a>',
+                note: 'Opens the visitor\'s mail client with the address, and here the subject, already filled in. Note the encoded space.',
+              },
+              {
+                label: 'Telephone',
+                code: '<a href="tel:+441632960123">Call 01632 960123</a>',
+                note: 'Dials on a phone and is often ignored on a desktop — so the readable number belongs in the link text, not only in the href.',
+              },
+              {
+                label: 'Download',
+                code: '<a href="/menu.pdf" download="riverside-menu.pdf">Download the menu (PDF, 240KB)</a>',
+                note: 'Saves rather than navigates, under the name you supply. Telling the reader the format and size before they click is basic courtesy.',
+              },
+            ]),
             recap(
               [
                 '`mailto:` opens an email client; show the real address as the link text.',
@@ -744,6 +821,23 @@ From projects/first.html (one folder deep):
               '`aria-current="page"` on the link to the current page',
               'A breadcrumb trail on pages more than one level deep',
               'A `<main>` element with an `id` the skip link targets',
+            ]),
+            demo('Marking where the visitor already is', 'Three navs. Only one is useful to somebody who cannot see the styling.', [
+              {
+                label: 'aria-current',
+                code: '<nav aria-label="Main">\n  <ul>\n    <li><a href="index.html">Home</a></li>\n    <li><a href="menu.html" aria-current="page">Menu</a></li>\n  </ul>\n</nav>',
+                note: 'Announced as "Menu, current page". The information reaches everybody.',
+              },
+              {
+                label: 'A class only',
+                code: '<nav aria-label="Main">\n  <ul>\n    <li><a href="index.html">Home</a></li>\n    <li><a href="menu.html" class="active">Menu</a></li>\n  </ul>\n</nav>',
+                note: 'Visually obvious, completely silent. A class name means nothing to assistive technology.',
+              },
+              {
+                label: 'Two unlabelled navs',
+                code: '<nav>\n  <ul><li><a href="index.html">Home</a></li></ul>\n</nav>\n<nav>\n  <ul><li><a href="terms.html">Terms</a></li></ul>\n</nav>',
+                note: 'Both announce as just "navigation", so a user listing the landmarks cannot tell the main menu from the footer links.',
+              },
             ]),
             recap(
               [
@@ -975,6 +1069,18 @@ From projects/first.html (one folder deep):
             prose(
               'The navigation block itself is the same on every page — but the paths inside it are not. From `index.html` the About link is `about.html`; from `routes/valley.html` it is `../about.html`. This is exactly the kind of repetition that templating tools exist to remove, and Level 5 shows how professionals handle it.',
             ),
+            demo('A nav that works across every page', 'The same markup on three pages, with one attribute moving.', [
+              {
+                label: 'On index.html',
+                code: '<nav aria-label="Main">\n  <ul>\n    <li><a href="index.html" aria-current="page">Home</a></li>\n    <li><a href="about.html">About</a></li>\n  </ul>\n</nav>',
+                note: 'aria-current sits on Home. Everything else is identical to every other page.',
+              },
+              {
+                label: 'On about.html',
+                code: '<nav aria-label="Main">\n  <ul>\n    <li><a href="index.html">Home</a></li>\n    <li><a href="about.html" aria-current="page">About</a></li>\n  </ul>\n</nav>',
+                note: 'The one attribute moves. This is the detail most often forgotten when copying a shell between pages.',
+              },
+            ]),
             recap(
               [
                 'Decide your folder structure before you write the files.',

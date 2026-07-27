@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LessonBlock } from './lesson-blocks';
+import { LessonWarmUp } from './lesson-warm-up';
 import { Quiz, type QuizQuestionView } from './quiz';
 import { Workbench, type WorkbenchExercise } from '@/components/editor/workbench';
 import { Badge, Button, ButtonLink, Card } from '@/components/ui';
@@ -15,6 +16,7 @@ import {
   SparkIcon,
 } from '@/components/ui/icons';
 import type { LessonBlockRow } from '@/lib/supabase/database.types';
+import type { ReviewQuestion } from '@/lib/data/review';
 import type { EvaluationOutcome, LessonCompletionOutcome, QuizOutcome } from '@/lib/actions/progress';
 import type { ActionResult } from '@/lib/actions/schemas';
 
@@ -47,6 +49,12 @@ export interface LessonViewProps {
   blocks: LessonBlockRow[];
   exercises: WorkbenchExercise[];
   questions: QuizQuestionView[];
+  /**
+   * Retrieval practice drawn from earlier lessons, composed on the server.
+   * Empty on a learner's very first lesson, which is correct rather than a gap:
+   * there is nothing yet to retrieve.
+   */
+  warmUp: ReviewQuestion[];
   savedCode: Record<string, { code: string; hintsUsed: number }>;
   passedExerciseIds: string[];
   previousAnswers: Record<string, { selected: string[]; isCorrect: boolean }>;
@@ -67,10 +75,13 @@ export interface LessonViewProps {
 
 const KIND_ORDER: Record<string, number> = {
   guided: 0,
-  challenge: 1,
-  debug: 2,
-  project_mission: 3,
-  bonus: 4,
+  // Finishing a partly written solution sits between being led through one and
+  // writing one from nothing: the scaffolding comes off gradually.
+  completion: 1,
+  challenge: 2,
+  debug: 3,
+  project_mission: 4,
+  bonus: 5,
 };
 
 export function LessonView(props: LessonViewProps) {
@@ -138,8 +149,12 @@ export function LessonView(props: LessonViewProps) {
     (a, b) => (KIND_ORDER[a.kind] ?? 9) - (KIND_ORDER[b.kind] ?? 9),
   );
 
-  const summaryBlocks = props.blocks.filter((b) => b.block_type === 'summary');
-  const teachingBlocks = props.blocks.filter((b) => b.block_type !== 'summary');
+  // `summary` restates the lesson and `recap` makes the learner retrieve it.
+  // Both belong after the knowledge check rather than in the teaching flow —
+  // a closing recall placed before the exercises is not a closing recall.
+  const isClosing = (type: string) => type === 'summary' || type === 'recap';
+  const summaryBlocks = props.blocks.filter((b) => isClosing(b.block_type));
+  const teachingBlocks = props.blocks.filter((b) => !isClosing(b.block_type));
 
   return (
     <article className="mx-auto max-w-4xl px-5 py-6 lg:px-10 lg:py-10">
@@ -185,6 +200,9 @@ export function LessonView(props: LessonViewProps) {
         </h1>
         <p className="mt-1.5 text-lg text-muted">{props.lesson.subtitle}</p>
       </header>
+
+      {/* ---- Warm-up: retrieval before new material ---- */}
+      <LessonWarmUp questions={props.warmUp} />
 
       {/* ---- Teaching content ---- */}
       <div className="space-y-6">

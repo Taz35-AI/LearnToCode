@@ -1,4 +1,5 @@
 import {
+  activeRecap,
   annotated,
   attr,
   attrMatches,
@@ -7,18 +8,24 @@ import {
   checklist,
   code,
   compare,
+  count,
+  demo,
   detail,
   doctype,
   headingOrder,
   legalNesting,
   notEmpty,
   objectives,
+  predictCheck,
   present,
+  pretest,
   prose,
   recap,
   term,
   unique,
   type LevelSpec,
+  mediaExample,
+  recall,
 } from '../types';
 
 export const LEVEL_09: LevelSpec = {
@@ -37,7 +44,10 @@ export const LEVEL_09: LevelSpec = {
       summary:
         'Titles, descriptions, canonical URLs, favicons, language and robots directives.',
       estimatedMinutes: 45,
-      prerequisites: ['accessibility-foundations'],
+      // Level 8 now runs foundations → ARIA and forms, so this depends on the
+      // later of the two: a learner should have met ARIA and accessible forms
+      // before metadata, not merely the keyboard basics.
+      prerequisites: ['aria-and-accessible-forms'],
       skills: [{ slug: 'metadata', masteryRequired: 0 }],
       lessons: [
         {
@@ -137,6 +147,31 @@ export const LEVEL_09: LevelSpec = {
               'A `<link rel="canonical">` on a live site',
               'A favicon',
               '`lang` on the `<html>` element',
+            ]),
+            mediaExample(
+              'newsroom-desk',
+              'Why every page needs its own title',
+              'Eight tabs open, all from the same site. The title is the only thing distinguishing them — which is why "Riverside Bakery" on every page makes a site unnavigable the moment somebody opens two of them.',
+              `<title>Bike hire prices — Riverside Cycle Hire</title>
+<title>Route guides — Riverside Cycle Hire</title>
+<title>Contact and opening hours — Riverside Cycle Hire</title>`,
+            ),
+            demo('The same page, three titles', 'Each shown as it would appear in a browser tab and a search result.', [
+              {
+                label: 'Specific, distinctive first',
+                code: '<title>Bike hire prices — Riverside Cycle Hire</title>',
+                note: 'Readable in a narrow tab, unique across the site, and the useful words come before the truncation point.',
+              },
+              {
+                label: 'Site name first',
+                code: '<title>Riverside Cycle Hire — Bike hire prices</title>',
+                note: 'In a narrow tab the visitor sees only "Riverside Cycl…", which is identical on every page of the site.',
+              },
+              {
+                label: 'Keyword stuffed',
+                code: '<title>Riverside Cycle Hire | Bike Hire | Cycling | Hexford | Home</title>',
+                note: 'Truncated in results, useless in a tab, and search engines have long since stopped rewarding it.',
+              },
             ]),
             recap(
               [
@@ -373,6 +408,34 @@ FAQPage         a set of questions and answers`,
               'The honest limits of on-page SEO',
               'HTML can make your content understandable, crawlable and shareable. It cannot make it *good*, and it cannot make it rank. Rankings depend overwhelmingly on the quality and relevance of your content, on how many other sites reference it, and on how fast and usable your pages are. Anyone who tells you a particular meta tag guarantees a position is selling something. What is genuinely in your control: unique titles and descriptions, a clear heading structure, descriptive links, real alt text, fast-loading pages, and accurate structured data. That is the whole honest list.',
             ),
+            mediaExample(
+              'event-stage',
+              'The image a share card actually uses',
+              'A sharing image is not decoration — it is often the only thing seen before someone decides whether to click. It needs its own dimensions and an absolute URL, because the site rendering it is not yours.',
+              `<meta property="og:image"
+      content="https://riverside-cycles.example/learning-media/images/event-stage.jpg">
+<meta property="og:image:width" content="1600">
+<meta property="og:image:height" content="900">
+<meta property="og:image:alt"
+      content="A crowd silhouetted in front of a stage lit by pink and blue lights">`,
+            ),
+            demo('The same page, shared three ways', 'What a chat app or social network has to work with.', [
+              {
+                label: 'Full card',
+                code: '<meta property="og:title" content="Bike hire prices — Riverside Cycle Hire">\n<meta property="og:description" content="Hourly, daily and weekly hire from £6, helmet and route map included.">\n<meta property="og:image" content="https://riverside-cycles.example/share.jpg">\n<meta property="og:image:alt" content="A blue bicycle on a riverside path">\n<meta property="og:url" content="https://riverside-cycles.example/prices.html">',
+                note: 'Title, description, image and a described image. The link arrives as a card somebody might actually click.',
+              },
+              {
+                label: 'Image with no alt',
+                code: '<meta property="og:title" content="Bike hire prices — Riverside Cycle Hire">\n<meta property="og:image" content="https://riverside-cycles.example/share.jpg">',
+                note: 'The card renders, and screen-reader users on the sharing platform get an unlabelled image. `og:image:alt` is the only fix.',
+              },
+              {
+                label: 'Nothing declared',
+                code: '<title>Bike hire prices — Riverside Cycle Hire</title>',
+                note: 'Platforms fall back to guessing — usually the title and whichever image they find first, which may be your logo or an advert.',
+              },
+            ]),
             recap(
               [
                 'Open Graph uses `property`, needs absolute image URLs, and wants a 1200×630 image.',
@@ -517,6 +580,264 @@ FAQPage         a set of questions and answers`,
           ],
         },
         {
+          slug: 'language-and-internationalisation',
+          title: 'Language and direction',
+          subtitle: 'The attribute that changes how your page is spoken, translated and indexed',
+          summary:
+            'One attribute on `<html>` affects screen-reader pronunciation, automatic translation, search indexing and how the browser hyphenates. Almost everybody sets it wrongly or not at all.',
+          objectives: [
+            'Declare the page language correctly',
+            'Mark passages that are in a different language',
+            'Explain what `dir` does and when it is needed',
+          ],
+          estimatedMinutes: 14,
+          skill: 'metadata',
+          blocks: [
+            pretest(
+              'A page has no `lang` attribute. A screen-reader user in France opens it. What is the most likely result?',
+              [
+                'English text is read aloud using French pronunciation rules, and is close to unintelligible',
+                'The screen reader detects the language automatically from the words',
+                'Nothing changes — `lang` only affects search engines',
+                'The page fails to load',
+              ],
+              'The screen reader falls back to the user\'s own configured language and applies French pronunciation to English words. The result is not a slight accent — it is genuinely hard to understand, in the way that reading English aloud with strictly French letter sounds would be. Screen readers do not guess the language from the content; they are told, or they fall back. One attribute prevents this entirely, which is why it is the single highest value-per-character thing in the whole of metadata.',
+            ),
+            objectives([
+              'Set `lang` on `<html>` with a valid language tag',
+              'Mark inline passages in another language',
+              'Use `dir` where the writing direction genuinely changes',
+            ]),
+            term(
+              'Language tag',
+              'A short code identifying a language, optionally with a region: `en`, `en-GB`, `fr`, `pt-BR`. Use the shortest tag that is accurate — `en` is fine unless the regional difference actually matters.',
+            ),
+            code(
+              `<html lang="en-GB">      British English
+<html lang="en">         English, region unspecified — usually enough
+<html lang="fr">         French
+<html lang="pt-BR">      Brazilian Portuguese
+<html lang="cy">         Welsh
+<html lang="ar">         Arabic — see dir, below`,
+              'Declaring the page language',
+            ),
+            prose(
+              'Set it once on `<html>` and every element inherits it. Then override it only where a passage genuinely changes language — and *only* there, because an incorrect override is worse than none.',
+            ),
+            annotated(
+              `<html lang="en">
+  <body>
+    <p>The bakery is on the Rue des Fleurs.</p>
+    <p>Our motto is <span lang="fr">plus de beurre</span>.</p>
+    <p lang="cy">Croeso i'r becws.</p>
+  </body>
+</html>`,
+              [
+                { line: '1', text: 'Declared once. Everything inside inherits `en` unless it says otherwise.' },
+                { line: '3', text: 'A French street name inside an English sentence. This does *not* get a `lang` — proper nouns are read acceptably either way, and marking every foreign-derived name quickly becomes noise.' },
+                { line: '4', text: 'An actual French phrase, so it is marked. The screen reader switches voice for those three words and switches back.' },
+                { line: '5', text: 'A whole paragraph in Welsh, so the attribute goes on the block itself rather than a span inside it.' },
+              ],
+            ),
+            callout(
+              'mistake',
+              'The two commonest `lang` errors',
+              'Leaving it off entirely — which the validator will tell you about, and which is the more damaging. And setting it once and then never revisiting it, so a page translated into Welsh still says `lang="en"`, which is worse than absent: the screen reader now confidently applies the wrong rules rather than falling back to the user\'s default.',
+            ),
+            term(
+              'Writing direction',
+              '`dir="rtl"` marks text that reads right to left — Arabic, Hebrew, Persian, Urdu. `dir="ltr"` is the default. `dir="auto"` lets the browser decide from the first strongly directional character, which is what you want for text you did not write.',
+            ),
+            demo('Direction in practice', 'The same markup, with and without a direction declared.', [
+              {
+                label: 'Declared',
+                code: '<p lang="ar" dir="rtl">مرحبا بكم في المخبز</p>\n<p>Open seven days a week.</p>',
+                note: 'The Arabic paragraph lays out right to left, its punctuation lands on the correct side, and the English paragraph is unaffected.',
+              },
+              {
+                label: 'Not declared',
+                code: '<p lang="ar">مرحبا بكم في المخبز</p>\n<p>Open seven days a week.</p>',
+                note: 'Browsers handle the characters themselves, but punctuation and any mixed-in Latin text can end up on the wrong side of the line.',
+              },
+              {
+                label: 'User-supplied text',
+                code: '<blockquote dir="auto">مرحبا بكم في المخبز</blockquote>\n<blockquote dir="auto">Lovely bread, thank you.</blockquote>',
+                note: '`dir="auto"` is the right choice for anything you did not write — a review, a comment, a name — because you cannot know its direction in advance.',
+              },
+            ]),
+            predictCheck(
+              `<html lang="en">
+  <body>
+    <p lang="en">Welcome to the bakery.</p>
+    <p lang="en">Our motto is plus de beurre.</p>
+  </body>
+</html>`,
+              'Every element here declares `lang="en"`, including a phrase that is actually French. Before you check: is repeating the attribute harmful, useless, or helpful?',
+              'Repeating `en` on the paragraphs is merely useless — they already inherited it. The real fault is the second paragraph, where a French phrase is now positively asserted to be English, so a screen reader will pronounce it with English rules rather than switching. This is the pattern worth internalising: a missing `lang` makes software fall back, which is bad; a *wrong* `lang` makes software confident, which is worse. Declare it once at the top, and override only where the language genuinely changes.',
+            ),
+            detail(
+              'What `lang` reaches beyond screen readers',
+              'Browser translation offers, and correctly identifies the source language. Hyphenation and line-breaking rules. Which font a browser picks for characters that exist in several scripts. Spell-checking in editable fields. Search engines use it to serve the right page to the right audience — which is why it sits in the metadata level rather than the accessibility one, though it matters most for accessibility. And `<html lang>` is required for several WCAG success criteria, so a page without it cannot conform at any level.',
+            ),
+            checklist('Language checklist', [
+              '`<html>` has a `lang` with a valid tag',
+              'The tag is actually correct for the content — not copied from a template',
+              'Passages in another language are marked, at the block or span level',
+              'Proper nouns are *not* marked just for being foreign',
+              '`dir="rtl"` on right-to-left content, `dir="auto"` on anything user-supplied',
+            ]),
+            recap(
+              [
+                '`lang` on `<html>` is inherited by everything and affects speech, translation, fonts and indexing.',
+                'Override it only where the language genuinely changes.',
+                'A wrong `lang` is worse than a missing one: software stops falling back and becomes confidently wrong.',
+                '`dir="auto"` is the right default for text you did not write.',
+              ],
+              'Next: the Level 9 milestone.',
+            ),
+            activeRecap(
+              [
+                'What does a missing `lang` do to a screen-reader user, specifically?',
+                'When should you add `lang` to an element inside the page — and when should you not?',
+                'What is `dir="auto"` for?',
+              ],
+              [
+                'The reader falls back to the user\'s own language and applies its pronunciation rules to your words, which can make the page close to unintelligible rather than merely accented.',
+                'Add it where a passage is genuinely in another language, at block or span level. Do not add it to proper nouns, and do not restate the page language on elements that already inherit it.',
+                'Text whose direction you cannot know in advance — anything user-supplied, such as a review, comment or name. The browser decides from the first strongly directional character.',
+              ],
+            ),
+          ],
+          exercises: [
+            {
+              slug: 'lang-guided',
+              kind: 'guided',
+              title: 'Declare the language properly',
+              brief:
+                'Set the page language to British English, mark the French motto so it is pronounced correctly, and mark the Welsh greeting on its own paragraph. Do not mark the French street name — it is a proper noun.',
+              starterCode: `<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Riverside Bakery</title>
+  </head>
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p>You will find us on the Rue des Fleurs.</p>
+    <p>Our motto is plus de beurre.</p>
+    <p>Croeso i'r becws.</p>
+  </body>
+</html>`,
+              referenceSolution: `<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <title>Riverside Bakery</title>
+  </head>
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p>You will find us on the Rue des Fleurs.</p>
+    <p>Our motto is <span lang="fr">plus de beurre</span>.</p>
+    <p lang="cy">Croeso i'r becws.</p>
+  </body>
+</html>`,
+              hints: [
+                'The page language goes on the <html> element itself: lang="en-GB".',
+                'Wrap just the French words in a <span lang="fr">.',
+                'The Welsh sentence is a whole paragraph, so the attribute goes on the <p>.',
+              ],
+              requirements: [
+                attrValue('html', 'lang', 'en-GB', 'The page declares British English'),
+                attrValue('span', 'lang', 'fr', 'The French phrase is marked'),
+                attrValue('p[lang="cy"]', 'lang', 'cy', 'The Welsh paragraph is marked'),
+                count('[lang="fr"]', 1, 1, 'Only the French phrase is marked as French'),
+                notEmpty('title', 'The page still has a title'),
+              ],
+              difficulty: 2,
+              xp: 40,
+              skill: 'metadata',
+            },
+            {
+              slug: 'lang-debug',
+              kind: 'debug',
+              title: 'Confidently wrong language markup',
+              brief:
+                'This page declares the wrong language, restates it needlessly on every paragraph, marks a proper noun as foreign, and leaves an Arabic quotation with no direction. Repair all four.',
+              starterCode: `<html lang="fr">
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p lang="fr">Open seven days a week.</p>
+    <p lang="fr">You will find us on the <span lang="fr">Rue des Fleurs</span>.</p>
+    <blockquote lang="ar">مرحبا بكم في المخبز</blockquote>
+  </body>
+</html>`,
+              referenceSolution: `<html lang="en">
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p>Open seven days a week.</p>
+    <p>You will find us on the Rue des Fleurs.</p>
+    <blockquote lang="ar" dir="rtl">مرحبا بكم في المخبز</blockquote>
+  </body>
+</html>`,
+              hints: [
+                'The page is in English, so <html lang="en">.',
+                'Paragraphs inherit the page language — remove the repeated lang attributes.',
+                'A street name is a proper noun and should not be marked as French.',
+                'Arabic reads right to left, so the quotation needs dir="rtl".',
+              ],
+              requirements: [
+                attrValue('html', 'lang', 'en', 'The page declares English'),
+                count('[lang="fr"]', 0, 0, 'Nothing is wrongly marked as French'),
+                count('p[lang]', 0, 0, 'Paragraphs simply inherit the page language'),
+                attrValue('blockquote', 'dir', 'rtl', 'The Arabic quotation declares its direction'),
+                attrValue('blockquote', 'lang', 'ar', 'The Arabic quotation declares its language'),
+              ],
+              difficulty: 3,
+              xp: 45,
+              skill: 'metadata',
+            },
+          ],
+          quiz: [
+            {
+              slug: 'q-lang-missing-effect',
+              prompt: 'What happens when a page has no `lang` attribute?',
+              explanation:
+                'Assistive technology falls back to the user\'s own language settings and applies its pronunciation rules to your text.',
+              options: [
+                { label: 'Screen readers fall back to the user\'s language and mispronounce the content', correct: true },
+                { label: 'The page will not validate but nothing else changes' },
+                { label: 'Browsers detect the language from the words automatically' },
+                { label: 'Only search ranking is affected' },
+              ],
+              skill: 'metadata',
+            },
+            {
+              slug: 'q-wrong-lang-worse',
+              prompt: 'Why is an incorrect `lang` worse than a missing one?',
+              explanation:
+                'A missing attribute makes software fall back to a sensible default. A wrong one makes it confidently apply the wrong rules.',
+              options: [
+                { label: 'Software stops falling back and applies the wrong rules with confidence', correct: true },
+                { label: 'It causes a validation error, whereas a missing one does not' },
+                { label: 'It prevents the page being indexed at all' },
+                { label: 'There is no difference in practice' },
+              ],
+              skill: 'metadata',
+            },
+            {
+              slug: 'q-dir-auto',
+              prompt: 'When is `dir="auto"` the right choice?',
+              explanation:
+                'For text whose direction you cannot know when writing the page — anything supplied by a user.',
+              options: [
+                { label: 'For user-supplied text such as reviews, comments or names', correct: true },
+                { label: 'For every element on a multilingual page' },
+                { label: 'Only on the `<html>` element' },
+                { label: 'Whenever the page mixes two fonts' },
+              ],
+              skill: 'metadata',
+            },
+          ],
+        },
+        {
           slug: 'seo-milestone',
           title: 'Milestone: optimise a page for discovery',
           subtitle: 'Every metadata decision on one page',
@@ -582,6 +903,34 @@ FAQPage         a set of questions and answers`,
                 code: `<title>Riverside Cycle Hire</title>`,
                 why: 'The messaging app guesses: often just the bare URL, or the first stray sentence it finds on the page.',
               },
+            ),
+            demo('What a search result is built from', 'Three pages, three very different results.', [
+              {
+                label: 'Complete',
+                code: '<title>Bike hire prices — Riverside Cycle Hire</title>\n<meta name="description" content="Hourly, daily and weekly hire from £6. Helmet, lock and route map included.">\n<link rel="canonical" href="https://riverside-cycles.example/prices.html">',
+                note: 'A distinct title, a description that reads as a promise, and one canonical address so duplicates do not compete.',
+              },
+              {
+                label: 'Shared title',
+                code: '<title>Riverside Cycle Hire</title>\n<meta name="description" content="Riverside Cycle Hire">',
+                note: 'Every page identical. Tabs are indistinguishable, bookmarks meaningless, and the search engine has nothing to tell them apart.',
+              },
+              {
+                label: 'No canonical',
+                code: '<title>Bike hire prices — Riverside Cycle Hire</title>\n<meta name="description" content="Hourly, daily and weekly hire from £6.">',
+                note: 'Fine until the same page is reachable with and without a trailing slash, or with tracking parameters — then several URLs compete with each other.',
+              },
+            ]),
+            recall(
+              'Metadata sits on top of structure — it cannot rescue a badly built page. From memory: which earlier decisions does a search engine actually read, and why does each one matter to it?',
+              [
+                'Level 1 — `<html lang>` tells it which audience the page is for; the `<title>` is the single most-read line you will write.',
+                'Level 2 — the heading outline is how a crawler works out what the page is about and which parts are subordinate.',
+                'Level 3 — descriptive link text is a signal about the destination, which is why "click here" wastes it.',
+                'Level 4 — `alt` text is the only description of an image a crawler has.',
+                'Level 5 — landmarks separate the content of this page from the navigation repeated on every page.',
+              ],
+              'What the crawler was already reading',
             ),
             recap(
               [

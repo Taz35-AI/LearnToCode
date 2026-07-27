@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Badge, Button, ProgressBar } from '@/components/ui';
+import { Badge, Button, InlineText, ProgressBar } from '@/components/ui';
 import { AlertIcon, CheckCircleIcon, SparkIcon } from '@/components/ui/icons';
 import { cx } from '@/lib/utils';
+import { CONFIDENCE_LABELS, type ConfidenceRating } from '@/lib/review/calibration';
 import type { QuizOutcome } from '@/lib/actions/progress';
 import type { ActionResult } from '@/lib/actions/schemas';
 
@@ -14,6 +15,12 @@ import type { ActionResult } from '@/lib/actions/schemas';
  * the answer key cannot be read out of the page source. The learner sees the
  * explanation after answering, whether they were right or wrong — being told
  * *why* is the part that teaches.
+ *
+ * Confidence is asked before checking, and is required rather than optional.
+ * Optional self-report would be filled in exactly when the learner feels sure
+ * and skipped when they do not, so the resulting calibration report would be
+ * built from a sample selected by the very bias it exists to measure. One extra
+ * click per question buys an honest measurement instead of a flattering one.
  */
 
 export interface QuizQuestionView {
@@ -36,7 +43,11 @@ export function Quiz({
 }: {
   questions: QuizQuestionView[];
   previousAnswers: Record<string, { selected: string[]; isCorrect: boolean }>;
-  onAnswer: (input: { questionId: string; optionIds: string[] }) => Promise<ActionResult<QuizOutcome>>;
+  onAnswer: (input: {
+    questionId: string;
+    optionIds: string[];
+    confidence?: ConfidenceRating;
+  }) => Promise<ActionResult<QuizOutcome>>;
 }) {
   const [answers, setAnswers] = useState<Record<string, AnswerState>>(() => {
     const initial: Record<string, AnswerState> = {};
@@ -91,8 +102,8 @@ export function Quiz({
                 [question.id]: { selected: optionIds, outcome: current[question.id]?.outcome ?? null },
               }))
             }
-            onSubmit={async (optionIds) => {
-              const response = await onAnswer({ questionId: question.id, optionIds });
+            onSubmit={async (optionIds, confidence) => {
+              const response = await onAnswer({ questionId: question.id, optionIds, confidence });
               if (response.ok && response.data) {
                 setAnswers((current) => ({
                   ...current,
@@ -120,9 +131,10 @@ function QuizQuestion({
   state: AnswerState;
   previous?: { selected: string[]; isCorrect: boolean };
   onSelect: (optionIds: string[]) => void;
-  onSubmit: (optionIds: string[]) => Promise<void>;
+  onSubmit: (optionIds: string[], confidence: ConfidenceRating) => Promise<void>;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [confidence, setConfidence] = useState<ConfidenceRating | null>(null);
   const outcome = state.outcome;
   const answered = outcome !== null;
   const isMulti = question.kind === 'multi';
@@ -147,7 +159,7 @@ function QuizQuestion({
       <fieldset>
         <legend className="font-semibold text-ink">
           <span className="text-muted">{index}. </span>
-          {question.prompt}
+          <InlineText text={question.prompt} />
           {isMulti ? (
             <span className="ml-2 text-xs font-normal text-muted">(choose all that apply)</span>
           ) : null}
@@ -190,7 +202,9 @@ function QuizQuestion({
                   disabled={answered}
                   className="mt-0.5 h-4 w-4 shrink-0 accent-[hsl(var(--accent))]"
                 />
-                <span className="text-ink">{option.label}</span>
+                <span className="text-ink">
+                  <InlineText text={option.label} />
+                </span>
                 {answered && isCorrectOption ? (
                   <span className="ml-auto shrink-0 text-[hsl(var(--success))]" aria-label="Correct answer">
                     <CheckCircleIcon size={18} />
@@ -202,14 +216,57 @@ function QuizQuestion({
         </div>
 
         {!answered ? (
-          <Button
-            className="mt-4"
-            size="sm"
-            disabled={state.selected.length === 0 || isPending}
-            onClick={() => startTransition(() => void onSubmit(state.selected))}
-          >
-            {isPending ? 'Checking…' : 'Check answer'}
-          </Button>
+          <>
+            <div className="mt-4">
+              <p id={`${groupName}-confidence`} className="text-sm font-medium text-ink">
+                Before you check — how sure are you?
+              </p>
+              <p className="mt-0.5 text-xs text-muted">
+                Asked before the answer, because afterwards it is hindsight. This is what the
+                confidence report on your review page is built from.
+              </p>
+              <div
+                className="mt-2 flex flex-wrap gap-2"
+                role="radiogroup"
+                aria-labelledby={`${groupName}-confidence`}
+              >
+                {([1, 2, 3, 4] as ConfidenceRating[]).map((rating) => (
+                  <button
+                    key={rating}
+                    type="button"
+                    role="radio"
+                    aria-checked={confidence === rating}
+                    onClick={() => setConfidence(rating)}
+                    className={cx(
+                      'rounded-full border px-3 py-1.5 text-sm transition-colors min-h-[2.25rem]',
+                      confidence === rating
+                        ? 'border-[hsl(var(--accent))] bg-[hsl(var(--accent))] text-white'
+                        : 'border-app text-muted hover:border-strong hover:text-ink',
+                    )}
+                  >
+                    {CONFIDENCE_LABELS[rating]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              className="mt-4"
+              size="sm"
+              disabled={state.selected.length === 0 || confidence === null || isPending}
+              onClick={() =>
+                startTransition(() => {
+                  if (confidence === null) return;
+                  void onSubmit(state.selected, confidence);
+                })
+              }
+            >
+              {isPending ? 'Checking…' : 'Check answer'}
+            </Button>
+            {state.selected.length > 0 && confidence === null ? (
+              <span className="ml-3 text-xs text-muted">Rate your confidence to continue.</span>
+            ) : null}
+          </>
         ) : (
           <div
             role="status"
@@ -235,7 +292,9 @@ function QuizQuestion({
                 </Badge>
               ) : null}
             </p>
-            <p className="mt-1.5 text-sm text-ink">{outcome.explanation}</p>
+            <p className="mt-1.5 text-sm text-ink">
+              <InlineText text={outcome.explanation} />
+            </p>
           </div>
         )}
       </fieldset>

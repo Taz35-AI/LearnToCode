@@ -158,6 +158,253 @@ export const recap = (points: string[], nextUp?: string): BlockSpec => ({
 });
 
 // ---------------------------------------------------------------------------
+// Retrieval-practice blocks
+//
+// The six block types added by migration 0006. What unites them is that each
+// one asks the learner to *produce* something — a guess, a prediction, an
+// explanation, a memory — before it shows them anything. That ordering is the
+// whole point. Reading an explanation produces a strong feeling of
+// understanding and very little durable knowledge; attempting first and being
+// wrong produces the opposite, which is why these blocks are deliberately
+// uncomfortable to work through.
+//
+// Every one of them hides its answer until the learner commits. A block that
+// reveals the answer alongside the question is a `prose` block wearing a
+// costume, and it teaches like one.
+// ---------------------------------------------------------------------------
+
+/**
+ * A question asked *before* the material is taught.
+ *
+ * The learner will usually get it wrong, and that is the mechanism rather than
+ * a side effect: a failed retrieval attempt primes the explanation that
+ * follows, so the same paragraph read afterwards lands far harder. Put one at
+ * the very top of a lesson, above the objectives.
+ *
+ * `answer` explains which option was right and why — it is shown only once a
+ * guess has been committed.
+ */
+export const pretest = (
+  prompt: string,
+  options: string[],
+  answer: string,
+  title = 'Before we start — have a guess',
+): BlockSpec => ({
+  type: 'pretest',
+  title,
+  body: prompt,
+  data: { options, answer },
+});
+
+/**
+ * Free recall: "write down everything you remember about X."
+ *
+ * Harder than recognising an answer from a list, and correspondingly more
+ * effective. `points` is what a good answer would contain — revealed after the
+ * learner has written theirs, so it grades their memory rather than replacing
+ * it.
+ */
+export const recall = (
+  prompt: string,
+  points: string[],
+  title = 'From memory',
+): BlockSpec => ({
+  type: 'recall',
+  title,
+  body: prompt,
+  data: { points },
+});
+
+/**
+ * Predict what this code does, then run it.
+ *
+ * A mismatch between prediction and result is the moment a misconception
+ * becomes visible — to the learner, not just to us. Reading the same code with
+ * the answer already on screen surfaces nothing, because a wrong model of it
+ * never gets stated and so never gets contradicted.
+ */
+export const predictCheck = (
+  codeText: string,
+  question: string,
+  outcome: string,
+  title = 'Predict, then check',
+): BlockSpec => ({
+  type: 'predict_check',
+  title,
+  body: question,
+  code: codeText,
+  language: 'html',
+  data: { outcome },
+});
+
+/**
+ * Asks the learner to explain something in their own words.
+ *
+ * Self-explanation forces the gaps in an understanding into the open, because
+ * an explanation cannot be assembled out of a vague sense of familiarity.
+ * `modelAnswer` is for comparison afterwards, never a target to reproduce.
+ */
+export const selfExplain = (
+  prompt: string,
+  modelAnswer: string,
+  title = 'Explain it in your own words',
+): BlockSpec => ({
+  type: 'self_explain',
+  title,
+  body: prompt,
+  data: { modelAnswer },
+});
+
+export interface WorkedStepSpec {
+  title: string;
+  code: string;
+  /** Why this step, not merely what it does. */
+  reasoning: string;
+}
+
+/**
+ * A problem solved one step at a time, with the reasoning behind each step.
+ *
+ * A beginner given a finished solution has to reverse-engineer the thinking,
+ * which is most of the difficulty and the part they cannot yet do. Studying
+ * worked examples produces better results than problem-solving alone early on,
+ * and the advantage reverses as expertise grows — so these belong in the
+ * lessons that introduce something, not in the ones that consolidate it.
+ */
+export const workedExample = (
+  title: string,
+  intro: string,
+  steps: WorkedStepSpec[],
+): BlockSpec => ({
+  type: 'worked_example',
+  title,
+  body: intro,
+  data: { steps },
+});
+
+/**
+ * The closing retrieval recap.
+ *
+ * Distinct from `recap`, which writes a `summary` block: that one *tells* the
+ * learner what the lesson said, this one makes them say it. Both have a place —
+ * the summary is a reference to come back to, this is the last piece of
+ * practice — but only one of them strengthens memory.
+ *
+ * `points` are revealed after the learner has attempted the prompts.
+ */
+export const activeRecap = (
+  prompts: string[],
+  points: string[],
+  title = 'Close the book',
+): BlockSpec => ({
+  type: 'recap',
+  title,
+  data: { prompts, points },
+});
+
+/**
+ * The block types that make the learner produce something before showing them
+ * anything. Counted separately in the seed statistics, because "how much of
+ * this course is retrieval rather than reading" is the number Part A exists to
+ * move.
+ */
+export const RETRIEVAL_BLOCK_TYPES: ReadonlySet<BlockType> = new Set<BlockType>([
+  'pretest',
+  'recall',
+  'predict_check',
+  'self_explain',
+  'worked_example',
+  'recap',
+]);
+
+// ---------------------------------------------------------------------------
+// Block validation
+// ---------------------------------------------------------------------------
+
+/** Reads a `string[]` out of a block's untyped `data`, ignoring anything else. */
+function stringList(data: Record<string, unknown> | undefined, key: string): string[] {
+  const value = data?.[key];
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
+function nonEmptyString(data: Record<string, unknown> | undefined, key: string): boolean {
+  const value = data?.[key];
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+/**
+ * Structural problems with one authored block, as plain messages.
+ *
+ * The builders above cannot produce a malformed block, but a `BlockSpec` object
+ * literal can, and the retrieval blocks fail *quietly* when they are: a pretest
+ * with no options renders as a question nobody can answer, and a worked example
+ * with no steps renders as nothing at all. A lesson that silently teaches
+ * nothing is worse than a build that stops, so these are checked at seed time
+ * where the failure is loud and names the lesson.
+ *
+ * Lives here rather than in the seed script so the rules sit beside the format
+ * they describe, and so they can be tested directly.
+ */
+export function blockProblems(block: BlockSpec): string[] {
+  const problems: string[] = [];
+  const data = block.data;
+  const require = (condition: boolean, message: string) => {
+    if (!condition) problems.push(message);
+  };
+
+  switch (block.type) {
+    case 'pretest':
+      require(Boolean(block.body?.trim()), 'pretest block has no question');
+      require(stringList(data, 'options').length >= 2, 'pretest block needs at least two options');
+      require(nonEmptyString(data, 'answer'), 'pretest block has no answer to reveal');
+      break;
+
+    case 'recall':
+      require(Boolean(block.body?.trim()), 'recall block has no prompt');
+      require(stringList(data, 'points').length > 0, 'recall block lists no expected points');
+      break;
+
+    case 'predict_check':
+      require(Boolean(block.body?.trim()), 'predict_check block has no question');
+      require(Boolean(block.code?.trim()), 'predict_check block has no code to predict');
+      require(nonEmptyString(data, 'outcome'), 'predict_check block does not say what happens');
+      break;
+
+    case 'self_explain':
+      require(Boolean(block.body?.trim()), 'self_explain block has no prompt');
+      require(nonEmptyString(data, 'modelAnswer'), 'self_explain block has no model answer');
+      break;
+
+    case 'worked_example': {
+      const steps = Array.isArray(data?.steps) ? data.steps : [];
+      require(steps.length > 0, 'worked_example block has no steps');
+      for (const [index, step] of steps.entries()) {
+        const record =
+          typeof step === 'object' && step !== null && !Array.isArray(step)
+            ? (step as Record<string, unknown>)
+            : undefined;
+        require(nonEmptyString(record, 'title'), `worked_example step ${index + 1} has no title`);
+        require(
+          nonEmptyString(record, 'reasoning'),
+          `worked_example step ${index + 1} explains what but not why`,
+        );
+      }
+      break;
+    }
+
+    case 'recap':
+      require(stringList(data, 'prompts').length > 0, 'recap block asks nothing');
+      require(stringList(data, 'points').length > 0, 'recap block reveals nothing');
+      break;
+
+    default:
+      break;
+  }
+
+  return problems;
+}
+
+// ---------------------------------------------------------------------------
 // Exercise requirements
 // ---------------------------------------------------------------------------
 

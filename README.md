@@ -47,20 +47,20 @@ learner has actually completed.
 | | |
 |---|---|
 | Mastery levels | 12 |
-| Modules | 20 |
-| Interactive lessons | 48 |
-| Lesson content blocks | 498 |
-| Coding exercises | 91 |
+| Modules | 21 |
+| Interactive lessons | 55 |
+| Lesson content blocks | 664 |
+| Coding exercises | 105 |
 | Debugging challenges | 25 |
 | Capstone project missions | 12 |
-| Knowledge-check and assessment questions | 220 |
+| Knowledge-check and assessment questions | 241 |
 | Milestone assessments | 12 (including the final) |
 | Tracked skills | 26 |
 | Achievements | 22 |
 | Capstone project types | 10 |
 | Learning-media assets | 38 (136 files) |
-| Estimated learner time | ~1,900 minutes (~32 hours, ≈64 min/day over 30 days) |
-| Automated tests | 464 |
+| Estimated learner time | ~2,250 minutes (~37 hours, ≈64 min/day over 30 days) |
+| Automated tests | 539 |
 
 ### The twelve levels
 
@@ -225,7 +225,7 @@ the lessons actually completed to produce a live completion estimate.
 │       ├── preview/               Sanitising and the starter stylesheet
 │       ├── progress/              XP, mastery, pace, achievements
 │       └── project/               Capstone checklist and export
-└── tests/                         464 tests across 7 files
+└── tests/                         539 tests across 8 files
 ```
 
 ---
@@ -457,7 +457,7 @@ Do not add anything whose licensing is unclear.
 ## Testing
 
 ```bash
-npm test          # 464 tests
+npm test          # 539 tests
 npm run test:rls  # 21 database-level assertions (needs PostgreSQL)
 ```
 
@@ -465,9 +465,10 @@ npm run test:rls  # 21 database-level assertions (needs PostgreSQL)
 |---|---|
 | `evaluator.test.ts` | Structural evaluation, every requirement kind, accessible names, alt-text quality, source scanning, nesting rules, media-path validation |
 | `progress.test.ts` | XP rules and duplicate prevention, learner levels, mastery, module gating, adaptive practice, pace, streaks, achievements |
-| `curriculum.test.ts` | Every reference solution passes its own requirements; no starter code already passes; media, skills and prerequisites all resolve; no graph cycles; quiz integrity; the 30-day calibration |
+| `curriculum.test.ts` | Every reference solution passes its own requirements; no starter code already passes; media, skills and prerequisites all resolve; no graph cycles; quiz integrity; retrieval-block validation; the 30-day calibration |
 | `preview-and-export.test.ts` | Preview sanitising and CSP, ZIP export and CRC-32, the capstone checklist |
-| `components.test.tsx` | Accessible names, ARIA on progress bars, field associations, lesson-block rendering, quiz behaviour |
+| `components.test.tsx` | Accessible names, ARIA on progress bars, field associations, lesson-block rendering, retrieval blocks withholding their answers, quiz behaviour and confidence |
+| `review-ui.test.tsx` | The review session and lesson warm-up: confidence collected before the answer, answers withheld until commitment, exercises served, failed items re-queued |
 | `auth-and-validation.test.ts` | Route protection through the real middleware, and every Zod schema |
 | `supabase/tests/rls.sql` | Cross-user isolation, read-only catalogue, append-only XP, anonymous access limits |
 

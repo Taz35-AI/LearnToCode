@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, useTransition } from 'react';
-import { Badge, Button, ButtonLink, Card, ProgressBar } from '@/components/ui';
+import { Badge, Button, ButtonLink, Card, InlineText, ProgressBar } from '@/components/ui';
 import { AlertIcon, CheckCircleIcon, SparkIcon } from '@/components/ui/icons';
 import { cx } from '@/lib/utils';
 import type { AssessmentOutcome } from '@/lib/actions/progress';
@@ -123,7 +123,7 @@ export function AssessmentView({
                 <fieldset>
                   <legend className="font-semibold text-ink">
                     <span className="text-muted">{index + 1}. </span>
-                    {question.prompt}
+                    <InlineText text={question.prompt} />
                     {isMulti ? (
                       <span className="ml-2 text-xs font-normal text-muted">
                         (choose all that apply)
@@ -161,7 +161,9 @@ export function AssessmentView({
                             disabled={Boolean(outcome)}
                             className="mt-0.5 h-4 w-4 shrink-0 accent-[hsl(var(--accent))]"
                           />
-                          <span className="text-ink">{option.label}</span>
+                          <span className="text-ink">
+                            <InlineText text={option.label} />
+                          </span>
                         </label>
                       );
                     })}
@@ -179,7 +181,7 @@ export function AssessmentView({
                       <strong className="font-semibold">
                         {feedback.correct ? 'Correct. ' : 'Not quite. '}
                       </strong>
-                      {feedback.explanation}
+                      <InlineText text={feedback.explanation} />
                     </p>
                   ) : null}
                 </fieldset>

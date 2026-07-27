@@ -1,4 +1,5 @@
 import {
+  activeRecap,
   attr,
   attrMatches,
   attrValue,
@@ -26,6 +27,9 @@ import {
   uniqueIds,
   visual,
   type LevelSpec,
+  demo,
+  mediaExample,
+  recall,
 } from '../types';
 
 export const LEVEL_12: LevelSpec = {
@@ -163,6 +167,31 @@ One more        Depends on your project:
               'Every internal link resolves — click all of them',
               'All assets are in `assets/`, with lowercase hyphenated names',
               'A favicon exists and is linked from every page',
+            ]),
+            mediaExample(
+              'workshop-tools',
+              'A real page, assembled from everything so far',
+              'Every element here has been covered: a landmark, a heading, a described image with dimensions, and a link whose text works on its own. Assembly is not a new skill — it is the point at which the previous eleven levels stop being separate.',
+              `<main>
+  <h1>The workshop</h1>
+  <img src="/learning-media/images/workshop-tools.jpg"
+       alt="Hand tools hanging in rows on a workshop wall above a wooden workbench"
+       width="1600" height="900" loading="lazy" decoding="async">
+  <p>Every repair is done here, by hand.</p>
+  <a href="repairs.html">See what a service includes</a>
+</main>`,
+            ),
+            demo('A page section, before and after the course', 'The same content as a beginner writes it, and as you write it now.', [
+              {
+                label: 'Now',
+                code: '<main>\n  <h1>Repairs</h1>\n  <img src="/learning-media/images/workshop-tools.jpg" alt="Hand tools hanging in rows on a workshop wall" width="1600" height="900" loading="lazy">\n  <p>Booked in and returned within a week.</p>\n  <a href="repairs.html">See what a service includes</a>\n</main>',
+                note: 'A landmark, one h1, described image with reserved space, deferred loading, and link text that works alone.',
+              },
+              {
+                label: 'Before',
+                code: '<div class="content">\n  <div class="title">Repairs</div>\n  <img src="workshop.jpg">\n  <div>Booked in and returned within a week.</div>\n  <a href="repairs.html">Click here</a>\n</div>',
+                note: 'Renders almost identically and fails on every count: no landmark, no heading, no alt, no dimensions, and link text that means nothing in a list.',
+              },
             ]),
             recap(
               [
@@ -342,6 +371,36 @@ One more        Depends on your project:
               'The shape of the capstone page — every requirement visible at once',
             ),
             visual('semantic-landmarks', 'The landmark structure every page of your site should have.'),
+            mediaExample(
+              'product-bottle',
+              'A product entry, marked up properly',
+              'A single item on a shop or menu page. Note what it does *not* need: no ARIA, no roles, no wrappers. Correct elements, and the accessibility comes free.',
+              `<article>
+  <h3>Stoneware bottle</h3>
+  <img src="/learning-media/images/product-bottle.jpg"
+       alt="A dark green ceramic bottle with a cork stopper"
+       width="1200" height="1200" loading="lazy" decoding="async">
+  <p>Hand-thrown, 500ml. <strong>£28</strong></p>
+  <a href="bottle.html">Read more about the stoneware bottle</a>
+</article>`,
+            ),
+            demo('Three states of the same project page', 'What "finished" actually means, checked against the course.', [
+              {
+                label: 'Finished',
+                code: '<main id="main" tabindex="-1">\n  <h1>Stoneware bottle</h1>\n  <img src="/learning-media/images/product-bottle.jpg" alt="A dark green ceramic bottle with a cork stopper" width="1200" height="1200" loading="lazy">\n  <p>Hand-thrown, 500ml. <strong>£28</strong></p>\n  <a href="shop.html">Back to the full range</a>\n</main>',
+                note: 'Landmark, one h1, described image with reserved space, deferred loading, and link text that stands alone.',
+              },
+              {
+                label: 'Nearly',
+                code: '<main>\n  <h1>Stoneware bottle</h1>\n  <img src="/learning-media/images/product-bottle.jpg" alt="bottle" width="1200" height="1200">\n  <p>Hand-thrown, 500ml. £28</p>\n  <a href="shop.html">Click here</a>\n</main>',
+                note: 'Valid, and three faults: alt that names the object rather than describing it, no loading strategy, and link text that means nothing in a list.',
+              },
+              {
+                label: 'Not started',
+                code: '<div class="page">\n  <div class="title">Stoneware bottle</div>\n  <img src="bottle.jpg">\n  <div>Hand-thrown, 500ml. £28</div>\n</div>',
+                note: 'No landmark, no heading, no alt, no dimensions, no link. It renders — and fails every check in the final review.',
+              },
+            ]),
             recap(
               [
                 'The capstone is the assembly of twelve levels of work.',
@@ -679,6 +738,49 @@ One more        Depends on your project:
               'Tested on a real phone',
               'No placeholder text left anywhere',
             ]),
+            mediaExample(
+              'restaurant-plate',
+              'The last thing to check: does it work on a real device?',
+              'Every review stage before this one can be done at your desk. This one cannot — pick the page up on a phone, on real data, and tap the things people will tap.',
+              `<img src="/learning-media/images/restaurant-plate.jpg"
+     alt="An overhead view of a colourful plated dish on a white plate"
+     width="1200" height="1200" loading="lazy" decoding="async">`,
+            ),
+            demo('The five reviews, in order', 'Each stage assumes the one before it is clean.', [
+              {
+                label: 'Validation first',
+                code: '<!DOCTYPE html>\n<html lang="en">\n  <head><meta charset="utf-8"><title>Menu — Riverside</title></head>\n  <body><main><h1>Menu</h1></main></body>\n</html>',
+                note: 'Zero errors before anything else. Measuring the performance of a page whose markup is broken measures the wrong page.',
+              },
+              {
+                label: 'Then the keyboard',
+                code: '<a href="#main-content">Skip to main content</a>\n<nav aria-label="Main"><a href="index.html">Home</a></nav>\n<main id="main-content" tabindex="-1"><h1>Menu</h1></main>',
+                note: 'Tab from the top. Everything reachable, focus always visible, and the skip link lands somewhere that can hold focus.',
+              },
+              {
+                label: 'Then media and performance',
+                code: '<img src="/learning-media/images/restaurant-plate.jpg" alt="An overhead view of a colourful plated dish" width="1200" height="1200" loading="lazy" decoding="async">',
+                note: 'Every asset resolves, every image has dimensions and an appropriate loading strategy. Only now is a measurement meaningful.',
+              },
+            ]),
+            recall(
+              'The last retrieval of the course. Close everything and write down what you would check on any page you were handed tomorrow — from memory, grouped however you like. Aim for fifteen items before you look.',
+              [
+                'Structure — doctype, `<html lang>`, charset first in the head, one unique title and description per page.',
+                'Headings — exactly one `<h1>`, no skipped levels, headings describing structure rather than chosen for size.',
+                'Landmarks — header, nav, main, footer; exactly one `<main>`; a skip link whose target can take focus.',
+                'Links — text that works read alone; `rel="noopener noreferrer"` with `target="_blank"`; every internal path resolving.',
+                'Images — an `alt` on every one, empty for decoration; `width` and `height` everywhere; `loading="lazy"` below the fold and never above it.',
+                'Forms — a label per control, groups in a `<fieldset>` with a `<legend>`, `autocomplete` on fields about the user, errors connected and announced.',
+                'ARIA — as little as possible; native elements first; `aria-current` on the current nav item.',
+                'Keyboard — everything reachable, focus always visible, nothing trapped, Enter and Space both working on buttons.',
+                'Validation — zero errors, no duplicate ids, no obsolete elements, legal nesting throughout.',
+                'Performance — one priority image, dimensions everywhere, embeds lazy, titled and sandboxed.',
+                'Metadata — canonical URL, favicon, Open Graph title, description and a described image.',
+                'And the one no tool can check: does the alt text, the link text and the heading order describe what is actually on the page?',
+              ],
+              'Everything, from memory',
+            ),
             recap(
               [
                 'Five reviews, in order: validation, accessibility, media, performance, real device.',
@@ -686,6 +788,18 @@ One more        Depends on your project:
                 'A static HTML site publishes with no build step at all.',
               ],
               'Finally: the course assessment.',
+            ),
+            activeRecap(
+              [
+                'Name the five reviews in order, and say why that order and not another.',
+                'For each one, name the single check you would run first if you only had five minutes.',
+                'What does it mean that a page passes validation but fails the keyboard test?',
+              ],
+              [
+                'Validation, accessibility, media, performance, real device. Each stage assumes the previous one is clean — there is no point measuring the performance of a page whose markup is still broken, because fixing the markup changes the measurement.',
+                'Validation: run the page through the W3C validator. Accessibility: tab through it from top to bottom. Media: check for 404s in the Network panel. Performance: check image dimensions and formats. Device: open it on a real phone.',
+                'That valid markup and usable markup are different claims. Validation checks that the document is well formed; it cannot tell whether a control can be reached, whether focus is visible, or whether the reading order makes sense. A page can be perfectly valid and completely unusable without a mouse.',
+              ],
             ),
           ],
           exercises: [

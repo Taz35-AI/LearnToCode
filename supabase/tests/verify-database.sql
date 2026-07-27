@@ -54,14 +54,42 @@ with checks(item, ok, detail) as (
     and condeferrable
   union all
   select 'Course content loaded',
-         (select count(*) from lessons) = 48
-         and (select count(*) from quiz_questions) = 220
-         and (select count(*) from lesson_blocks) = 498,
+         (select count(*) from lessons) = 55
+         and (select count(*) from quiz_questions) = 241
+         and (select count(*) from lesson_blocks) = 664,
+         -- The block count is in the detail because it is the figure that
+         -- changes most often, and a failure that does not say which of the
+         -- three numbers is wrong sends you looking in the wrong place.
          (select count(*) from lessons)::text || ' lessons, '
-         || (select count(*) from quiz_questions)::text || ' questions'
+         || (select count(*) from quiz_questions)::text || ' questions, '
+         || (select count(*) from lesson_blocks)::text || ' blocks'
   union all
-  select 'All 12 levels and 20 modules',
-         (select count(*) from levels) = 12 and (select count(*) from modules) = 20,
+  -- These two were added after a live database was found passing every check
+  -- while holding zero review items: the seed had been loaded before the pool
+  -- existed and never reloaded, so /review was silently empty. A health check
+  -- that cannot see an entirely absent feature is not checking much.
+  select 'Reviewable items loaded',
+         (select count(*) from review_items) = 230
+         and (select count(*) from review_items where kind = 'exercise') = 93
+         and (select count(*) from review_items where kind = 'question') = 137,
+         (select count(*) from review_items)::text || ' items ('
+         || (select count(*) from review_items where kind = 'question')::text || ' questions, '
+         || (select count(*) from review_items where kind = 'exercise')::text || ' exercises)'
+  union all
+  select 'Retrieval-practice blocks authored',
+         (select count(*) from lesson_blocks
+          where block_type in ('pretest','recall','predict_check','self_explain','worked_example','recap')) > 0
+         and (select count(distinct block_type) from lesson_blocks
+              where block_type in ('pretest','recall','predict_check','self_explain','worked_example','recap')) = 6,
+         (select count(*) from lesson_blocks
+          where block_type in ('pretest','recall','predict_check','self_explain','worked_example','recap'))::text
+         || ' blocks across '
+         || (select count(distinct block_type) from lesson_blocks
+             where block_type in ('pretest','recall','predict_check','self_explain','worked_example','recap'))::text
+         || ' of 6 types'
+  union all
+  select 'All 12 levels and 21 modules',
+         (select count(*) from levels) = 12 and (select count(*) from modules) = 21,
          (select count(*) from levels)::text || ' levels, ' || (select count(*) from modules)::text || ' modules'
   union all
   select 'Media library registered',

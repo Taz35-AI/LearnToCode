@@ -10,6 +10,7 @@ import { LEVEL_09 } from './levels/level-09';
 import { LEVEL_10 } from './levels/level-10';
 import { LEVEL_11 } from './levels/level-11';
 import { LEVEL_12 } from './levels/level-12';
+import { RETRIEVAL_BLOCK_TYPES } from './types';
 import type { LessonSpec, LevelSpec, ModuleSpec } from './types';
 
 /**
@@ -92,6 +93,13 @@ export function courseStats() {
     modules: allModules().length,
     lessons: lessons.length,
     blocks: lessons.reduce((sum, l) => sum + l.blocks.length, 0),
+    retrievalBlocks: lessons.reduce(
+      (sum, l) => sum + l.blocks.filter((b) => RETRIEVAL_BLOCK_TYPES.has(b.type)).length,
+      0,
+    ),
+    lessonsWithRetrieval: lessons.filter((l) =>
+      l.blocks.some((b) => RETRIEVAL_BLOCK_TYPES.has(b.type)),
+    ).length,
     exercises: exercises.length,
     debugChallenges: exercises.filter((e) => e.kind === 'debug').length,
     projectMissions: exercises.filter((e) => e.kind === 'project_mission').length,

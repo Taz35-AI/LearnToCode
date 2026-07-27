@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 5 of 9
+-- HTML Hero — course seed, part 5 of 10
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -10,6 +10,374 @@
 -- Run part 4 first.
 
 begin;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 6, 'valid_nesting'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
+from public.exercises e where e.slug = 'section-article-guided';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'section-debug', 2, 'debug'::public.exercise_kind, 'Sections that should not be sections',
+       'This page uses `<section>` for two things that are not sections: a styling wrapper with no heading, and a self-contained review. Fix both, and give the aside an accessible name.', '<main>
+  <h1>Customer reviews</h1>
+  <section class="layout-wrapper">
+    <section>
+      <h2>"Excellent service"</h2>
+      <p>Booked a bike at short notice and it was ready in ten minutes.</p>
+    </section>
+  </section>
+  <aside>
+    <h2>Leave a review</h2>
+    <p>We read every one.</p>
+  </aside>
+</main>', '<main>
+  <h1>Customer reviews</h1>
+  <div class="layout-wrapper">
+    <article>
+      <h2>"Excellent service"</h2>
+      <p>Booked a bike at short notice and it was ready in ten minutes.</p>
+    </article>
+  </div>
+  <aside aria-label="Leave a review">
+    <h2>Leave a review</h2>
+    <p>We read every one.</p>
+  </aside>
+</main>', ARRAY['The outer wrapper has no heading and exists only for layout — that is a <div>.', 'A single review is self-contained, so it is an <article>.', 'Add aria-label to the aside so screen readers can name it.']::text[],
+       45, 3,
+       (select id from public.skills where slug = 'semantic-html'), false
+from public.lessons l where l.slug = 'section-article-aside'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_present'::public.requirement_kind, 'article', NULL,
+       NULL, NULL, NULL, NULL,
+       'The review is an article', NULL, 1, true
+from public.exercises e where e.slug = 'section-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'element_count'::public.requirement_kind, 'section', NULL,
+       NULL, NULL, 0, 0,
+       'No misused section elements remain', NULL, 1, true
+from public.exercises e where e.slug = 'section-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'attribute_present'::public.requirement_kind, 'aside', 'aria-label',
+       NULL, NULL, NULL, NULL,
+       'The aside has an accessible name', NULL, 1, true
+from public.exercises e where e.slug = 'section-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'element_present'::public.requirement_kind, 'div', NULL,
+       NULL, NULL, NULL, NULL,
+       'The layout wrapper is a div', NULL, 1, true
+from public.exercises e where e.slug = 'section-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'section-article-aside'), NULL, 'q-article-test', 1, 'single'::public.question_kind,
+        'What is the test for using `<article>`?', 'Whether the content would still make sense on its own, lifted out of the page.', (select id from public.skills where slug = 'semantic-html'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Is it more than three paragraphs long?', false, NULL
+from public.quiz_questions where slug = 'q-article-test';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Does it contain an image?', false, NULL
+from public.quiz_questions where slug = 'q-article-test';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Is it written by a named author?', false, NULL
+from public.quiz_questions where slug = 'q-article-test';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Would it make sense on its own, outside this page?', true, NULL
+from public.quiz_questions where slug = 'q-article-test';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'section-article-aside'), NULL, 'q-section-heading', 2, 'single'::public.question_kind,
+        'You have a container with no heading and no theme, used only for layout. What should it be?', '`<div>`. Using `<section>` would add a meaningless region to the page structure.', (select id from public.skills where slug = 'semantic-html'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '<article>', false, NULL
+from public.quiz_questions where slug = 'q-section-heading';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '<aside>', false, NULL
+from public.quiz_questions where slug = 'q-section-heading';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '<div>', true, NULL
+from public.quiz_questions where slug = 'q-section-heading';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '<section>', false, NULL
+from public.quiz_questions where slug = 'q-section-heading';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'section-article-aside'), NULL, 'q-outline-algorithm', 3, 'single'::public.question_kind,
+        'Does nesting a heading inside a `<section>` change its level?', 'No. The outline algorithm that would have done this was never implemented and has been removed from the specification. Always set levels explicitly.', (select id from public.skills where slug = 'semantic-html'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'No — always set heading levels explicitly', true, NULL
+from public.quiz_questions where slug = 'q-outline-algorithm';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Yes, each section demotes headings by one level', false, NULL
+from public.quiz_questions where slug = 'q-outline-algorithm';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Only in browsers that support HTML5 outlines', false, NULL
+from public.quiz_questions where slug = 'q-outline-algorithm';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Only for h1 elements', false, NULL
+from public.quiz_questions where slug = 'q-outline-algorithm';
+-- module: Organising a real project
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'organising-a-project', 2, 'Organising a real project', 'Folder structure, naming conventions, repeated page patterns, and the Level 5 milestone rebuild.',
+       45, true
+from public.levels l where l.slug = 'structure-professional'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'organising-a-project' and p.slug = 'semantic-landmarks';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0.7
+from public.modules m, public.skills s
+where m.slug = 'organising-a-project' and s.slug = 'semantic-html';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'organising-a-project' and s.slug = 'maintainability';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0.6
+from public.modules m, public.skills s
+where m.slug = 'organising-a-project' and s.slug = 'multi-page';
+-- lesson: File organisation and reusable patterns
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'file-organisation-and-patterns', 1, 'File organisation and reusable patterns', 'Structure that still makes sense at page forty', 'Every professional site has conventions. Adopting them now costs nothing and saves a great deal later.',
+       ARRAY['Lay out a project folder that scales', 'Apply consistent naming conventions', 'Recognise repeated patterns and keep them identical']::text[], 13, 40, (select id from public.skills where slug = 'maintainability'), 0.7
+from public.modules m where m.slug = 'organising-a-project'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Design a folder structure for a multi-page site","Apply naming conventions that avoid server-specific bugs","Keep repeated page furniture consistent across a site"]}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'visual'::public.block_type, NULL, 'A project laid out so that paths stay predictable.',
+       NULL, NULL, 'file-paths', '{}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'code_example'::public.block_type, 'A structure that still works at forty pages', NULL,
+       'my-site/
+├── index.html
+├── about.html
+├── contact.html
+├── 404.html                custom "page not found"
+├── favicon.svg
+├── assets/
+│   ├── css/
+│   │   └── site.css
+│   ├── images/
+│   │   ├── hero-workshop.jpg
+│   │   └── logo.svg
+│   ├── media/
+│   │   ├── tour.mp4
+│   │   └── tour.en.vtt
+│   └── files/
+│       └── price-list-2026.pdf
+└── routes/
+    ├── index.html
+    ├── valley.html
+    └── harbour.html', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'checklist'::public.block_type, 'Conventions worth adopting permanently', NULL,
+       NULL, NULL, NULL, '{"items":["Lowercase filenames — some servers are case-sensitive, some are not; assume the strict one","Hyphens, never spaces or underscores, in filenames","One `index.html` per folder, so `/routes/` works as a URL","All assets under `assets/`, grouped by type","Descriptive names: `hero-workshop.jpg`, not `IMG_4821.jpg`","A `404.html` so a mistyped URL is still helpful"]}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, 'The case-sensitivity trap', 'Most Windows and macOS setups treat `About.html` and `about.html` as the same file. Most Linux servers do not. A site that works perfectly on your laptop can 404 the moment it is deployed. Lowercase everything and the problem disappears permanently.',
+       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'prose'::public.block_type, NULL, 'The other half of maintainability is repetition. Your header, navigation and footer appear on every page. Keeping them byte-for-byte identical is what makes a site feel coherent — and it is the thing hand-written sites get wrong first.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'comparison'::public.block_type, 'Two ways of writing the same page furniture', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"Consistent","code":"<!-- Site header — identical on every page -->\n<header>\n  <a href=\"/\" class=\"logo\">Riverside</a>\n  <nav aria-label=\"Main\">…</nav>\n</header>","why":"A comment marks the block as shared, so the next person knows to change it everywhere."},"bad":{"label":"Drifted","code":"<!-- page 1 -->\n<header><nav aria-label=\"Main\">…</nav></header>\n\n<!-- page 2 -->\n<div class=\"top\"><nav>…</nav></div>","why":"The same region, written two different ways. Screen-reader users lose the landmark on page two, and every future change has to be made twice."}}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'term'::public.block_type, 'Progressive disclosure of complexity', 'Hand-copying shared markup is fine for a handful of pages. Beyond that, professionals use a template system or a static site generator that writes the repetition for them. Knowing *why* the repetition exists is what lets you pick the right tool later.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'callout'::public.block_type, 'Comment the boundaries, not the obvious', 'A comment saying `<!-- Site header — keep identical across pages -->` earns its place. A comment saying `<!-- paragraph -->` above a `<p>` does not. Write comments for decisions and boundaries, never for restating what the code already says.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'progressive_detail'::public.block_type, 'Avoiding unnecessary containers', 'Every extra wrapper is a line someone has to read, and a level of nesting that makes a missing closing tag harder to find. Before adding a `<div>`, check whether the element you already have could carry the styling instead. A page that is five levels deep where three would do is not "more structured" — it is just harder to change.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'interactive_demo'::public.block_type, 'Where a file lives changes every path in it', 'The same link, written from three different places in the project.',
+       NULL, NULL, NULL, '{"variants":[{"label":"From index.html, at the top","code":"<a href=\"projects/first.html\">First project</a>\n<img src=\"images/logo.svg\" alt=\"Riverside Bakery\" width=\"200\" height=\"60\">","note":"Both targets are below the current file, so both paths simply step down into a folder."},{"label":"From projects/first.html","code":"<a href=\"../index.html\">Home</a>\n<img src=\"../images/logo.svg\" alt=\"Riverside Bakery\" width=\"200\" height=\"60\">","note":"One folder deep, so both need ../ first. Read it back as a sentence: up one, into images, take logo.svg."},{"label":"A leading slash","code":"<img src=\"/images/logo.svg\" alt=\"Riverside Bakery\" width=\"200\" height=\"60\">","note":"Means \"from the site root\". Correct on a server, broken when you open the file directly from your computer."}]}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'visual'::public.block_type, NULL, 'A project folder is a desk. Everything has a place, and you can find things without remembering where you put them.',
+       NULL, NULL, 'studio-desk', '{}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Lowercase, hyphenated filenames avoid an entire class of deployment bug.","Group assets by type under one folder.","Keep shared page furniture byte-for-byte identical.","Add a container only when it earns its place."],"nextUp":"Next: the Level 5 milestone rebuild."}'::jsonb
+from public.lessons where slug = 'file-organisation-and-patterns';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'patterns-guided', 1, 'guided'::public.exercise_kind, 'Make two pages consistent',
+       'This is the header from page two of a site. Page one uses `<header>`, a labelled `<nav>` and a `<ul>` of links. Rewrite this one to match exactly.', '<div class="top">
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</div>', '<header>
+  <nav aria-label="Main">
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+</header>', ARRAY['The wrapper should be a <header>, not a div.', 'The nav needs aria-label="Main" to match page one.', 'Wrap the links in a <ul> with one <li> each.']::text[],
+       40, 2,
+       (select id from public.skills where slug = 'maintainability'), false
+from public.lessons l where l.slug = 'file-organisation-and-patterns'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_present'::public.requirement_kind, 'header', NULL,
+       NULL, NULL, NULL, NULL,
+       'The wrapper is a header landmark', NULL, 1, true
+from public.exercises e where e.slug = 'patterns-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'attribute_value'::public.requirement_kind, 'nav', 'aria-label',
+       'Main', NULL, NULL, NULL,
+       'The nav is labelled "Main"', NULL, 1, true
+from public.exercises e where e.slug = 'patterns-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'element_count'::public.requirement_kind, 'nav li a', NULL,
+       NULL, NULL, 3, 3,
+       'Three links, each in a list item', NULL, 1, true
+from public.exercises e where e.slug = 'patterns-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'element_count'::public.requirement_kind, 'div', NULL,
+       NULL, NULL, 0, 0,
+       'The generic div has been replaced', NULL, 1, true
+from public.exercises e where e.slug = 'patterns-guided';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'file-organisation-and-patterns'), NULL, 'q-case-sensitivity', 1, 'single'::public.question_kind,
+        'Why use lowercase filenames?', 'Linux servers are case-sensitive while many development machines are not, so mixed case works locally and 404s in production.', (select id from public.skills where slug = 'multi-page'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Lowercase files load faster', false, NULL
+from public.quiz_questions where slug = 'q-case-sensitivity';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'HTML requires it', false, NULL
+from public.quiz_questions where slug = 'q-case-sensitivity';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Many servers are case-sensitive even when your computer is not', true, NULL
+from public.quiz_questions where slug = 'q-case-sensitivity';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Uppercase letters are invalid in URLs', false, NULL
+from public.quiz_questions where slug = 'q-case-sensitivity';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'file-organisation-and-patterns'), NULL, 'q-comments-value', 2, 'single'::public.question_kind,
+        'Which comment is worth writing?', 'Comments should record decisions and mark boundaries, not restate what the markup already says.', (select id from public.skills where slug = 'maintainability'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '<!-- Site header — keep identical across all pages -->', true, NULL
+from public.quiz_questions where slug = 'q-comments-value';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '<!-- paragraph -->', false, NULL
+from public.quiz_questions where slug = 'q-comments-value';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '<!-- div -->', false, NULL
+from public.quiz_questions where slug = 'q-comments-value';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '<!-- closing tag below -->', false, NULL
+from public.quiz_questions where slug = 'q-comments-value';
+-- lesson: Milestone: rebuild an unstructured page
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'semantic-rebuild-milestone', 2, 'Milestone: rebuild an unstructured page', 'Take div soup and turn it into professional markup', 'A real page, written badly. Your job is to rebuild it properly without changing a word of the content.',
+       ARRAY['Convert a non-semantic page into a landmark-based structure', 'Fix the heading hierarchy at the same time', 'Justify every element choice you make']::text[], 30, 40, (select id from public.skills where slug = 'semantic-html'), 0.8
+from public.modules m where m.slug = 'organising-a-project'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Rebuild a div-based page using correct landmarks","Repair the heading hierarchy","Produce markup you would be happy to hand to a colleague"]}'::jsonb
+from public.lessons where slug = 'semantic-rebuild-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'prose'::public.block_type, NULL, 'The page in the exercise below is the kind you meet constantly in real work: it looks acceptable, and the markup underneath says nothing at all. Rebuilding it is the single most useful exercise in this level.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'semantic-rebuild-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'checklist'::public.block_type, 'Your rebuild must have', NULL,
+       NULL, NULL, NULL, '{"items":["A `<header>` containing the site name and the main `<nav>`","Exactly one `<main>`, with an `id` a skip link can target","The self-contained items as `<article>` elements","The tangential block as an `<aside>` with an accessible name","A `<footer>` outside `<main>`","A correct heading hierarchy: one `<h1>`, no skipped levels","No `<div>` where a semantic element fits"]}'::jsonb
+from public.lessons where slug = 'semantic-rebuild-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'callout'::public.block_type, 'Work outside in', 'Identify the landmarks first — header, main, footer. Then work down through what is inside each one. Trying to fix the innermost elements before the outer structure is settled means doing the work twice.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'semantic-rebuild-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'comparison'::public.block_type, 'The same region, before and after a rebuild', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"After — semantic","code":"<article>\n  <h2>The valley route</h2>\n  <p>Twenty-four miles, mostly flat.</p>\n</article>","why":"A screen reader announces an article with a heading. Search engines can identify the item. The class names are gone because the elements now carry the meaning."},"bad":{"label":"Before — div soup","code":"<div class=\"card\">\n  <div class=\"card-title\">The valley route</div>\n  <p>Twenty-four miles, mostly flat.</p>\n</div>","why":"Identical on screen. No heading in the outline, no landmark to jump to, and the \"card-title\" class means nothing to any software."}}'::jsonb
+from public.lessons where slug = 'semantic-rebuild-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'visual'::public.block_type, NULL, 'The structure you are rebuilding towards.',
+       NULL, NULL, 'semantic-landmarks', '{}'::jsonb
+from public.lessons where slug = 'semantic-rebuild-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'interactive_demo'::public.block_type, 'Div soup and its replacement, side by side', 'Identical on screen. Not remotely identical to software.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Rebuilt","code":"<header><nav aria-label=\"Main\"><ul><li><a href=\"index.html\">Home</a></li></ul></nav></header>\n<main><h1>Prices</h1><p>From £6 an hour.</p></main>\n<footer><p>© 2026</p></footer>","note":"Four landmarks a screen-reader user can jump between, and a heading that describes the page."},{"label":"The original","code":"<div class=\"header\"><div class=\"nav\"><ul><li><a href=\"index.html\">Home</a></li></ul></div></div>\n<div class=\"main\"><div class=\"h1\">Prices</div><p>From £6 an hour.</p></div>\n<div class=\"footer\"><p>© 2026</p></div>","note":"No landmarks, no heading. The class names describe the intent perfectly and communicate it to nothing."}]}'::jsonb
+from public.lessons where slug = 'semantic-rebuild-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["You can now read an unstructured page and see the structure it should have had.","Landmarks first, then content elements, then headings.","This is the skill that most visibly separates professional markup from amateur markup."],"nextUp":"Level 6 next: tables and forms."}'::jsonb
+from public.lessons where slug = 'semantic-rebuild-milestone';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
 select l.id, 'semantic-rebuild', 1, 'challenge'::public.exercise_kind, 'Milestone: rebuild the page',
@@ -877,7 +1245,11 @@ select id, 12, 'progressive_detail'::public.block_type, 'Why autocomplete is an 
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'labels-and-inputs';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 13, 'interactive_demo'::public.block_type, 'Three ways to label a field', 'Two of these work. One only looks like it does.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Label with for","code":"<label for=\"email\">Email address</label>\n<input type=\"email\" id=\"email\" name=\"email\" autocomplete=\"email\">","note":"The usual form. Announced as \"Email address, edit text\", and clicking the words focuses the field."},{"label":"Label wrapping the input","code":"<label>Email address\n  <input type=\"email\" name=\"email\" autocomplete=\"email\">\n</label>","note":"Also correct, and needs no id at all. Useful when you do not control the ids on the page."},{"label":"Placeholder only","code":"<input type=\"email\" name=\"email\" placeholder=\"Email address\">","note":"No accessible name at all, and the hint vanishes the moment typing starts — removing the only clue exactly when it is needed."}]}'::jsonb
+from public.lessons where slug = 'labels-and-inputs';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Every input needs a `<label for=\"…\">` matching its `id`.","`name` is what the value is submitted under — without it the field is not sent.","Placeholder text is a hint, never a label.","Choose `type` for the keyboard and the checking it brings; use `inputmode` where `number` would hurt.","`autocomplete` is a real accessibility feature, not just a convenience."],"nextUp":"Next: grouping, selects and buttons."}'::jsonb
 from public.lessons where slug = 'labels-and-inputs';
 insert into public.exercises
@@ -1165,7 +1537,11 @@ select id, 12, 'progressive_detail'::public.block_type, 'Button versus link', 'A
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'grouping-and-controls';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 13, 'interactive_demo'::public.block_type, 'A question, and a list of unrelated options', 'The difference is one wrapper.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Grouped","code":"<fieldset>\n  <legend>How should we contact you?</legend>\n  <input type=\"radio\" id=\"by-email\" name=\"contact\" value=\"email\">\n  <label for=\"by-email\">Email</label>\n  <input type=\"radio\" id=\"by-phone\" name=\"contact\" value=\"phone\">\n  <label for=\"by-phone\">Phone</label>\n</fieldset>","note":"The legend names the group, so the options are announced together with the question they answer."},{"label":"Ungrouped","code":"<p>How should we contact you?</p>\n<input type=\"radio\" id=\"by-email\" name=\"contact\" value=\"email\">\n<label for=\"by-email\">Email</label>\n<input type=\"radio\" id=\"by-phone\" name=\"contact\" value=\"phone\">\n<label for=\"by-phone\">Phone</label>","note":"The question is just a paragraph floating above. A user who jumps straight to the controls hears \"Email, radio button\" with no idea what is being asked."}]}'::jsonb
+from public.lessons where slug = 'grouping-and-controls';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<fieldset>` groups controls; `<legend>` labels the group and comes first.","A shared `name` creates a radio group, not the fieldset.","`value` is submitted; the label is for the human.","Always write `type` on a button, or it will submit the form.","Links navigate; buttons act."],"nextUp":"Next: validation attributes and the milestone form."}'::jsonb
 from public.lessons where slug = 'grouping-and-controls';
 insert into public.exercises
@@ -1450,7 +1826,15 @@ select id, 9, 'checklist'::public.block_type, 'The milestone form needs', NULL,
        NULL, NULL, NULL, '{"items":["`<form>` with an `action` and `method=\"post\"`","Every control labelled with `<label for=\"…\">`","A `<fieldset>` with a `<legend>` around at least one group","At least four different input types","`required` on the fields that genuinely are","`autocomplete` on every personal-detail field","A hint connected with `aria-describedby`","A `<textarea>` for a message","A submit button with an explicit `type`"]}'::jsonb
 from public.lessons where slug = 'validation-and-form-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 10, 'interactive_demo'::public.block_type, 'Client-side validation, and what it is worth', 'The same field, three ways of asking.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Typed and required","code":"<label for=\"email\">Email address</label>\n<input type=\"email\" id=\"email\" name=\"email\" autocomplete=\"email\" required>","note":"The right keyboard on a phone, browser-level checking, autofill, and a real label. All of it helps honest users and stops nobody else."},{"label":"Untyped","code":"<label for=\"email\">Email address</label>\n<input type=\"text\" id=\"email\" name=\"email\">","note":"Works, but gives up the mobile keyboard, the built-in check and the autofill hint for no gain."},{"label":"Pattern with no hint","code":"<label for=\"postcode\">Postcode</label>\n<input type=\"text\" id=\"postcode\" name=\"postcode\" pattern=\"[A-Z]{1,2}[0-9]{1,2} ?[0-9][A-Z]{2}\" required>","note":"Rejects valid-looking input with no explanation of the rule. A pattern always needs a visible description of what it wants."}]}'::jsonb
+from public.lessons where slug = 'validation-and-form-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'recall'::public.block_type, 'Four levels back', 'Before you build the form, reach back four levels. From memory, and without scrolling: what does each of these give you, and what breaks without it?',
+       NULL, NULL, NULL, '{"points":["Level 1 — the document skeleton: doctype, `<html lang>`, `<head>` with a charset and title, `<body>`. Without the charset, accented characters and currency symbols break.","Level 2 — headings describe structure, not size. A skipped level leaves a gap in the outline a screen-reader user navigates by.","Level 3 — link text has to make sense read on its own, because links are commonly listed with the surrounding sentence removed.","Level 5 — landmarks let assistive technology jump to a region. Exactly one `<main>`, holding what is unique to this page."]}'::jsonb
+from public.lessons where slug = 'validation-and-form-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Native validation attributes catch most honest mistakes for free.","`pattern` always needs a visible, connected hint.","GET for reading, POST for anything that changes or is private.","The server must revalidate everything. HTML secures nothing."],"nextUp":"Level 7 next: native interactive elements."}'::jsonb
 from public.lessons where slug = 'validation-and-form-milestone';
 insert into public.exercises
@@ -1939,437 +2323,5 @@ from public.quiz_questions where slug = 'a6-q6';
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 4, 'GET', true, NULL
 from public.quiz_questions where slug = 'a6-q6';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-6-milestone'), 'a6-q7', 7, 'single'::public.question_kind,
-        'What must accompany a `pattern` attribute?', 'A visible, plain-language description of the required format, connected with `aria-describedby`.', (select id from public.skills where slug = 'accessibility'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'A title attribute only', false, NULL
-from public.quiz_questions where slug = 'a6-q7';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Nothing — the browser explains it', false, NULL
-from public.quiz_questions where slug = 'a6-q7';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'A visible hint connected with aria-describedby', true, NULL
-from public.quiz_questions where slug = 'a6-q7';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'A matching maxlength', false, NULL
-from public.quiz_questions where slug = 'a6-q7';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-6-milestone'), 'a6-q8', 8, 'single'::public.question_kind,
-        'What does `<legend>` do?', 'It labels the whole `<fieldset>` group, and screen readers announce it before each control in the group.', (select id from public.skills where slug = 'forms'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Describes a validation error', false, NULL
-from public.quiz_questions where slug = 'a6-q8';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Labels the group of controls in a fieldset', true, NULL
-from public.quiz_questions where slug = 'a6-q8';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Labels a single input', false, NULL
-from public.quiz_questions where slug = 'a6-q8';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Provides a table caption', false, NULL
-from public.quiz_questions where slug = 'a6-q8';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-6-milestone'), 'a6-q9', 9, 'single'::public.question_kind,
-        'You add a "Show password" button inside a form and omit `type`. What happens on click?', 'It submits the form, because `submit` is the default button type.', (select id from public.skills where slug = 'forms'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'The form is submitted', true, NULL
-from public.quiz_questions where slug = 'a6-q9';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Nothing happens', false, NULL
-from public.quiz_questions where slug = 'a6-q9';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'The form is reset', false, NULL
-from public.quiz_questions where slug = 'a6-q9';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'The password is revealed', false, NULL
-from public.quiz_questions where slug = 'a6-q9';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values (NULL, (select id from public.assessments where slug = 'level-6-milestone'), 'a6-q10', 10, 'single'::public.question_kind,
-        'Why is `<input type="hidden">` unsuitable for secrets?', 'Its value is in the page source, visible to anyone who looks.', (select id from public.skills where slug = 'security'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Its value is visible in the page source', true, NULL
-from public.quiz_questions where slug = 'a6-q10';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'It is not submitted with the form', false, NULL
-from public.quiz_questions where slug = 'a6-q10';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Screen readers announce it aloud', false, NULL
-from public.quiz_questions where slug = 'a6-q10';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Browsers strip it before sending', false, NULL
-from public.quiz_questions where slug = 'a6-q10';
--- --------------------------------------------------------------------------
--- Level 7: Native Interaction Expert
--- --------------------------------------------------------------------------
-
-insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
-select c.id, 'native-interaction', 7, 'Native Interaction Expert', 'Interactive features that need no JavaScript at all',
-       'Modern HTML can build accordions, modal dialogs, popovers, progress displays and autocomplete lists on its own — with keyboard support and screen-reader semantics already correct. Reaching for JavaScript first means rebuilding all of that by hand, usually worse.', 'You can build FAQ accordions, dialogs, progress displays and enhanced form controls using HTML alone.', 'cyan'
-from public.courses c where c.slug = 'html-hero'
-on conflict (course_id, slug) do update set
-  ordinal = excluded.ordinal, title = excluded.title,
-  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
-  accent = excluded.accent;
-insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
-select l.id, NULL, 'level-7-milestone', 'milestone'::public.assessment_kind, 'Level 7 milestone: Native Interaction Expert', 'Seven questions on native interactive elements and progressive enhancement. Pass mark 75%.',
-       0.75, 170, 7
-from public.levels l where l.slug = 'native-interaction'
-on conflict (slug) do update set
-  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
-  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
-  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
--- module: Disclosure, dialogs and popovers
-insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
-select l.id, 'disclosure-and-dialog', 1, 'Disclosure, dialogs and popovers', 'details, summary, dialog and the popover attribute — the four features that replace most simple JavaScript widgets.',
-       45, false
-from public.levels l where l.slug = 'native-interaction'
-on conflict (slug) do update set
-  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
-  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
-  is_milestone = excluded.is_milestone;
-insert into public.module_prerequisites (module_id, prerequisite_module_id)
-select m.id, p.id from public.modules m, public.modules p
-where m.slug = 'disclosure-and-dialog' and p.slug = 'form-foundations';
-insert into public.module_skills (module_id, skill_id, mastery_required)
-select m.id, s.id, 0
-from public.modules m, public.skills s
-where m.slug = 'disclosure-and-dialog' and s.slug = 'native-interaction';
-insert into public.module_skills (module_id, skill_id, mastery_required)
-select m.id, s.id, 0
-from public.modules m, public.skills s
-where m.slug = 'disclosure-and-dialog' and s.slug = 'progressive-enhancement';
--- lesson: Details and summary
-insert into public.lessons
-  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'details-and-summary', 1, 'Details and summary', 'An accordion in two elements', 'The show/hide pattern, built in — with keyboard support, correct announcements and find-in-page support you would otherwise have to write yourself.',
-       ARRAY['Build a disclosure widget with details and summary', 'Build an accordion where only one panel opens at a time', 'Explain what you get free that JavaScript would have to reimplement']::text[], 13, 40, (select id from public.skills where slug = 'native-interaction'), 0.7
-from public.modules m where m.slug = 'disclosure-and-dialog'
-on conflict (slug) do update set
-  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
-  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
-  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
-  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
-       NULL, NULL, NULL, '{"items":["Build a working FAQ accordion with no JavaScript","Use the open and name attributes","List the behaviours native disclosure gives you for free"]}'::jsonb
-from public.lessons where slug = 'details-and-summary';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'annotated_code'::public.block_type, 'Line by line', NULL,
-       '<details>
-  <summary>Do I need to book in advance?</summary>
-  <p>
-    Not on weekdays. At weekends we recommend booking at least a day ahead,
-    especially for tandems and child seats.
-  </p>
-</details>', 'html', NULL, '{"annotations":[{"line":"1","text":"`<details>` is the container. It is closed by default; add the `open` attribute to start expanded."},{"line":"2","text":"`<summary>` is the always-visible part that toggles it. It must be the first child, and there is exactly one per details."},{"line":"3-6","text":"Everything after the summary is the panel, hidden until the widget is opened."}]}'::jsonb
-from public.lessons where slug = 'details-and-summary';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'callout'::public.block_type, 'What you get without writing a line of JavaScript', 'Click and keyboard activation with Enter and Space. Correct focus behaviour. A screen-reader announcement of "collapsed" or "expanded" that updates as it changes. Browser find-in-page that opens the panel when the match is inside it. Printing that expands the content. Reimplementing all of that correctly takes a surprising amount of code, and most hand-rolled accordions miss at least two of them.',
-       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
-from public.lessons where slug = 'details-and-summary';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'prose'::public.block_type, NULL, 'Give several `<details>` elements the same `name` and they behave as an exclusive accordion: opening one closes the others, exactly like a radio group.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'details-and-summary';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'code_example'::public.block_type, 'An exclusive accordion', NULL,
-       '<h2>Frequently asked questions</h2>
-
-<details name="faq" open>
-  <summary>Do I need to book in advance?</summary>
-  <p>Not on weekdays. At weekends, please book a day ahead.</p>
-</details>
-
-<details name="faq">
-  <summary>Are helmets included?</summary>
-  <p>Yes — a helmet and a lock come with every hire.</p>
-</details>
-
-<details name="faq">
-  <summary>What if it rains?</summary>
-  <p>Cancel up to two hours before and we will refund in full.</p>
-</details>', 'html', NULL, '{}'::jsonb
-from public.lessons where slug = 'details-and-summary';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'callout'::public.block_type, 'Do not put a heading inside the summary and a heading outside it too', 'A common pattern is `<summary><h3>Question</h3></summary>`. It is valid, and it can be useful for a page where the questions should appear in the heading outline — but doubling up, with an `<h3>` both inside and above the summary, produces a confusing outline. Pick one.',
-       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
-from public.lessons where slug = 'details-and-summary';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'interactive_demo'::public.block_type, 'Disclosure states', 'The same widget, opened and closed.',
-       NULL, NULL, NULL, '{"variants":[{"label":"Closed by default","code":"<details>\n  <summary>Opening hours</summary>\n  <p>Tuesday to Sunday, 8am to 6pm.</p>\n</details>","note":"Announced as \"Opening hours, collapsed, button\"."},{"label":"Open by default","code":"<details open>\n  <summary>Opening hours</summary>\n  <p>Tuesday to Sunday, 8am to 6pm.</p>\n</details>","note":"Announced as \"Opening hours, expanded, button\". Use `open` for the answer people most often want."}]}'::jsonb
-from public.lessons where slug = 'details-and-summary';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'progressive_detail'::public.block_type, 'When is a details element the wrong choice?', 'It is a disclosure, not a menu and not a tab set. A navigation dropdown needs different keyboard behaviour — arrow keys, Escape to close, focus returning to the trigger — and a tab set needs arrow-key navigation between tabs. For those, either use a well-tested component or accept that you are writing JavaScript. `<details>` is exactly right for FAQs, "show more" panels, and optional detail.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'details-and-summary';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
-       NULL, NULL, NULL, '{"points":["`<details>` plus `<summary>` gives a complete disclosure widget.","A shared `name` makes several of them mutually exclusive.","`open` starts a panel expanded.","Keyboard, screen-reader, find-in-page and print behaviour all come free."],"nextUp":"Next: dialogs and popovers."}'::jsonb
-from public.lessons where slug = 'details-and-summary';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'details-guided', 1, 'guided'::public.exercise_kind, 'Build an FAQ accordion',
-       'Turn these three question-and-answer pairs into an exclusive accordion using `<details>` and `<summary>`, all sharing the name `faq`. The first should start open.', '<h2>Frequently asked questions</h2>
-
-<p>Do I need to book in advance?</p>
-<p>Not on weekdays. At weekends, please book a day ahead.</p>
-
-<p>Are helmets included?</p>
-<p>Yes — a helmet and a lock come with every hire.</p>
-
-<p>What if it rains?</p>
-<p>Cancel up to two hours before and we will refund in full.</p>', '<h2>Frequently asked questions</h2>
-
-<details name="faq" open>
-  <summary>Do I need to book in advance?</summary>
-  <p>Not on weekdays. At weekends, please book a day ahead.</p>
-</details>
-
-<details name="faq">
-  <summary>Are helmets included?</summary>
-  <p>Yes — a helmet and a lock come with every hire.</p>
-</details>
-
-<details name="faq">
-  <summary>What if it rains?</summary>
-  <p>Cancel up to two hours before and we will refund in full.</p>
-</details>', ARRAY['Each question becomes a <summary> and each answer becomes the panel below it.', 'The <summary> must be the first child of its <details>.', 'Give all three name="faq", and add open to the first one only.']::text[],
-       45, 2,
-       (select id from public.skills where slug = 'native-interaction'), false
-from public.lessons l where l.slug = 'details-and-summary'
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
-  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
-  reference_solution = excluded.reference_solution, hints = excluded.hints,
-  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
-  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'element_count'::public.requirement_kind, 'details', NULL,
-       NULL, NULL, 3, 3,
-       'There are three disclosure widgets', NULL, 1, true
-from public.exercises e where e.slug = 'details-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'element_count'::public.requirement_kind, 'details > summary', NULL,
-       NULL, NULL, 3, 3,
-       'Each has a summary as its first child', NULL, 1, true
-from public.exercises e where e.slug = 'details-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'attribute_value'::public.requirement_kind, 'details', 'name',
-       'faq', NULL, NULL, NULL,
-       'They share the name "faq" so only one opens at a time', NULL, 1, true
-from public.exercises e where e.slug = 'details-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'element_count'::public.requirement_kind, 'details[open]', NULL,
-       NULL, NULL, 1, 1,
-       'Exactly one starts open', NULL, 1, true
-from public.exercises e where e.slug = 'details-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 5, 'text_not_empty'::public.requirement_kind, 'summary', NULL,
-       NULL, NULL, NULL, NULL,
-       'Every summary has text', NULL, 1, true
-from public.exercises e where e.slug = 'details-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 6, 'valid_nesting'::public.requirement_kind, NULL, NULL,
-       NULL, NULL, NULL, NULL,
-       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
-from public.exercises e where e.slug = 'details-guided';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'details-and-summary'), NULL, 'q-summary-position', 1, 'single'::public.question_kind,
-        'Where must `<summary>` appear?', 'As the first child of its `<details>` element.', (select id from public.skills where slug = 'native-interaction'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'As the first child of <details>', true, NULL
-from public.quiz_questions where slug = 'q-summary-position';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Anywhere inside <details>', false, NULL
-from public.quiz_questions where slug = 'q-summary-position';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Immediately before <details>', false, NULL
-from public.quiz_questions where slug = 'q-summary-position';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'As the last child of <details>', false, NULL
-from public.quiz_questions where slug = 'q-summary-position';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'details-and-summary'), NULL, 'q-details-name', 2, 'single'::public.question_kind,
-        'What does giving several `<details>` elements the same `name` do?', 'It makes them exclusive: opening one closes the others.', (select id from public.skills where slug = 'native-interaction'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'It groups them for form submission', false, NULL
-from public.quiz_questions where slug = 'q-details-name';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'It has no effect on details elements', false, NULL
-from public.quiz_questions where slug = 'q-details-name';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Opening one closes the others', true, NULL
-from public.quiz_questions where slug = 'q-details-name';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'They all open together', false, NULL
-from public.quiz_questions where slug = 'q-details-name';
--- lesson: Dialog and popover
-insert into public.lessons
-  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'dialog-and-popover', 2, 'Dialog and popover', 'Modals and tooltips, built in', 'Two newer features that handle focus trapping, Escape-to-close and layering — the parts hand-built modals get wrong.',
-       ARRAY['Build a dialog and understand what modal means', 'Use the popover attribute for lightweight overlays', 'Know exactly where JavaScript is still required, and why']::text[], 14, 40, (select id from public.skills where slug = 'native-interaction'), 0.7
-from public.modules m where m.slug = 'disclosure-and-dialog'
-on conflict (slug) do update set
-  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
-  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
-  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
-  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
-       NULL, NULL, NULL, '{"items":["Write a <dialog> with a close mechanism","Build a popover with no JavaScript at all","Explain honestly which parts still need scripting"]}'::jsonb
-from public.lessons where slug = 'dialog-and-popover';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'term'::public.block_type, 'Modal', 'An overlay that blocks the rest of the page until it is dealt with. Everything behind it becomes inert — unfocusable and unreadable to screen readers.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'dialog-and-popover';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'code_example'::public.block_type, 'A dialog with a close button that needs no JavaScript', NULL,
-       '<dialog id="cancel-policy">
-  <h2>Cancellation policy</h2>
-  <p>Cancel up to two hours before your booking for a full refund.</p>
-  <form method="dialog">
-    <button type="submit">Close</button>
-  </form>
-</dialog>', 'html', NULL, '{}'::jsonb
-from public.lessons where slug = 'dialog-and-popover';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'annotated_code'::public.block_type, 'Line by line', NULL,
-       '<form method="dialog">
-  <button type="submit">Close</button>
-</form>', 'html', NULL, '{"annotations":[{"line":"1","text":"`method=\"dialog\"` is a special form method that exists only inside a `<dialog>`. Submitting the form closes the dialog instead of sending anything anywhere."},{"line":"2","text":"This is the one way to close a dialog with no JavaScript. It is worth knowing, because a dialog with no way out is a trap."}]}'::jsonb
-from public.lessons where slug = 'dialog-and-popover';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'callout'::public.block_type, 'Opening a dialog does need JavaScript', 'This is the honest limit. `showModal()` is a JavaScript method, and there is no HTML attribute that opens a `<dialog>`. What HTML gives you, once it is open, is substantial: focus moves into the dialog, focus is trapped inside it, Escape closes it, the background is made inert, and it renders above everything else regardless of stacking order. Those are precisely the things hand-built modals get wrong. This course does not teach the one line of JavaScript that opens it — but you should know that one line is all it is.',
-       NULL, NULL, NULL, '{"tone":"note"}'::jsonb
-from public.lessons where slug = 'dialog-and-popover';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'prose'::public.block_type, NULL, 'The `popover` attribute is newer, and it does work with no JavaScript at all. Any element can become a popover; any button can control it.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'dialog-and-popover';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'annotated_code'::public.block_type, 'Line by line', NULL,
-       '<button popovertarget="helmet-info" popovertargetaction="toggle">
-  What sizes do helmets come in?
-</button>
-
-<div id="helmet-info" popover>
-  <h3>Helmet sizes</h3>
-  <p>Small, medium and large, plus two children''s sizes.</p>
-  <button popovertarget="helmet-info" popovertargetaction="hide">Close</button>
-</div>', 'html', NULL, '{"annotations":[{"line":"1","text":"`popovertarget` names the element this button controls, by its id. The browser wires up the relationship — and the ARIA that goes with it — automatically."},{"line":"5","text":"The bare `popover` attribute makes the element a popover. It is hidden until shown, renders in the top layer above everything else, and closes on Escape or on a click outside it — behaviour known as \"light dismiss\"."},{"line":"8","text":"A second button with `popovertargetaction=\"hide\"` gives an explicit close. Useful on touch devices, where clicking outside is less discoverable."}]}'::jsonb
-from public.lessons where slug = 'dialog-and-popover';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'comparison'::public.block_type, 'Dialog or popover?', NULL,
-       NULL, NULL, NULL, '{"good":{"label":"Dialog — needs a decision","code":"<dialog id=\"confirm\">\n  <p>Cancel this booking?</p>\n  <form method=\"dialog\">\n    <button value=\"yes\">Yes, cancel</button>\n    <button value=\"no\">Keep it</button>\n  </form>\n</dialog>","why":"Modal. The user must answer before continuing. Blocks the page deliberately."},"bad":{"label":"Popover — extra information","code":"<button popovertarget=\"tip\">Helmet sizes</button>\n<div id=\"tip\" popover>\n  <p>Small, medium and large.</p>\n</div>","why":"Non-modal. The user can ignore it and carry on. Dismisses itself on Escape or an outside click."}}'::jsonb
-from public.lessons where slug = 'dialog-and-popover';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'term'::public.block_type, 'Progressive enhancement', 'Build so the page works without the enhancement, then add the enhancement for browsers that support it. The content must never be locked inside a feature that might not run.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'dialog-and-popover';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'callout'::public.block_type, 'Never hide essential content in a popover or dialog', 'If the only place your cancellation policy exists is inside a modal, then anyone whose browser does not open it — or whose JavaScript failed to load — cannot read it. Put essential content on the page, and use overlays for convenience, not as the sole home for anything that matters.',
-       NULL, NULL, NULL, '{"tone":"accessibility"}'::jsonb
-from public.lessons where slug = 'dialog-and-popover';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'progressive_detail'::public.block_type, 'Browser support, and how to think about it', '`<details>` has been supported everywhere for years. `<dialog>` reached every current browser in 2022. The `popover` attribute reached every current browser in 2024. For a public site, the sensible approach is: use `<details>` freely; use `<dialog>` and `popover` where the content underneath is still reachable if the feature does nothing. That is progressive enhancement in one sentence, and it is a more useful habit than memorising a support table that changes every few months.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'dialog-and-popover';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
-       NULL, NULL, NULL, '{"points":["`<dialog>` gives focus trapping, Escape-to-close and inert background — but opening it needs one line of JavaScript.","`<form method=\"dialog\">` closes a dialog with no scripting.","The `popover` attribute needs no JavaScript at all, on either side.","Never make an overlay the only place essential content exists."],"nextUp":"Next: progress, meter, datalist and output."}'::jsonb
-from public.lessons where slug = 'dialog-and-popover';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'popover-guided', 1, 'guided'::public.exercise_kind, 'Build a popover',
-       'Add a button that toggles a popover with the id `sizes`, and a close button inside the popover. Use `popovertarget` and `popovertargetaction`.', '<button>What sizes do helmets come in?</button>
-
-<div id="sizes">
-  <h3>Helmet sizes</h3>
-  <p>Small, medium and large, plus two children''s sizes.</p>
-</div>', '<button popovertarget="sizes" popovertargetaction="toggle">
-  What sizes do helmets come in?
-</button>
-
-<div id="sizes" popover>
-  <h3>Helmet sizes</h3>
-  <p>Small, medium and large, plus two children''s sizes.</p>
-  <button popovertarget="sizes" popovertargetaction="hide">Close</button>
-</div>', ARRAY['Add popovertarget="sizes" to the first button.', 'Add the bare popover attribute to the div — it needs no value.', 'Add a second button inside with popovertargetaction="hide".']::text[],
-       50, 3,
-       (select id from public.skills where slug = 'native-interaction'), false
-from public.lessons l where l.slug = 'dialog-and-popover'
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
-  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
-  reference_solution = excluded.reference_solution, hints = excluded.hints,
-  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
-  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'attribute_present'::public.requirement_kind, 'div', 'popover',
-       NULL, NULL, NULL, NULL,
-       'The panel is marked as a popover', NULL, 1, true
-from public.exercises e where e.slug = 'popover-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'attribute_value'::public.requirement_kind, 'button', 'popovertarget',
-       'sizes', NULL, NULL, NULL,
-       'A button targets the popover', NULL, 1, true
-from public.exercises e where e.slug = 'popover-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'element_count'::public.requirement_kind, 'button[popovertarget]', NULL,
-       NULL, NULL, 2, 2,
-       'There is a trigger button and a close button', NULL, 1, true
-from public.exercises e where e.slug = 'popover-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'attribute_value'::public.requirement_kind, 'button[popovertargetaction="hide"]', 'popovertargetaction',
-       'hide', NULL, NULL, NULL,
-       'The close button hides the popover', NULL, 1, true
-from public.exercises e where e.slug = 'popover-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 5, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
-       NULL, NULL, NULL, NULL,
-       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true
-from public.exercises e where e.slug = 'popover-guided';
 
 commit;

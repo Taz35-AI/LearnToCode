@@ -24,6 +24,7 @@ import {
   uniqueIds,
   visual,
   type LevelSpec,
+  recall,
 } from '../types';
 
 export const LEVEL_06: LevelSpec = {
@@ -411,6 +412,23 @@ type="hidden"    Not shown; carries a value the server needs`,
               'Why autocomplete is an accessibility requirement',
               'WCAG 2.1 introduced a success criterion called Identify Input Purpose, which requires common personal-data fields to declare their purpose programmatically. `autocomplete` is how you meet it. For someone with a cognitive disability, a motor impairment, or simply a very long email address, autofill is the difference between a form that takes ten seconds and one that takes two minutes.',
             ),
+            demo('Three ways to label a field', 'Two of these work. One only looks like it does.', [
+              {
+                label: 'Label with for',
+                code: '<label for="email">Email address</label>\n<input type="email" id="email" name="email" autocomplete="email">',
+                note: 'The usual form. Announced as "Email address, edit text", and clicking the words focuses the field.',
+              },
+              {
+                label: 'Label wrapping the input',
+                code: '<label>Email address\n  <input type="email" name="email" autocomplete="email">\n</label>',
+                note: 'Also correct, and needs no id at all. Useful when you do not control the ids on the page.',
+              },
+              {
+                label: 'Placeholder only',
+                code: '<input type="email" name="email" placeholder="Email address">',
+                note: 'No accessible name at all, and the hint vanishes the moment typing starts — removing the only clue exactly when it is needed.',
+              },
+            ]),
             recap(
               [
                 'Every input needs a `<label for="…">` matching its `id`.',
@@ -672,6 +690,18 @@ type="hidden"    Not shown; carries a value the server needs`,
               'Button versus link',
               'A link goes somewhere. A button does something. If clicking it changes the address bar, it should be an `<a>`; if it submits, toggles or opens something on the current page, it should be a `<button>`. This matters because keyboard behaviour differs — a link activates on Enter, a button on Enter *and* Space — and because screen readers announce them differently, setting a different expectation.',
             ),
+            demo('A question, and a list of unrelated options', 'The difference is one wrapper.', [
+              {
+                label: 'Grouped',
+                code: '<fieldset>\n  <legend>How should we contact you?</legend>\n  <input type="radio" id="by-email" name="contact" value="email">\n  <label for="by-email">Email</label>\n  <input type="radio" id="by-phone" name="contact" value="phone">\n  <label for="by-phone">Phone</label>\n</fieldset>',
+                note: 'The legend names the group, so the options are announced together with the question they answer.',
+              },
+              {
+                label: 'Ungrouped',
+                code: '<p>How should we contact you?</p>\n<input type="radio" id="by-email" name="contact" value="email">\n<label for="by-email">Email</label>\n<input type="radio" id="by-phone" name="contact" value="phone">\n<label for="by-phone">Phone</label>',
+                note: 'The question is just a paragraph floating above. A user who jumps straight to the controls hears "Email, radio button" with no idea what is being asked.',
+              },
+            ]),
             recap(
               [
                 '`<fieldset>` groups controls; `<legend>` labels the group and comes first.',
@@ -919,6 +949,33 @@ accept="image/*,.pdf"     Which file types a file input offers`,
               'A `<textarea>` for a message',
               'A submit button with an explicit `type`',
             ]),
+            demo('Client-side validation, and what it is worth', 'The same field, three ways of asking.', [
+              {
+                label: 'Typed and required',
+                code: '<label for="email">Email address</label>\n<input type="email" id="email" name="email" autocomplete="email" required>',
+                note: 'The right keyboard on a phone, browser-level checking, autofill, and a real label. All of it helps honest users and stops nobody else.',
+              },
+              {
+                label: 'Untyped',
+                code: '<label for="email">Email address</label>\n<input type="text" id="email" name="email">',
+                note: 'Works, but gives up the mobile keyboard, the built-in check and the autofill hint for no gain.',
+              },
+              {
+                label: 'Pattern with no hint',
+                code: '<label for="postcode">Postcode</label>\n<input type="text" id="postcode" name="postcode" pattern="[A-Z]{1,2}[0-9]{1,2} ?[0-9][A-Z]{2}" required>',
+                note: 'Rejects valid-looking input with no explanation of the rule. A pattern always needs a visible description of what it wants.',
+              },
+            ]),
+            recall(
+              'Before you build the form, reach back four levels. From memory, and without scrolling: what does each of these give you, and what breaks without it?',
+              [
+                'Level 1 — the document skeleton: doctype, `<html lang>`, `<head>` with a charset and title, `<body>`. Without the charset, accented characters and currency symbols break.',
+                'Level 2 — headings describe structure, not size. A skipped level leaves a gap in the outline a screen-reader user navigates by.',
+                'Level 3 — link text has to make sense read on its own, because links are commonly listed with the surrounding sentence removed.',
+                'Level 5 — landmarks let assistive technology jump to a region. Exactly one `<main>`, holding what is unique to this page.',
+              ],
+              'Four levels back',
+            ),
             recap(
               [
                 'Native validation attributes catch most honest mistakes for free.',

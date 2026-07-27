@@ -1,16 +1,11 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/supabase/server';
-import { getCalibrationHistory, getReviewCandidates, getReviewQuestions } from '@/lib/data/review';
-import { getSkillMastery } from '@/lib/data/learner';
-import { getSkills } from '@/lib/data/catalogue';
-import { isMastered } from '@/lib/progress/mastery';
-import {
-  DEFAULT_SESSION_OPTIONS,
-  composeReviewSession,
-  dueNowCount,
-  reviewForecast,
-} from '@/lib/review/session';
+import { composeSession, getCalibrationHistory } from '@/lib/data/review';
+import { getLessonProgress, getProfile } from '@/lib/data/learner';
+import { getRoadmap } from '@/lib/data/catalogue';
+import { dueNowCount, reviewForecast } from '@/lib/review/session';
 import { reviewDate } from '@/lib/review/scheduler';
 import { blindSpots, calibrationMessage, calibrationReport } from '@/lib/review/calibration';
 import { ReviewSession } from '@/components/learn/review-session';
@@ -27,47 +22,55 @@ export const metadata: Metadata = {
  * Composed on the server from three signals — what the schedule says has
  * decayed, which skills are demonstrably weak, and what was learned in earlier
  * levels — then interleaved so consecutive items rarely share a skill.
+ *
+ * This is the widest of the three review surfaces. The other two narrow it
+ * deliberately: module recall covers one module the day it is finished, level
+ * review sweeps a whole level, and this queue mixes across everything the
+ * learner has ever studied. All three use the same composer.
  */
 export default async function ReviewPage() {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
 
-  const [candidates, mastery, skills, calibrationPoints] = await Promise.all([
-    getReviewCandidates(user.id),
-    getSkillMastery(user.id),
-    getSkills(),
-    getCalibrationHistory(user.id),
-  ]);
-
   const today = reviewDate(new Date());
 
-  const skillSlugById = new Map(skills.map((skill) => [skill.id, skill.slug]));
-  const weakSkills = new Set(
-    mastery
-      .filter((record) => !isMastered({ mastery: Number(record.mastery), evidenceCount: record.evidence_count }))
-      .map((record) => skillSlugById.get(record.skill_id) ?? '')
-      .filter(Boolean),
-  );
+  const [session, calibrationPoints, profile, roadmap, progress] = await Promise.all([
+    composeSession({ userId: user.id, today }),
+    getCalibrationHistory(user.id),
+    getProfile(user.id),
+    getRoadmap(),
+    getLessonProgress(user.id),
+  ]);
 
-  const currentLevel = Math.max(1, ...candidates.map((candidate) => candidate.levelOrdinal));
-
-  const session = composeReviewSession(candidates, {
-    ...DEFAULT_SESSION_OPTIONS,
-    today,
-    weakSkills,
-    currentLevel,
-    seed: user.id,
-  });
-
-  const questionItems = session.filter((entry) => entry.candidate.kind === 'question');
-  const questions = await getReviewQuestions(questionItems.map((entry) => entry.candidate.itemId));
+  const { entries, candidates } = session;
 
   const report = calibrationReport(calibrationPoints);
   const spots = blindSpots(calibrationPoints).slice(0, 3);
   const forecast = reviewForecast(candidates, today, 7);
 
+  const completedLessonIds = new Set(
+    progress.filter((row) => row.status === 'completed').map((row) => row.lesson_id),
+  );
+
+  // Modules the learner has finished every lesson of, newest first — the point
+  // at which a module recall is worth offering.
+  const finishedModules = roadmap
+    .flatMap((level) => level.modules.map((module) => ({ level, module })))
+    .filter(
+      ({ module }) =>
+        module.lessons.length > 0 && module.lessons.every((l) => completedLessonIds.has(l.id)),
+    )
+    .reverse()
+    .slice(0, 4);
+
+  const levelsWithProgress = roadmap.filter((level) =>
+    level.modules.some((module) => module.lessons.some((l) => completedLessonIds.has(l.id))),
+  );
+
+  const exerciseCount = entries.filter((entry) => entry.kind === 'exercise').length;
+
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl p-5 lg:p-10">
       <h1 className="text-2xl font-bold text-ink">Review</h1>
       <p className="mt-1 text-sm text-muted">
         Scheduled from how memory actually fades, not from a calendar. Each item comes back at the
@@ -76,12 +79,24 @@ export default async function ReviewPage() {
       </p>
 
       <div className="mt-6">
-        {questions.length > 0 ? (
-          <ReviewSession questions={questions} />
+        {entries.length > 0 ? (
+          <>
+            {exerciseCount > 0 ? (
+              <p className="mb-3 text-sm text-muted">
+                {exerciseCount} of these {entries.length === 1 ? 'item asks' : 'items ask'} you to
+                write the markup again rather than recognise it. That is the harder half, and the
+                half that measures what you can actually do.
+              </p>
+            ) : null}
+            <ReviewSession
+              entries={entries}
+              theme={profile?.theme === 'dark' ? 'dark' : 'light'}
+            />
+          </>
         ) : candidates.length === 0 ? (
           <EmptyState
             title="Nothing to review yet"
-            description="Finish a lesson and its questions will start appearing here, spaced out over the following days and weeks."
+            description="Finish a lesson and its questions and exercises will start appearing here, spaced out over the following days and weeks."
           />
         ) : (
           <EmptyState
@@ -90,6 +105,54 @@ export default async function ReviewPage() {
           />
         )}
       </div>
+
+      {finishedModules.length > 0 || levelsWithProgress.length > 0 ? (
+        <Card className="mt-8 p-5">
+          <CardHeader
+            title="Recall a whole module or level"
+            description="The daily queue mixes across everything. These two sweep one module or one level in a single pass — worth doing the day you finish something, and again a fortnight later."
+          />
+          {finishedModules.length > 0 ? (
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                Modules you have finished
+              </p>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {finishedModules.map(({ module }) => (
+                  <li key={module.id}>
+                    <Link
+                      href={`/review/module/${module.slug}`}
+                      className="inline-flex rounded-full border border-app px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent min-h-[2.25rem] items-center"
+                    >
+                      {module.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {levelsWithProgress.length > 0 ? (
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                Levels you have started
+              </p>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {levelsWithProgress.map((level) => (
+                  <li key={level.id}>
+                    <Link
+                      href={`/review/level/${level.slug}`}
+                      className="inline-flex rounded-full border border-app px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent min-h-[2.25rem] items-center"
+                    >
+                      {level.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </Card>
+      ) : null}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         <Card className="p-5">

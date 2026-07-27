@@ -16,6 +16,7 @@ import {
   saveCodeAction,
   startLessonAction,
 } from '@/lib/actions/progress';
+import { getLessonWarmUp } from '@/lib/data/review';
 import { LessonView } from '@/components/learn/lesson-view';
 import type { QuestionKind } from '@/lib/supabase/database.types';
 
@@ -66,6 +67,11 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
   // Records the visit so the dashboard can show the lesson as in progress.
   await startLessonAction(detail.lesson.id);
 
+  // Composed after the visit is recorded, so the lesson the learner is opening
+  // counts as started — and is therefore excluded from its own warm-up rather
+  // than quietly missing from the pool.
+  const warmUp = await getLessonWarmUp(user.id, slug);
+
   const isCompleted =
     progress.find((p) => p.lesson_id === detail.lesson.id)?.status === 'completed';
 
@@ -107,6 +113,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
         xpAward: question.xp_award,
         options: question.options.map((option) => ({ id: option.id, label: option.label })),
       }))}
+      warmUp={warmUp}
       savedCode={savedCode}
       passedExerciseIds={passedExerciseIds.filter((id) => exerciseIds.includes(id))}
       previousAnswers={previousAnswers}

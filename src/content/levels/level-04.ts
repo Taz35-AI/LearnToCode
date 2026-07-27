@@ -324,6 +324,13 @@ export const LEVEL_04: LevelSpec = {
               'When the caption already says it',
               'If a caption fully describes the image, repeating it in the alt text makes a screen-reader user hear the same sentence twice in a row. In that case `alt=""` is the right choice: the caption is already doing the job, and it is available to everybody. This is one of the few places where an empty alt on a clearly informative image is correct.',
             ),
+            mediaExample(
+              'placeholder',
+              'The decorative case, in full',
+              'A neutral graphic carrying no information. The correct alt text is empty — present, but with nothing in it — so assistive technology skips it instead of announcing a filename.',
+              `<img src="/learning-media/svg/placeholder.svg" alt=""
+     width="600" height="400">`,
+            ),
             recap(
               [
                 'Ask: what would I say if I were reading this page aloud?',
@@ -522,6 +529,35 @@ export const LEVEL_04: LevelSpec = {
               'tip',
               'The media library already has the sizes',
               'Every photograph in the HTML Hero media library is generated at 480, 800, 1200 and 1600 pixels wide. The media picker in the editor can insert a complete, correct `srcset` for you — use it while you are learning the pattern, then write one by hand to prove you can.',
+            ),
+            demo('One image, three requests', 'What the browser actually downloads depends on what you told it.', [
+              {
+                label: 'With srcset and sizes',
+                code: '<img src="/learning-media/images/coast-sunrise.jpg"\n     srcset="/learning-media/images/coast-sunrise-800.jpg 800w,\n             /learning-media/images/coast-sunrise-1200.jpg 1200w,\n             /learning-media/images/coast-sunrise.jpg 1600w"\n     sizes="(max-width: 700px) 100vw, 700px"\n     alt="Sunrise over a calm sea" width="1600" height="900">',
+                note: 'A phone fetches the 800-wide file. A wide screen fetches the largest. Nobody downloads more than they can display.',
+              },
+              {
+                label: 'srcset with no sizes',
+                code: '<img src="/learning-media/images/coast-sunrise.jpg"\n     srcset="/learning-media/images/coast-sunrise-800.jpg 800w,\n             /learning-media/images/coast-sunrise.jpg 1600w"\n     alt="Sunrise over a calm sea" width="1600" height="900">',
+                note: 'Without sizes the browser assumes the image spans the full viewport width, and usually fetches larger than it needs.',
+              },
+              {
+                label: 'A single large file',
+                code: '<img src="/learning-media/images/coast-sunrise.jpg"\n     alt="Sunrise over a calm sea" width="1600" height="900">',
+                note: 'Everyone downloads the full-size file, including a phone that will display it 400 pixels wide.',
+              },
+            ]),
+            mediaExample(
+              'responsive-layout',
+              'What responsive actually looks like',
+              'A layout reflowing from three columns to one as the viewport narrows. `srcset` is the image half of this: the same page asking for a different file at each of those widths.',
+              `<video controls preload="metadata"
+       poster="/learning-media/posters/responsive-layout.jpg"
+       width="1280" height="720">
+  <source src="/learning-media/video/responsive-layout.mp4" type="video/mp4">
+  <p>Your browser cannot play this video.
+     <a href="/learning-media/video/responsive-layout.mp4">Download the MP4</a>.</p>
+</video>`,
             ),
             recap(
               [
@@ -734,6 +770,34 @@ export const LEVEL_04: LevelSpec = {
             detail(
               'Why does lazy loading a hero image hurt so much?',
               'Lazy-loaded images are deprioritised until the browser has calculated layout, which delays the largest visible image — the exact thing performance measurements such as Largest Contentful Paint measure. The rule of thumb: images visible without scrolling should never be lazy; everything else should be. Level 10 returns to this with the full performance picture.',
+            ),
+            demo('Choosing a format, and the fallback that must be there', 'The browser takes the first source it understands.', [
+              {
+                label: 'Modern format with a fallback',
+                code: '<picture>\n  <source srcset="/learning-media/images/city-dusk.webp" type="image/webp">\n  <img src="/learning-media/images/city-dusk.jpg"\n       alt="A city skyline at dusk with hundreds of lit office windows"\n       width="1600" height="900">\n</picture>',
+                note: 'A browser that understands WebP takes it; anything else falls through to the JPEG. The <img> is what actually renders.',
+              },
+              {
+                label: 'Art direction',
+                code: '<picture>\n  <source media="(max-width: 600px)" srcset="/learning-media/images/city-dusk-800.jpg">\n  <img src="/learning-media/images/city-dusk.jpg"\n       alt="A city skyline at dusk with hundreds of lit office windows"\n       width="1600" height="900">\n</picture>',
+                note: 'Here the choice is by viewport, not format — a differently cropped image on narrow screens. That is what <picture> is for; plain srcset cannot do it.',
+              },
+              {
+                label: 'No img fallback',
+                code: '<picture>\n  <source srcset="/learning-media/images/city-dusk.webp" type="image/webp">\n</picture>',
+                note: 'Nothing renders at all. The <img> inside <picture> is not optional — it is the element that displays, and the sources merely redirect it.',
+              },
+            ]),
+            mediaExample(
+              'city-dusk',
+              'One photograph, several possible files',
+              'A detailed night scene is exactly where format matters: gradients and noise make it large as a JPEG, and markedly smaller in a modern format. `<picture>` is how you offer both without excluding anyone.',
+              `<picture>
+  <source srcset="/learning-media/images/city-dusk.jpg" type="image/jpeg">
+  <img src="/learning-media/images/city-dusk.jpg"
+       alt="A city skyline at dusk with hundreds of lit office windows"
+       width="1600" height="900" loading="lazy" decoding="async">
+</picture>`,
             ),
             recap(
               [
@@ -1006,6 +1070,43 @@ The doctype tells the browser to use modern HTML rules.`,
               '`width` and `height` to reserve space',
               'No autoplay — or if truly necessary, `muted` and still with controls',
             ]),
+            mediaExample(
+              'welcome-chime',
+              'A three-second clip, with controls',
+              'Press play. `controls` is what makes this operable at all — without it nothing renders and nothing is focusable, so only a script could ever start it.',
+              `<audio controls preload="none">
+  <source src="/learning-media/audio/welcome-chime.mp3" type="audio/mpeg">
+  <p>Your browser cannot play audio.
+     <a href="/learning-media/audio/welcome-chime.mp3">Download the file</a>.</p>
+</audio>`,
+            ),
+            mediaExample(
+              'calm-loop',
+              'A longer clip, and why `preload` matters',
+              'Eight seconds of ambient tone. `preload="none"` means nothing is fetched until somebody presses play — the right default for any audio that is not the reason they came.',
+              `<audio controls preload="none">
+  <source src="/learning-media/audio/calm-loop.mp3" type="audio/mpeg">
+  <p>Your browser cannot play audio.
+     <a href="/learning-media/audio/calm-loop.mp3">Download the file</a>.</p>
+</audio>`,
+            ),
+            demo('What each attribute is holding up', 'Remove one thing at a time from a working player.', [
+              {
+                label: 'Complete',
+                code: '<audio controls preload="none">\n  <source src="/learning-media/audio/welcome-chime.mp3" type="audio/mpeg">\n  <p>Your browser cannot play audio. <a href="/learning-media/audio/welcome-chime.mp3">Download the file</a>.</p>\n</audio>',
+                note: 'Operable by keyboard, nothing downloaded until asked for, and a working link for anyone whose browser cannot play the format.',
+              },
+              {
+                label: 'No controls',
+                code: '<audio preload="none">\n  <source src="/learning-media/audio/welcome-chime.mp3" type="audio/mpeg">\n</audio>',
+                note: 'Nothing renders and nothing is focusable. The audio exists on the page and no visitor can reach it.',
+              },
+              {
+                label: 'No fallback',
+                code: '<audio controls preload="none">\n  <source src="/learning-media/audio/welcome-chime.mp3" type="audio/mpeg">\n</audio>',
+                note: 'Fine until somebody arrives with a browser that cannot play MP3 — and then an empty player with no way through to the file.',
+              },
+            ]),
             recap(
               [
                 '`<source>` elements let the browser choose a format it supports.',
@@ -1215,6 +1316,18 @@ The doctype tells the browser to use modern HTML rules.`,
               'Correct alt text on every informative image',
               'Lazy loading on everything below the fold, but not on the hero',
               'No broken media paths',
+            ]),
+            demo('An embed, configured and not', 'The four attributes every frame wants.', [
+              {
+                label: 'Configured',
+                code: '<iframe src="https://example.org/map" title="Map of the bakery location" loading="lazy" width="560" height="315"></iframe>',
+                note: 'Named so it can be navigated to, deferred so it costs nothing until scrolled to, and sized so the layout does not jump.',
+              },
+              {
+                label: 'Bare',
+                code: '<iframe src="https://example.org/map"></iframe>',
+                note: 'Announced as an unnamed frame, loaded immediately, and the page shifts when it resolves. Three faults in one line.',
+              },
             ]),
             recap(
               [

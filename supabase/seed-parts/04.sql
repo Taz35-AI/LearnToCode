@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 4 of 9
+-- HTML Hero — course seed, part 4 of 10
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -10,6 +10,193 @@
 -- Run part 3 first.
 
 begin;
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'img-debug', 2, 'debug'::public.exercise_kind, 'Three broken images',
+       'Each image below has a different problem: a path that does not exist, a missing alt attribute, and a hotlinked remote URL. Fix all three using paths from the media library.', '<img src="/learning-media/images/coast.jpg" alt="Sunrise over a calm sea" width="1200" height="800">
+<img src="/learning-media/images/studio-desk.jpg" width="1200" height="800">
+<img src="https://example.com/photos/plate.jpg" alt="A plated dish seen from above" width="1200" height="800">', '<img src="/learning-media/images/coast-sunrise.jpg" alt="Sunrise over a calm sea" width="1200" height="800">
+<img src="/learning-media/images/studio-desk.jpg" alt="An open laptop, a notebook and a coffee mug on a wooden desk" width="1200" height="800">
+<img src="/learning-media/images/restaurant-plate.jpg" alt="A plated dish seen from above" width="1200" height="800">', ARRAY['Open the media library from the editor toolbar to see the real filenames.', 'The first image is missing part of its filename.', 'The second has no alt attribute at all.', 'The third points at another website — replace it with a local library path.']::text[],
+       50, 3,
+       (select id from public.skills where slug = 'images'), false
+from public.lessons l where l.slug = 'the-img-element'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_count'::public.requirement_kind, 'img', NULL,
+       NULL, NULL, 3, 3,
+       'All three images remain', NULL, 1, true
+from public.exercises e where e.slug = 'img-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'local_media_path'::public.requirement_kind, 'img', NULL,
+       NULL, NULL, NULL, NULL,
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+from public.exercises e where e.slug = 'img-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 3, 'attribute_present'::public.requirement_kind, 'img', 'alt',
+       NULL, NULL, NULL, NULL,
+       'Every image has an alt attribute', NULL, 1, true
+from public.exercises e where e.slug = 'img-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 4, 'alt_quality'::public.requirement_kind, 'img', NULL,
+       NULL, NULL, NULL, NULL,
+       'Every image has meaningful alt text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+from public.exercises e where e.slug = 'img-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 5, 'attribute_absent'::public.requirement_kind, 'img[src^="http"]', 'src',
+       NULL, NULL, NULL, NULL,
+       'No image is hotlinked from another site', NULL, 1, true
+from public.exercises e where e.slug = 'img-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'the-img-element'), NULL, 'q-img-dimensions', 1, 'single'::public.question_kind,
+        'Why set `width` and `height` on an `<img>`?', 'The browser reserves the correct space before the file arrives, so surrounding content does not jump when the image loads.', (select id from public.skills where slug = 'images'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Because alt text requires them', false, NULL
+from public.quiz_questions where slug = 'q-img-dimensions';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'So the browser reserves space and the page does not jump', true, NULL
+from public.quiz_questions where slug = 'q-img-dimensions';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'To force the image to display at that exact size', false, NULL
+from public.quiz_questions where slug = 'q-img-dimensions';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'To compress the image file', false, NULL
+from public.quiz_questions where slug = 'q-img-dimensions';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'the-img-element'), NULL, 'q-hotlinking', 2, 'single'::public.question_kind,
+        'What is wrong with pointing `src` at an image on someone else''s website?', 'It uses their bandwidth, breaks when they move the file, and is usually a copyright problem.', (select id from public.skills where slug = 'images'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Nothing — this is standard practice', false, NULL
+from public.quiz_questions where slug = 'q-hotlinking';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It uses their bandwidth, breaks easily, and is usually a copyright problem', true, NULL
+from public.quiz_questions where slug = 'q-hotlinking';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Browsers block cross-domain images', false, NULL
+from public.quiz_questions where slug = 'q-hotlinking';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It makes your page load faster but looks unprofessional', false, NULL
+from public.quiz_questions where slug = 'q-hotlinking';
+-- lesson: Writing alt text that carries the meaning
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'writing-alt-text', 2, 'Writing alt text that carries the meaning', 'Informative, decorative, and the surprisingly common empty alt', 'Good alt text is a writing skill, not a technical one. The rule is simpler than most people expect.',
+       ARRAY['Decide whether an image is informative or decorative', 'Write alt text that replaces the image, rather than describing it', 'Use `alt=""` correctly']::text[], 14, 40, (select id from public.skills where slug = 'images'), 0.7
+from public.modules m where m.slug = 'images-and-alt-text'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Classify an image as informative or decorative","Write alt text that conveys the image''s purpose","Use an empty alt attribute where it is the correct answer"]}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'prose'::public.block_type, NULL, 'The test is this: if you were reading the page aloud to someone on the telephone, what would you say when you reached this image? That sentence is your alt text. Sometimes the honest answer is "nothing" — and that is a real answer, written as `alt=""`.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'term'::public.block_type, 'Informative image', 'An image that adds meaning the surrounding text does not already carry. It needs alt text describing that meaning.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'term'::public.block_type, 'Decorative image', 'An image that adds atmosphere but no information — a background texture, a divider, an icon beside a word that already says the same thing. It takes `alt=""`, which tells screen readers to skip it entirely.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, '`alt=""` and no alt attribute are completely different', '`alt=""` says "I have considered this image and it carries no information — skip it." Omitting `alt` says nothing, and screen readers fall back to announcing the filename, so users hear "image, D S C underscore 0 4 8 2 dot J P G". Always include the attribute; make it empty only on purpose.',
+       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'comparison'::public.block_type, 'Alt text for the same photograph, in two different contexts', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"On a page about the workshop","code":"<img src=\"/learning-media/images/workshop-tools.jpg\"\n     alt=\"Hand tools hanging in labelled rows above a workbench\">","why":"The image is showing the reader what the workshop is like. That is information."},"bad":{"label":"As a background strip on a contact page","code":"<img src=\"/learning-media/images/workshop-tools.jpg\" alt=\"\">","why":"Here it is atmosphere. Describing it would interrupt the reader for no benefit."}}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'checklist'::public.block_type, 'Alt text that works', NULL,
+       NULL, NULL, NULL, '{"items":["Describe the *purpose*, not every detail — one useful sentence","Do not start with \"Image of\" or \"Picture of\" — the screen reader already says \"image\"","Do not repeat text that sits right next to the image","For a photograph of a person, say who they are, not what they are wearing","For a chart, give the conclusion the chart shows, and put the data in a table nearby","For an image inside a link, describe where the link goes"]}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'interactive_demo'::public.block_type, 'Four attempts at the same image', 'The image shows a plated dish on a restaurant menu page.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Best","code":"<img src=\"/learning-media/images/restaurant-plate.jpg\" alt=\"Slow-roast lamb with charred aubergine and flatbread\" width=\"1200\" height=\"800\">","note":"Tells the reader what the dish is — exactly what a sighted reader gets from looking."},{"label":"Too vague","code":"<img src=\"/learning-media/images/restaurant-plate.jpg\" alt=\"Food\" width=\"1200\" height=\"800\">","note":"Technically present, practically useless."},{"label":"Redundant","code":"<img src=\"/learning-media/images/restaurant-plate.jpg\" alt=\"Image of a photo of food\" width=\"1200\" height=\"800\">","note":"Screen readers already announce \"image\". This says it three times and describes nothing."},{"label":"Filename","code":"<img src=\"/learning-media/images/restaurant-plate.jpg\" alt=\"restaurant-plate.jpg\" width=\"1200\" height=\"800\">","note":"The commonest automated mistake. It tells the reader nothing at all."}]}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'prose'::public.block_type, NULL, '`<figure>` and `<figcaption>` group an image with a caption. A caption is visible to everyone; alt text is for people who cannot see the image. They are not the same thing and should not be identical — the caption might name a photographer, while the alt text describes the scene.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'code_example'::public.block_type, 'A figure with both a caption and alt text', NULL,
+       '<figure>
+  <img src="/learning-media/images/city-dusk.jpg"
+       alt="A city skyline at dusk with hundreds of lit office windows"
+       width="1200" height="800">
+  <figcaption>The financial district, photographed from the river path.</figcaption>
+</figure>', 'html', NULL, '{}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'progressive_detail'::public.block_type, 'When the caption already says it', 'If a caption fully describes the image, repeating it in the alt text makes a screen-reader user hear the same sentence twice in a row. In that case `alt=""` is the right choice: the caption is already doing the job, and it is available to everybody. This is one of the few places where an empty alt on a clearly informative image is correct.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'media_example'::public.block_type, 'The decorative case, in full', 'A neutral graphic carrying no information. The correct alt text is empty — present, but with nothing in it — so assistive technology skips it instead of announcing a filename.',
+       '<img src="/learning-media/svg/placeholder.svg" alt=""
+     width="600" height="400">', 'html', 'placeholder', '{}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Ask: what would I say if I were reading this page aloud?","Informative images need descriptive alt; decorative images take `alt=\"\"`.","`alt=\"\"` and a missing `alt` are not the same — always include the attribute.","Captions and alt text serve different audiences and should not duplicate each other."],"nextUp":"Next: serving the right image for the screen."}'::jsonb
+from public.lessons where slug = 'writing-alt-text';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'alt-guided', 1, 'guided'::public.exercise_kind, 'Fix four alt attributes',
+       'Each image below has poor alt text. Rewrite them: the first is informative and needs a real description; the second is purely decorative and should be `alt=""`; the third must not start with "Image of"; the fourth must not be a filename.', '<img src="/learning-media/images/team-portrait.jpg" alt="photo" width="1067" height="1600">
+<img src="/learning-media/svg/placeholder.svg" alt="decorative background pattern here" width="800" height="500">
+<img src="/learning-media/images/vehicle-hire.jpg" alt="Image of a car" width="1200" height="800">
+<img src="/learning-media/images/event-stage.jpg" alt="event-stage.jpg" width="1200" height="800">', '<img src="/learning-media/images/team-portrait.jpg" alt="Amara Okonjo, our head mechanic" width="1067" height="1600">
+<img src="/learning-media/svg/placeholder.svg" alt="" width="800" height="500">
+<img src="/learning-media/images/vehicle-hire.jpg" alt="A blue five-door hire car parked on an open road" width="1200" height="800">
+<img src="/learning-media/images/event-stage.jpg" alt="A crowd watching a stage lit by pink and blue lights" width="1200" height="800">', ARRAY['For the portrait, say who the person is — that is what a sighted reader learns.', 'A purely decorative image takes alt="" — an empty value, but the attribute must still be there.', 'Delete "Image of" and describe the car instead.', 'Replace the filename with a sentence about what is in the picture.']::text[],
+       50, 3,
+       (select id from public.skills where slug = 'images'), false
+from public.lessons l where l.slug = 'writing-alt-text'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 1, 'element_count'::public.requirement_kind, 'img', NULL,
+       NULL, NULL, 4, 4,
+       'All four images remain', NULL, 1, true
+from public.exercises e where e.slug = 'alt-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+select e.id, 2, 'attribute_present'::public.requirement_kind, 'img', 'alt',
+       NULL, NULL, NULL, NULL,
+       'Every image has an alt attribute', NULL, 1, true
+from public.exercises e where e.slug = 'alt-guided';
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
 select e.id, 3, 'alt_quality'::public.requirement_kind, 'img', NULL,
@@ -224,7 +411,21 @@ select id, 8, 'callout'::public.block_type, 'The media library already has the s
        NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
 from public.lessons where slug = 'srcset-and-sizes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 9, 'interactive_demo'::public.block_type, 'One image, three requests', 'What the browser actually downloads depends on what you told it.',
+       NULL, NULL, NULL, '{"variants":[{"label":"With srcset and sizes","code":"<img src=\"/learning-media/images/coast-sunrise.jpg\"\n     srcset=\"/learning-media/images/coast-sunrise-800.jpg 800w,\n             /learning-media/images/coast-sunrise-1200.jpg 1200w,\n             /learning-media/images/coast-sunrise.jpg 1600w\"\n     sizes=\"(max-width: 700px) 100vw, 700px\"\n     alt=\"Sunrise over a calm sea\" width=\"1600\" height=\"900\">","note":"A phone fetches the 800-wide file. A wide screen fetches the largest. Nobody downloads more than they can display."},{"label":"srcset with no sizes","code":"<img src=\"/learning-media/images/coast-sunrise.jpg\"\n     srcset=\"/learning-media/images/coast-sunrise-800.jpg 800w,\n             /learning-media/images/coast-sunrise.jpg 1600w\"\n     alt=\"Sunrise over a calm sea\" width=\"1600\" height=\"900\">","note":"Without sizes the browser assumes the image spans the full viewport width, and usually fetches larger than it needs."},{"label":"A single large file","code":"<img src=\"/learning-media/images/coast-sunrise.jpg\"\n     alt=\"Sunrise over a calm sea\" width=\"1600\" height=\"900\">","note":"Everyone downloads the full-size file, including a phone that will display it 400 pixels wide."}]}'::jsonb
+from public.lessons where slug = 'srcset-and-sizes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'media_example'::public.block_type, 'What responsive actually looks like', 'A layout reflowing from three columns to one as the viewport narrows. `srcset` is the image half of this: the same page asking for a different file at each of those widths.',
+       '<video controls preload="metadata"
+       poster="/learning-media/posters/responsive-layout.jpg"
+       width="1280" height="720">
+  <source src="/learning-media/video/responsive-layout.mp4" type="video/mp4">
+  <p>Your browser cannot play this video.
+     <a href="/learning-media/video/responsive-layout.mp4">Download the MP4</a>.</p>
+</video>', 'html', 'responsive-layout', '{}'::jsonb
+from public.lessons where slug = 'srcset-and-sizes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`srcset` offers candidate files with `w` descriptors giving each file''s real width.","`sizes` tells the browser how wide the image will display, before layout is known.","`src` remains as the fallback for browsers that do not understand `srcset`.","The browser makes the final choice, using information you do not have."],"nextUp":"Next: art direction and modern formats with `<picture>`."}'::jsonb
 from public.lessons where slug = 'srcset-and-sizes';
 insert into public.exercises
@@ -455,7 +656,20 @@ select id, 11, 'progressive_detail'::public.block_type, 'Why does lazy loading a
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'picture-and-formats';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 12, 'interactive_demo'::public.block_type, 'Choosing a format, and the fallback that must be there', 'The browser takes the first source it understands.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Modern format with a fallback","code":"<picture>\n  <source srcset=\"/learning-media/images/city-dusk.webp\" type=\"image/webp\">\n  <img src=\"/learning-media/images/city-dusk.jpg\"\n       alt=\"A city skyline at dusk with hundreds of lit office windows\"\n       width=\"1600\" height=\"900\">\n</picture>","note":"A browser that understands WebP takes it; anything else falls through to the JPEG. The <img> is what actually renders."},{"label":"Art direction","code":"<picture>\n  <source media=\"(max-width: 600px)\" srcset=\"/learning-media/images/city-dusk-800.jpg\">\n  <img src=\"/learning-media/images/city-dusk.jpg\"\n       alt=\"A city skyline at dusk with hundreds of lit office windows\"\n       width=\"1600\" height=\"900\">\n</picture>","note":"Here the choice is by viewport, not format — a differently cropped image on narrow screens. That is what <picture> is for; plain srcset cannot do it."},{"label":"No img fallback","code":"<picture>\n  <source srcset=\"/learning-media/images/city-dusk.webp\" type=\"image/webp\">\n</picture>","note":"Nothing renders at all. The <img> inside <picture> is not optional — it is the element that displays, and the sources merely redirect it."}]}'::jsonb
+from public.lessons where slug = 'picture-and-formats';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'media_example'::public.block_type, 'One photograph, several possible files', 'A detailed night scene is exactly where format matters: gradients and noise make it large as a JPEG, and markedly smaller in a modern format. `<picture>` is how you offer both without excluding anyone.',
+       '<picture>
+  <source srcset="/learning-media/images/city-dusk.jpg" type="image/jpeg">
+  <img src="/learning-media/images/city-dusk.jpg"
+       alt="A city skyline at dusk with hundreds of lit office windows"
+       width="1600" height="900" loading="lazy" decoding="async">
+</picture>', 'html', 'city-dusk', '{}'::jsonb
+from public.lessons where slug = 'picture-and-formats';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<picture>` chooses between genuinely different files; `srcset` chooses between sizes.","The `<img>` inside `<picture>` is required and carries the alt text.","`loading=\"lazy\"` for images below the fold; never for the hero image.","`fetchpriority=\"high\"` marks the one image that matters most."],"nextUp":"Next: video and audio."}'::jsonb
 from public.lessons where slug = 'picture-and-formats';
 insert into public.exercises
@@ -764,7 +978,27 @@ select id, 9, 'checklist'::public.block_type, 'Every video you publish', NULL,
        NULL, NULL, NULL, '{"items":["`controls`, always","A `poster` image","At least one `<source>`, ideally WebM and MP4","A `<track kind=\"captions\">` with a real caption file","Fallback content with a download link","`width` and `height` to reserve space","No autoplay — or if truly necessary, `muted` and still with controls"]}'::jsonb
 from public.lessons where slug = 'video-and-audio';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 10, 'media_example'::public.block_type, 'A three-second clip, with controls', 'Press play. `controls` is what makes this operable at all — without it nothing renders and nothing is focusable, so only a script could ever start it.',
+       '<audio controls preload="none">
+  <source src="/learning-media/audio/welcome-chime.mp3" type="audio/mpeg">
+  <p>Your browser cannot play audio.
+     <a href="/learning-media/audio/welcome-chime.mp3">Download the file</a>.</p>
+</audio>', 'html', 'welcome-chime', '{}'::jsonb
+from public.lessons where slug = 'video-and-audio';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'media_example'::public.block_type, 'A longer clip, and why `preload` matters', 'Eight seconds of ambient tone. `preload="none"` means nothing is fetched until somebody presses play — the right default for any audio that is not the reason they came.',
+       '<audio controls preload="none">
+  <source src="/learning-media/audio/calm-loop.mp3" type="audio/mpeg">
+  <p>Your browser cannot play audio.
+     <a href="/learning-media/audio/calm-loop.mp3">Download the file</a>.</p>
+</audio>', 'html', 'calm-loop', '{}'::jsonb
+from public.lessons where slug = 'video-and-audio';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'interactive_demo'::public.block_type, 'What each attribute is holding up', 'Remove one thing at a time from a working player.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Complete","code":"<audio controls preload=\"none\">\n  <source src=\"/learning-media/audio/welcome-chime.mp3\" type=\"audio/mpeg\">\n  <p>Your browser cannot play audio. <a href=\"/learning-media/audio/welcome-chime.mp3\">Download the file</a>.</p>\n</audio>","note":"Operable by keyboard, nothing downloaded until asked for, and a working link for anyone whose browser cannot play the format."},{"label":"No controls","code":"<audio preload=\"none\">\n  <source src=\"/learning-media/audio/welcome-chime.mp3\" type=\"audio/mpeg\">\n</audio>","note":"Nothing renders and nothing is focusable. The audio exists on the page and no visitor can reach it."},{"label":"No fallback","code":"<audio controls preload=\"none\">\n  <source src=\"/learning-media/audio/welcome-chime.mp3\" type=\"audio/mpeg\">\n</audio>","note":"Fine until somebody arrives with a browser that cannot play MP3 — and then an empty player with no way through to the file."}]}'::jsonb
+from public.lessons where slug = 'video-and-audio';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["`<source>` elements let the browser choose a format it supports.","`controls` and a `poster` are effectively mandatory.","`<track kind=\"captions\">` is what makes video usable by deaf viewers.","Fallback content sits after the sources; make it a download link.","Autoplay with sound is harmful and is blocked by browsers."],"nextUp":"Next: embedding other people''s content safely."}'::jsonb
 from public.lessons where slug = 'video-and-audio';
 insert into public.exercises
@@ -1011,7 +1245,11 @@ select id, 7, 'checklist'::public.block_type, 'The media milestone page needs', 
        NULL, NULL, NULL, '{"items":["A responsive hero image with `srcset` and `sizes`","A `<figure>` with an image and a `<figcaption>`","A `<video>` with controls, a poster, two sources, captions and fallback content","One decorative image with `alt=\"\"`","Correct alt text on every informative image","Lazy loading on everything below the fold, but not on the hero","No broken media paths"]}'::jsonb
 from public.lessons where slug = 'iframes-and-media-milestone';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 8, 'interactive_demo'::public.block_type, 'An embed, configured and not', 'The four attributes every frame wants.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Configured","code":"<iframe src=\"https://example.org/map\" title=\"Map of the bakery location\" loading=\"lazy\" width=\"560\" height=\"315\"></iframe>","note":"Named so it can be navigated to, deferred so it costs nothing until scrolled to, and sized so the layout does not jump."},{"label":"Bare","code":"<iframe src=\"https://example.org/map\"></iframe>","note":"Announced as an unnamed frame, loaded immediately, and the page shifts when it resolves. Three faults in one line."}]}'::jsonb
+from public.lessons where slug = 'iframes-and-media-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["An `<iframe>` embeds a whole separate document; `title` is required.","`sandbox` removes capabilities; add back only what is needed.","`loading=\"lazy\"` matters even more for embeds than for images.","You can now build a complete, accessible, fast media page."],"nextUp":"Level 5 next: giving your pages professional structure."}'::jsonb
 from public.lessons where slug = 'iframes-and-media-milestone';
 insert into public.exercises
@@ -1588,7 +1826,11 @@ select id, 11, 'progressive_detail'::public.block_type, 'Do landmarks replace AR
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'semantic-vs-non-semantic';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 12, 'self_explain'::public.block_type, 'Explain it in your own words', 'A colleague says: "Both pages look identical in the browser, so semantic elements are just a style preference." Write your answer to them. Do not list the landmark elements — explain *who or what* is worse off with the div version, and why looking the same is not the same as being the same.',
+       NULL, NULL, NULL, '{"modelAnswer":"Looking identical is exactly the point: the difference is invisible to someone who can see the page, and decisive for everything that cannot. A screen-reader user can jump straight to `main` or list the page''s regions; with divs there are no regions, so the only way through is to read from the top every time. Search engines, reader modes and browser translation all read the same structure. And a `<div class=\"header\">` tells the next developer nothing that the class name has not already promised — a promise nothing enforces. \"It looks the same\" is a statement about one way of using a page, by one kind of user, on one device."}'::jsonb
+from public.lessons where slug = 'semantic-vs-non-semantic';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["Semantic elements name what their content is; `<div>` and `<span>` name nothing.","Landmarks let assistive technology jump straight to a region of the page.","Exactly one `<main>`, holding what is unique to this page.","Use `<div>` when no semantic element fits — but ask the question first."],"nextUp":"Next: sections, articles, and the ones people get wrong."}'::jsonb
 from public.lessons where slug = 'semantic-vs-non-semantic';
 insert into public.exercises
@@ -1885,361 +2127,5 @@ select e.id, 5, 'heading_order'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
        'The heading hierarchy is correct: one <h1>, and no skipped levels', 'Start with a single <h1>, then step down one level at a time — h2 before h3.', 1, true
 from public.exercises e where e.slug = 'section-article-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 6, 'valid_nesting'::public.requirement_kind, NULL, NULL,
-       NULL, NULL, NULL, NULL,
-       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
-from public.exercises e where e.slug = 'section-article-guided';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'section-debug', 2, 'debug'::public.exercise_kind, 'Sections that should not be sections',
-       'This page uses `<section>` for two things that are not sections: a styling wrapper with no heading, and a self-contained review. Fix both, and give the aside an accessible name.', '<main>
-  <h1>Customer reviews</h1>
-  <section class="layout-wrapper">
-    <section>
-      <h2>"Excellent service"</h2>
-      <p>Booked a bike at short notice and it was ready in ten minutes.</p>
-    </section>
-  </section>
-  <aside>
-    <h2>Leave a review</h2>
-    <p>We read every one.</p>
-  </aside>
-</main>', '<main>
-  <h1>Customer reviews</h1>
-  <div class="layout-wrapper">
-    <article>
-      <h2>"Excellent service"</h2>
-      <p>Booked a bike at short notice and it was ready in ten minutes.</p>
-    </article>
-  </div>
-  <aside aria-label="Leave a review">
-    <h2>Leave a review</h2>
-    <p>We read every one.</p>
-  </aside>
-</main>', ARRAY['The outer wrapper has no heading and exists only for layout — that is a <div>.', 'A single review is self-contained, so it is an <article>.', 'Add aria-label to the aside so screen readers can name it.']::text[],
-       45, 3,
-       (select id from public.skills where slug = 'semantic-html'), false
-from public.lessons l where l.slug = 'section-article-aside'
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
-  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
-  reference_solution = excluded.reference_solution, hints = excluded.hints,
-  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
-  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'element_present'::public.requirement_kind, 'article', NULL,
-       NULL, NULL, NULL, NULL,
-       'The review is an article', NULL, 1, true
-from public.exercises e where e.slug = 'section-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'element_count'::public.requirement_kind, 'section', NULL,
-       NULL, NULL, 0, 0,
-       'No misused section elements remain', NULL, 1, true
-from public.exercises e where e.slug = 'section-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'attribute_present'::public.requirement_kind, 'aside', 'aria-label',
-       NULL, NULL, NULL, NULL,
-       'The aside has an accessible name', NULL, 1, true
-from public.exercises e where e.slug = 'section-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'element_present'::public.requirement_kind, 'div', NULL,
-       NULL, NULL, NULL, NULL,
-       'The layout wrapper is a div', NULL, 1, true
-from public.exercises e where e.slug = 'section-debug';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'section-article-aside'), NULL, 'q-article-test', 1, 'single'::public.question_kind,
-        'What is the test for using `<article>`?', 'Whether the content would still make sense on its own, lifted out of the page.', (select id from public.skills where slug = 'semantic-html'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Is it more than three paragraphs long?', false, NULL
-from public.quiz_questions where slug = 'q-article-test';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Does it contain an image?', false, NULL
-from public.quiz_questions where slug = 'q-article-test';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Is it written by a named author?', false, NULL
-from public.quiz_questions where slug = 'q-article-test';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Would it make sense on its own, outside this page?', true, NULL
-from public.quiz_questions where slug = 'q-article-test';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'section-article-aside'), NULL, 'q-section-heading', 2, 'single'::public.question_kind,
-        'You have a container with no heading and no theme, used only for layout. What should it be?', '`<div>`. Using `<section>` would add a meaningless region to the page structure.', (select id from public.skills where slug = 'semantic-html'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, '<article>', false, NULL
-from public.quiz_questions where slug = 'q-section-heading';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, '<aside>', false, NULL
-from public.quiz_questions where slug = 'q-section-heading';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, '<div>', true, NULL
-from public.quiz_questions where slug = 'q-section-heading';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, '<section>', false, NULL
-from public.quiz_questions where slug = 'q-section-heading';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'section-article-aside'), NULL, 'q-outline-algorithm', 3, 'single'::public.question_kind,
-        'Does nesting a heading inside a `<section>` change its level?', 'No. The outline algorithm that would have done this was never implemented and has been removed from the specification. Always set levels explicitly.', (select id from public.skills where slug = 'semantic-html'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'No — always set heading levels explicitly', true, NULL
-from public.quiz_questions where slug = 'q-outline-algorithm';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Yes, each section demotes headings by one level', false, NULL
-from public.quiz_questions where slug = 'q-outline-algorithm';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Only in browsers that support HTML5 outlines', false, NULL
-from public.quiz_questions where slug = 'q-outline-algorithm';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Only for h1 elements', false, NULL
-from public.quiz_questions where slug = 'q-outline-algorithm';
--- module: Organising a real project
-insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
-select l.id, 'organising-a-project', 2, 'Organising a real project', 'Folder structure, naming conventions, repeated page patterns, and the Level 5 milestone rebuild.',
-       45, true
-from public.levels l where l.slug = 'structure-professional'
-on conflict (slug) do update set
-  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
-  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
-  is_milestone = excluded.is_milestone;
-insert into public.module_prerequisites (module_id, prerequisite_module_id)
-select m.id, p.id from public.modules m, public.modules p
-where m.slug = 'organising-a-project' and p.slug = 'semantic-landmarks';
-insert into public.module_skills (module_id, skill_id, mastery_required)
-select m.id, s.id, 0.7
-from public.modules m, public.skills s
-where m.slug = 'organising-a-project' and s.slug = 'semantic-html';
-insert into public.module_skills (module_id, skill_id, mastery_required)
-select m.id, s.id, 0
-from public.modules m, public.skills s
-where m.slug = 'organising-a-project' and s.slug = 'maintainability';
-insert into public.module_skills (module_id, skill_id, mastery_required)
-select m.id, s.id, 0.6
-from public.modules m, public.skills s
-where m.slug = 'organising-a-project' and s.slug = 'multi-page';
--- lesson: File organisation and reusable patterns
-insert into public.lessons
-  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'file-organisation-and-patterns', 1, 'File organisation and reusable patterns', 'Structure that still makes sense at page forty', 'Every professional site has conventions. Adopting them now costs nothing and saves a great deal later.',
-       ARRAY['Lay out a project folder that scales', 'Apply consistent naming conventions', 'Recognise repeated patterns and keep them identical']::text[], 13, 40, (select id from public.skills where slug = 'maintainability'), 0.7
-from public.modules m where m.slug = 'organising-a-project'
-on conflict (slug) do update set
-  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
-  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
-  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
-  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
-       NULL, NULL, NULL, '{"items":["Design a folder structure for a multi-page site","Apply naming conventions that avoid server-specific bugs","Keep repeated page furniture consistent across a site"]}'::jsonb
-from public.lessons where slug = 'file-organisation-and-patterns';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'visual'::public.block_type, NULL, 'A project laid out so that paths stay predictable.',
-       NULL, NULL, 'file-paths', '{}'::jsonb
-from public.lessons where slug = 'file-organisation-and-patterns';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'code_example'::public.block_type, 'A structure that still works at forty pages', NULL,
-       'my-site/
-├── index.html
-├── about.html
-├── contact.html
-├── 404.html                custom "page not found"
-├── favicon.svg
-├── assets/
-│   ├── css/
-│   │   └── site.css
-│   ├── images/
-│   │   ├── hero-workshop.jpg
-│   │   └── logo.svg
-│   ├── media/
-│   │   ├── tour.mp4
-│   │   └── tour.en.vtt
-│   └── files/
-│       └── price-list-2026.pdf
-└── routes/
-    ├── index.html
-    ├── valley.html
-    └── harbour.html', 'text', NULL, '{}'::jsonb
-from public.lessons where slug = 'file-organisation-and-patterns';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'checklist'::public.block_type, 'Conventions worth adopting permanently', NULL,
-       NULL, NULL, NULL, '{"items":["Lowercase filenames — some servers are case-sensitive, some are not; assume the strict one","Hyphens, never spaces or underscores, in filenames","One `index.html` per folder, so `/routes/` works as a URL","All assets under `assets/`, grouped by type","Descriptive names: `hero-workshop.jpg`, not `IMG_4821.jpg`","A `404.html` so a mistyped URL is still helpful"]}'::jsonb
-from public.lessons where slug = 'file-organisation-and-patterns';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'callout'::public.block_type, 'The case-sensitivity trap', 'Most Windows and macOS setups treat `About.html` and `about.html` as the same file. Most Linux servers do not. A site that works perfectly on your laptop can 404 the moment it is deployed. Lowercase everything and the problem disappears permanently.',
-       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
-from public.lessons where slug = 'file-organisation-and-patterns';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'prose'::public.block_type, NULL, 'The other half of maintainability is repetition. Your header, navigation and footer appear on every page. Keeping them byte-for-byte identical is what makes a site feel coherent — and it is the thing hand-written sites get wrong first.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'file-organisation-and-patterns';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'comparison'::public.block_type, 'Two ways of writing the same page furniture', NULL,
-       NULL, NULL, NULL, '{"good":{"label":"Consistent","code":"<!-- Site header — identical on every page -->\n<header>\n  <a href=\"/\" class=\"logo\">Riverside</a>\n  <nav aria-label=\"Main\">…</nav>\n</header>","why":"A comment marks the block as shared, so the next person knows to change it everywhere."},"bad":{"label":"Drifted","code":"<!-- page 1 -->\n<header><nav aria-label=\"Main\">…</nav></header>\n\n<!-- page 2 -->\n<div class=\"top\"><nav>…</nav></div>","why":"The same region, written two different ways. Screen-reader users lose the landmark on page two, and every future change has to be made twice."}}'::jsonb
-from public.lessons where slug = 'file-organisation-and-patterns';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'term'::public.block_type, 'Progressive disclosure of complexity', 'Hand-copying shared markup is fine for a handful of pages. Beyond that, professionals use a template system or a static site generator that writes the repetition for them. Knowing *why* the repetition exists is what lets you pick the right tool later.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'file-organisation-and-patterns';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'callout'::public.block_type, 'Comment the boundaries, not the obvious', 'A comment saying `<!-- Site header — keep identical across pages -->` earns its place. A comment saying `<!-- paragraph -->` above a `<p>` does not. Write comments for decisions and boundaries, never for restating what the code already says.',
-       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
-from public.lessons where slug = 'file-organisation-and-patterns';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'progressive_detail'::public.block_type, 'Avoiding unnecessary containers', 'Every extra wrapper is a line someone has to read, and a level of nesting that makes a missing closing tag harder to find. Before adding a `<div>`, check whether the element you already have could carry the styling instead. A page that is five levels deep where three would do is not "more structured" — it is just harder to change.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'file-organisation-and-patterns';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
-       NULL, NULL, NULL, '{"points":["Lowercase, hyphenated filenames avoid an entire class of deployment bug.","Group assets by type under one folder.","Keep shared page furniture byte-for-byte identical.","Add a container only when it earns its place."],"nextUp":"Next: the Level 5 milestone rebuild."}'::jsonb
-from public.lessons where slug = 'file-organisation-and-patterns';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'patterns-guided', 1, 'guided'::public.exercise_kind, 'Make two pages consistent',
-       'This is the header from page two of a site. Page one uses `<header>`, a labelled `<nav>` and a `<ul>` of links. Rewrite this one to match exactly.', '<div class="top">
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-    <a href="contact.html">Contact</a>
-  </nav>
-</div>', '<header>
-  <nav aria-label="Main">
-    <ul>
-      <li><a href="index.html">Home</a></li>
-      <li><a href="about.html">About</a></li>
-      <li><a href="contact.html">Contact</a></li>
-    </ul>
-  </nav>
-</header>', ARRAY['The wrapper should be a <header>, not a div.', 'The nav needs aria-label="Main" to match page one.', 'Wrap the links in a <ul> with one <li> each.']::text[],
-       40, 2,
-       (select id from public.skills where slug = 'maintainability'), false
-from public.lessons l where l.slug = 'file-organisation-and-patterns'
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
-  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
-  reference_solution = excluded.reference_solution, hints = excluded.hints,
-  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
-  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'element_present'::public.requirement_kind, 'header', NULL,
-       NULL, NULL, NULL, NULL,
-       'The wrapper is a header landmark', NULL, 1, true
-from public.exercises e where e.slug = 'patterns-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'attribute_value'::public.requirement_kind, 'nav', 'aria-label',
-       'Main', NULL, NULL, NULL,
-       'The nav is labelled "Main"', NULL, 1, true
-from public.exercises e where e.slug = 'patterns-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'element_count'::public.requirement_kind, 'nav li a', NULL,
-       NULL, NULL, 3, 3,
-       'Three links, each in a list item', NULL, 1, true
-from public.exercises e where e.slug = 'patterns-guided';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'element_count'::public.requirement_kind, 'div', NULL,
-       NULL, NULL, 0, 0,
-       'The generic div has been replaced', NULL, 1, true
-from public.exercises e where e.slug = 'patterns-guided';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'file-organisation-and-patterns'), NULL, 'q-case-sensitivity', 1, 'single'::public.question_kind,
-        'Why use lowercase filenames?', 'Linux servers are case-sensitive while many development machines are not, so mixed case works locally and 404s in production.', (select id from public.skills where slug = 'multi-page'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Lowercase files load faster', false, NULL
-from public.quiz_questions where slug = 'q-case-sensitivity';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'HTML requires it', false, NULL
-from public.quiz_questions where slug = 'q-case-sensitivity';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Many servers are case-sensitive even when your computer is not', true, NULL
-from public.quiz_questions where slug = 'q-case-sensitivity';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Uppercase letters are invalid in URLs', false, NULL
-from public.quiz_questions where slug = 'q-case-sensitivity';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'file-organisation-and-patterns'), NULL, 'q-comments-value', 2, 'single'::public.question_kind,
-        'Which comment is worth writing?', 'Comments should record decisions and mark boundaries, not restate what the markup already says.', (select id from public.skills where slug = 'maintainability'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, '<!-- Site header — keep identical across all pages -->', true, NULL
-from public.quiz_questions where slug = 'q-comments-value';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, '<!-- paragraph -->', false, NULL
-from public.quiz_questions where slug = 'q-comments-value';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, '<!-- div -->', false, NULL
-from public.quiz_questions where slug = 'q-comments-value';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, '<!-- closing tag below -->', false, NULL
-from public.quiz_questions where slug = 'q-comments-value';
--- lesson: Milestone: rebuild an unstructured page
-insert into public.lessons
-  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'semantic-rebuild-milestone', 2, 'Milestone: rebuild an unstructured page', 'Take div soup and turn it into professional markup', 'A real page, written badly. Your job is to rebuild it properly without changing a word of the content.',
-       ARRAY['Convert a non-semantic page into a landmark-based structure', 'Fix the heading hierarchy at the same time', 'Justify every element choice you make']::text[], 30, 40, (select id from public.skills where slug = 'semantic-html'), 0.8
-from public.modules m where m.slug = 'organising-a-project'
-on conflict (slug) do update set
-  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
-  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
-  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
-  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
-       NULL, NULL, NULL, '{"items":["Rebuild a div-based page using correct landmarks","Repair the heading hierarchy","Produce markup you would be happy to hand to a colleague"]}'::jsonb
-from public.lessons where slug = 'semantic-rebuild-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'prose'::public.block_type, NULL, 'The page in the exercise below is the kind you meet constantly in real work: it looks acceptable, and the markup underneath says nothing at all. Rebuilding it is the single most useful exercise in this level.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'semantic-rebuild-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'checklist'::public.block_type, 'Your rebuild must have', NULL,
-       NULL, NULL, NULL, '{"items":["A `<header>` containing the site name and the main `<nav>`","Exactly one `<main>`, with an `id` a skip link can target","The self-contained items as `<article>` elements","The tangential block as an `<aside>` with an accessible name","A `<footer>` outside `<main>`","A correct heading hierarchy: one `<h1>`, no skipped levels","No `<div>` where a semantic element fits"]}'::jsonb
-from public.lessons where slug = 'semantic-rebuild-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'callout'::public.block_type, 'Work outside in', 'Identify the landmarks first — header, main, footer. Then work down through what is inside each one. Trying to fix the innermost elements before the outer structure is settled means doing the work twice.',
-       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
-from public.lessons where slug = 'semantic-rebuild-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'comparison'::public.block_type, 'The same region, before and after a rebuild', NULL,
-       NULL, NULL, NULL, '{"good":{"label":"After — semantic","code":"<article>\n  <h2>The valley route</h2>\n  <p>Twenty-four miles, mostly flat.</p>\n</article>","why":"A screen reader announces an article with a heading. Search engines can identify the item. The class names are gone because the elements now carry the meaning."},"bad":{"label":"Before — div soup","code":"<div class=\"card\">\n  <div class=\"card-title\">The valley route</div>\n  <p>Twenty-four miles, mostly flat.</p>\n</div>","why":"Identical on screen. No heading in the outline, no landmark to jump to, and the \"card-title\" class means nothing to any software."}}'::jsonb
-from public.lessons where slug = 'semantic-rebuild-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'visual'::public.block_type, NULL, 'The structure you are rebuilding towards.',
-       NULL, NULL, 'semantic-landmarks', '{}'::jsonb
-from public.lessons where slug = 'semantic-rebuild-milestone';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'summary'::public.block_type, 'Lesson summary', NULL,
-       NULL, NULL, NULL, '{"points":["You can now read an unstructured page and see the structure it should have had.","Landmarks first, then content elements, then headings.","This is the skill that most visibly separates professional markup from amateur markup."],"nextUp":"Level 6 next: tables and forms."}'::jsonb
-from public.lessons where slug = 'semantic-rebuild-milestone';
 
 commit;

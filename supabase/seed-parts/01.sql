@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 1 of 9
+-- HTML Hero — course seed, part 1 of 10
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -15,10 +15,10 @@ begin;
 -- GENERATED FILE. Do not edit by hand.
 -- Source: src/content/**  ·  Regenerate: npm run seed:generate
 --
--- 12 levels · 20 modules · 48 lessons
--- 498 content blocks · 91 exercises · 220 questions
+-- 12 levels · 21 modules · 55 lessons
+-- 664 content blocks · 105 exercises · 241 questions
 -- 38 media assets · 22 achievements
--- Estimated learner time: 1907 minutes
+-- Estimated learner time: 2163 minutes
 --
 -- This script is idempotent: running it again updates existing rows in place
 -- rather than duplicating them, so content edits can be re-seeded safely.
@@ -1471,7 +1471,11 @@ select id, 11, 'progressive_detail'::public.block_type, 'What about CSS and Java
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'what-happens-when-you-open-a-page';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 12, 'interactive_demo'::public.block_type, 'The same words, with and without labels', 'This is the whole idea of HTML, in two panels.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Plain text","code":"Fresh bread, every morning\nWe open at 6am and bake until we sell out.","note":"The browser has been told nothing about what these words are, so it runs them together as one undifferentiated block."},{"label":"With labels","code":"<h1>Fresh bread, every morning</h1>\n<p>We open at 6am and bake until we sell out.</p>","note":"Identical words. The labels say what each part *is*, and the browser decides how to show it — larger and bolder for the heading, normal for the paragraph."}]}'::jsonb
+from public.lessons where slug = 'what-happens-when-you-open-a-page';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["A browser fetches a file from a server and draws it on screen.","That file is HTML: ordinary text with labels around parts of it.","The labels say what a piece of content *means*, and the browser decides how to display it.","HTML is not a programming language — it describes, it does not calculate."],"nextUp":"Next: the file itself, and the tool you write it in."}'::jsonb
 from public.lessons where slug = 'what-happens-when-you-open-a-page';
 insert into public.exercises
@@ -1598,66 +1602,79 @@ on conflict (slug) do update set
   estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
   primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'You have seen `<h1>Fresh bread</h1>` already. Which part of that would you call the *element*?',
+       NULL, NULL, NULL, '{"options":["The whole thing: `<h1>Fresh bread</h1>`","Just `<h1>`","Just the words `Fresh bread`","Just `</h1>`"],"answer":"The element is the whole thing — opening tag, content and closing tag together. `<h1>` on its own is a *tag*. The distinction sounds pedantic and is not: nearly every error message you will ever read talks about one or the other, and they mean different things."}'::jsonb
+from public.lessons where slug = 'tags-elements-attributes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
        NULL, NULL, NULL, '{"items":["Explain the difference between a tag and an element","Add an attribute to an element with the correct syntax","Identify void elements, which never have a closing tag"]}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'prose'::public.block_type, NULL, 'Nearly everything in HTML follows one pattern: an opening tag, some content, and a closing tag. Together those three things are called an element.',
+select id, 3, 'prose'::public.block_type, NULL, 'Nearly everything in HTML follows one pattern: an opening tag, some content, and a closing tag. Together those three things are called an element.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'visual'::public.block_type, NULL, 'Every part of an element, labelled.',
+select id, 4, 'visual'::public.block_type, NULL, 'Every part of an element, labelled.',
        NULL, NULL, 'anatomy-of-an-element', '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'term'::public.block_type, 'Tag', 'The bit in angle brackets. `<p>` is an opening tag; `</p>` is a closing tag.',
+select id, 5, 'term'::public.block_type, 'Tag', 'The bit in angle brackets. `<p>` is an opening tag; `</p>` is a closing tag.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'term'::public.block_type, 'Element', 'The opening tag, the content and the closing tag together. `<p>Hello</p>` is one paragraph element.',
+select id, 6, 'term'::public.block_type, 'Element', 'The opening tag, the content and the closing tag together. `<p>Hello</p>` is one paragraph element.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'term'::public.block_type, 'Attribute', 'Extra information written inside the opening tag, as `name="value"`. It tells the browser something the tag alone cannot.',
-       NULL, NULL, NULL, '{"example":"<a href=\"about.html\">About us</a> — here `href` is the attribute name and `about.html` is its value."}'::jsonb
+select id, 7, 'term'::public.block_type, 'Attribute', 'Extra information written inside the opening tag, as `name="value"`. It tells the browser something the tag alone cannot.',
+       NULL, NULL, NULL, '{"example":"<a href=\"about.html\">About us</a> — here href is the attribute name and about.html is its value."}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'annotated_code'::public.block_type, 'Line by line', NULL,
+select id, 8, 'annotated_code'::public.block_type, 'Line by line', NULL,
        '<a href="about.html" title="Learn about our bakery">About us</a>', 'html', NULL, '{"annotations":[{"line":"1","text":"`<a` starts a link element. The letter \"a\" stands for anchor."},{"line":"1","text":"`href=\"about.html\"` is an attribute. `href` means \"hypertext reference\" — where the link goes. Its value sits in quotation marks."},{"line":"1","text":"`title=\"…\"` is a second attribute. Attributes are separated by a single space, and an element can have as many as it needs."},{"line":"1","text":"`>` closes the opening tag. Everything after it is the content."},{"line":"1","text":"`About us` is the content — the words a person actually sees and clicks."},{"line":"1","text":"`</a>` closes the element. The slash is what makes it a closing tag."}]}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'callout'::public.block_type, 'The three mistakes everyone makes at first', 'Forgetting the slash in the closing tag (`<p>` twice instead of `<p>` then `</p>`). Forgetting the quotation marks around an attribute value. Putting a space around the equals sign — write `href="x"`, not `href = "x"`. All three are normal, and the checker in this course names them for you.',
+select id, 9, 'callout'::public.block_type, 'The three mistakes everyone makes at first', 'Forgetting the slash in the closing tag (`<p>` twice instead of `<p>` then `</p>`). Forgetting the quotation marks around an attribute value. Putting a space around the equals sign — write `href="x"`, not `href = "x"`. All three are normal, and the checker in this course names them for you.',
        NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'prose'::public.block_type, NULL, 'A small number of elements have nothing to put between an opening and closing tag, because they are not wrapping anything. These are called void elements, and they are written as a single tag.',
+select id, 10, 'prose'::public.block_type, NULL, 'A small number of elements have nothing to put between an opening and closing tag, because they are not wrapping anything. These are called void elements, and they are written as a single tag.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'code_example'::public.block_type, 'Void elements: one tag, no closing tag', NULL,
+select id, 11, 'code_example'::public.block_type, 'Void elements: one tag, no closing tag', NULL,
        '<br>
 <hr>
 <img src="/learning-media/images/coast-sunrise.jpg" alt="Sunrise over a calm sea">', 'html', NULL, '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'prose'::public.block_type, NULL, 'There are only fifteen void elements in the whole language, and you will meet the useful ones — `<br>`, `<hr>`, `<img>`, `<input>`, `<meta>`, `<link>`, `<source>`, `<track>` — as the course goes on. You never need to memorise the list.',
+select id, 12, 'prose'::public.block_type, NULL, 'There are only fifteen void elements in the whole language, and you will meet the useful ones — `<br>`, `<hr>`, `<img>`, `<input>`, `<meta>`, `<link>`, `<source>`, `<track>` — as the course goes on. You never need to memorise the list.',
        NULL, NULL, NULL, '{}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'interactive_demo'::public.block_type, 'See it change', 'Watch what the same words look like with different labels around them.',
+select id, 13, 'interactive_demo'::public.block_type, 'See it change', 'Watch what the same words look like with different labels around them.',
        NULL, NULL, NULL, '{"variants":[{"label":"As a heading","code":"<h1>Opening hours</h1>","note":"The browser makes it large and bold, and screen readers announce it as a heading."},{"label":"As a paragraph","code":"<p>Opening hours</p>","note":"Normal body text. Correct if it is a sentence, wrong if it is really a heading."},{"label":"As a link","code":"<a href=\"hours.html\">Opening hours</a>","note":"Now it is interactive — it can be clicked, and reached with the Tab key."}]}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'comparison'::public.block_type, 'Attributes: written correctly, and written wrongly', NULL,
+select id, 14, 'comparison'::public.block_type, 'Attributes: written correctly, and written wrongly', NULL,
        NULL, NULL, NULL, '{"good":{"label":"Correct","code":"<a href=\"contact.html\">Contact us</a>","why":"Attribute name, equals sign, value in quotation marks, no stray spaces."},"bad":{"label":"Broken","code":"<a href = contact.html>Contact us</a>","why":"Spaces around the equals sign and no quotation marks. Browsers sometimes forgive this, but it breaks the moment the value contains a space."}}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 14, 'checklist'::public.block_type, 'Before you move on, you can', NULL,
+select id, 15, 'predict_check'::public.block_type, 'Predict, then check', 'Two paragraphs, almost identical. `<br>` is a void element, so the second one closes a tag that was never open. Before you run it: will the browser refuse the second paragraph, or do something else?',
+       '<p>Fresh bread<br>every morning</p>
+<p>Fresh bread</br>every morning</p>', 'html', NULL, '{"outcome":"It does something else. Browsers do not reject broken HTML — they repair it and carry on, so `</br>` is silently treated as `<br>` and both paragraphs look identical. That is why a page can look perfect and still be wrong, and why this course checks your markup rather than trusting how it looks."}'::jsonb
+from public.lessons where slug = 'tags-elements-attributes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 16, 'checklist'::public.block_type, 'Before you move on, you can', NULL,
        NULL, NULL, NULL, '{"items":["Point at a tag and an element and say which is which","Write an attribute with its quotation marks","Name two void elements"]}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
+select id, 17, 'summary'::public.block_type, 'Lesson summary', NULL,
        NULL, NULL, NULL, '{"points":["A tag is one label in angle brackets; an element is the opening tag, content and closing tag together.","Attributes live inside the opening tag and are written `name=\"value\"`.","Void elements such as `<br>`, `<hr>` and `<img>` have no closing tag because they wrap nothing."],"nextUp":"Next: how elements sit inside one another."}'::jsonb
+from public.lessons where slug = 'tags-elements-attributes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 18, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What is the difference between a tag and an element?","Write out the anatomy of a link to `about.html` with the text \"About us\", from memory.","Name two void elements and say what makes them void."],"points":["A tag is one label in angle brackets. An element is the opening tag, the content and the closing tag together.","`<a href=\"about.html\">About us</a>` — element name, attribute as `name=\"value\"` in quotation marks, content, then a closing tag with a slash.","`<br>`, `<hr>`, `<img>`, `<input>`, `<meta>` and `<link>` are all void: they wrap no content, so there is nothing for a closing tag to close."]}'::jsonb
 from public.lessons where slug = 'tags-elements-attributes';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -1872,36 +1889,6 @@ from public.lessons where slug = 'nesting-and-the-document-tree';
 insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
 select id, 2, 'prose'::public.block_type, NULL, 'Elements can contain other elements. When they do, they must be closed in the reverse of the order they were opened — like closing a set of brackets. Think of it as boxes inside boxes: you cannot close the outer box before the inner one.',
        NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'comparison'::public.block_type, 'Nesting: correct and overlapping', NULL,
-       NULL, NULL, NULL, '{"good":{"label":"Correct","code":"<p>Open <strong>every morning</strong> at six.</p>","why":"`<strong>` is opened and closed entirely inside the paragraph."},"bad":{"label":"Overlapping — never valid","code":"<p>Open <strong>every morning</p></strong> at six.","why":"The paragraph is closed while `<strong>` is still open. Browsers guess at a repair, and every browser guesses differently."}}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'visual'::public.block_type, NULL, 'Every HTML page is a tree. One element at the root, branching downwards.',
-       NULL, NULL, 'document-tree', '{}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'term'::public.block_type, 'Nesting', 'Placing one element inside another. The inside element is called a child; the outside one is its parent.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'term'::public.block_type, 'The DOM', 'Document Object Model. It is simply the name for this tree once the browser has built it in memory. When people say "inspect the DOM", they mean "look at the live tree".',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'prose'::public.block_type, NULL, 'Because the structure is a tree, the way you lay out your code should show that tree. Every time you go one level deeper, indent by two spaces. This is not decoration — it is how you spot a missing closing tag with your eyes instead of with a checker.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'nesting-and-the-document-tree';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'annotated_code'::public.block_type, 'Line by line', NULL,
-       '<article>
-  <h2>Sourdough workshop</h2>
-  <p>
-    A three-hour session covering
-    <strong>starter care</strong> and shaping.
-  </p>
-</article>', 'html', NULL, '{"annotations":[{"line":"1","text":"`<article>` opens at the far left — it is the outermost element here."},{"line":"2-5","text":"Its children are indented two spaces, showing they sit inside it."},{"line":"4","text":"The `<strong>` is a child of the paragraph, so it is indented again."},{"line":"6","text":"`</article>` lines up exactly with `<article>`. If the indentation of an opening and closing tag do not line up, something is wrong."}]}'::jsonb
 from public.lessons where slug = 'nesting-and-the-document-tree';
 
 commit;

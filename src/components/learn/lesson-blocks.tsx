@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { InlinePreview } from '@/components/editor/preview';
-import { Badge, Callout } from '@/components/ui';
+import { Badge, Callout, InlineText } from '@/components/ui';
 import { getMedia } from '@/content/media/manifest';
-import { cx } from '@/lib/utils';
+import { cx, inlineFormat } from '@/lib/utils';
 import { CheckIcon, CodeIcon, LightbulbIcon } from '@/components/ui/icons';
 import type { Json, LessonBlockRow } from '@/lib/supabase/database.types';
 
@@ -43,24 +43,6 @@ function str(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
-/**
- * Renders inline markdown-ish emphasis used in lesson prose: `code`, **bold**
- * and *italic*. Deliberately tiny — lesson text is authored in this repository,
- * not by users, and a full markdown parser would be a dependency we do not
- * need. Everything is escaped first, so no authored string can inject markup.
- */
-function inlineFormat(text: string): string {
-  const escaped = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
-  return escaped
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
-}
-
 function Prose({ text }: { text: string }) {
   return (
     <div
@@ -87,7 +69,7 @@ function ObjectivesBlock({ block }: { block: LessonBlockRow }) {
       className="rounded-[var(--radius-card)] border border-[hsl(var(--accent-border))] bg-[hsl(var(--accent-soft))] p-5"
     >
       <h2 id={`objectives-${block.id}`} className="text-sm font-bold uppercase tracking-wide text-accent">
-        {block.title ?? 'What you will be able to do'}
+        <InlineText text={block.title ?? 'What you will be able to do'} />
       </h2>
       <ul className="mt-3 space-y-2">
         {items.map((item) => (
@@ -95,7 +77,9 @@ function ObjectivesBlock({ block }: { block: LessonBlockRow }) {
             <span className="mt-1 shrink-0 text-accent" aria-hidden="true">
               <CheckIcon size={15} />
             </span>
-            <span>{item}</span>
+            <span>
+              <InlineText text={item} />
+            </span>
           </li>
         ))}
       </ul>
@@ -137,7 +121,9 @@ function VisualBlock({ block }: { block: LessonBlockRow }) {
         className="w-full rounded-[var(--radius-card)] border border-app bg-white"
       />
       {block.body ? (
-        <figcaption className="mt-2 text-sm text-muted">{block.body}</figcaption>
+        <figcaption className="mt-2 text-sm text-muted">
+          <InlineText text={block.body} />
+        </figcaption>
       ) : null}
     </figure>
   );
@@ -152,7 +138,7 @@ function CodeBlock({ block }: { block: LessonBlockRow }) {
       <div className="flex items-center justify-between gap-3 rounded-t-[var(--radius-card)] border border-b-0 border-app bg-[hsl(var(--bg-subtle))] px-4 py-2">
         <p className="flex items-center gap-1.5 text-xs font-semibold text-muted">
           <CodeIcon size={14} />
-          {block.title ?? 'Example'}
+          <InlineText text={block.title ?? 'Example'} />
         </p>
         {canPreview ? (
           <button
@@ -191,7 +177,7 @@ function AnnotatedCodeBlock({ block }: { block: LessonBlockRow }) {
   return (
     <div className="rounded-[var(--radius-card)] border border-app overflow-hidden">
       <p className="border-b border-app bg-[hsl(var(--bg-subtle))] px-4 py-2 text-xs font-semibold text-muted">
-        {block.title ?? 'Line by line'}
+        <InlineText text={block.title ?? 'Line by line'} />
       </p>
       <pre className="overflow-x-auto bg-surface p-4 text-sm">
         <code>{block.code}</code>
@@ -224,7 +210,11 @@ function ComparisonBlock({ block }: { block: LessonBlockRow }) {
 
   return (
     <div>
-      {block.title ? <h3 className="mb-3 font-semibold text-ink">{block.title}</h3> : null}
+      {block.title ? (
+        <h3 className="mb-3 font-semibold text-ink">
+          <InlineText text={block.title} />
+        </h3>
+      ) : null}
       <div className="grid gap-3 md:grid-cols-2">
         {panels.map(({ data, tone }) => (
           <div
@@ -250,7 +240,7 @@ function ComparisonBlock({ block }: { block: LessonBlockRow }) {
               <code>{str(data.code)}</code>
             </pre>
             <p className="border-t border-app bg-[hsl(var(--bg-subtle))] px-3 py-2 text-sm text-muted">
-              {str(data.why)}
+              <InlineText text={str(data.why)} />
             </p>
           </div>
         ))}
@@ -273,8 +263,14 @@ function InteractiveDemoBlock({ block }: { block: LessonBlockRow }) {
   return (
     <section className="rounded-[var(--radius-card)] border border-app overflow-hidden">
       <div className="border-b border-app bg-[hsl(var(--bg-subtle))] px-4 py-3">
-        <h3 className="font-semibold text-ink">{block.title ?? 'Try it'}</h3>
-        {block.body ? <p className="mt-0.5 text-sm text-muted">{block.body}</p> : null}
+        <h3 className="font-semibold text-ink">
+          <InlineText text={block.title ?? 'Try it'} />
+        </h3>
+        {block.body ? (
+          <p className="mt-0.5 text-sm text-muted">
+            <InlineText text={block.body} />
+          </p>
+        ) : null}
       </div>
 
       <div role="tablist" aria-label={block.title ?? 'Demonstration options'} className="flex flex-wrap gap-1 border-b border-app p-2">
@@ -307,7 +303,7 @@ function InteractiveDemoBlock({ block }: { block: LessonBlockRow }) {
       </div>
 
       <p className="border-t border-app bg-[hsl(var(--bg-subtle))] px-4 py-2.5 text-sm text-muted">
-        {current.note}
+        <InlineText text={current.note} />
       </p>
     </section>
   );
@@ -319,8 +315,14 @@ function MediaExampleBlock({ block }: { block: LessonBlockRow }) {
   return (
     <section className="rounded-[var(--radius-card)] border border-app overflow-hidden">
       <div className="border-b border-app bg-[hsl(var(--bg-subtle))] px-4 py-3">
-        <h3 className="font-semibold text-ink">{block.title}</h3>
-        {block.body ? <p className="mt-0.5 text-sm text-muted">{block.body}</p> : null}
+        <h3 className="font-semibold text-ink">
+          <InlineText text={block.title ?? ''} />
+        </h3>
+        {block.body ? (
+          <p className="mt-0.5 text-sm text-muted">
+            <InlineText text={block.body} />
+          </p>
+        ) : null}
       </div>
 
       {asset ? (
@@ -390,7 +392,7 @@ function ProgressiveDetailBlock({ block }: { block: LessonBlockRow }) {
   return (
     <details className="rounded-[var(--radius-card)] border border-app bg-[hsl(var(--bg-subtle))] px-4 py-3">
       <summary className="cursor-pointer font-semibold text-ink">
-        {block.title ?? 'More detail'}
+        <InlineText text={block.title ?? 'More detail'} />
       </summary>
       <div className="mt-3 text-sm">
         {block.body ? <Prose text={block.body} /> : null}
@@ -408,14 +410,18 @@ function ChecklistBlock({ block }: { block: LessonBlockRow }) {
   const items = readArray(block.data, 'items').map(str).filter(Boolean);
   return (
     <section className="rounded-[var(--radius-card)] border border-app bg-surface p-5">
-      <h3 className="font-semibold text-ink">{block.title ?? 'Checklist'}</h3>
+      <h3 className="font-semibold text-ink">
+        <InlineText text={block.title ?? 'Checklist'} />
+      </h3>
       <ul className="mt-3 space-y-2">
         {items.map((item) => (
           <li key={item} className="flex gap-2.5 text-sm">
             <span className="mt-0.5 shrink-0 text-[hsl(var(--success))]" aria-hidden="true">
               <CheckIcon size={15} />
             </span>
-            <span className="text-ink">{item}</span>
+            <span className="text-ink">
+              <InlineText text={item} />
+            </span>
           </li>
         ))}
       </ul>
@@ -434,15 +440,432 @@ function SummaryBlock({ block }: { block: LessonBlockRow }) {
     >
       <h2 id={`summary-${block.id}`} className="flex items-center gap-2 font-semibold text-ink">
         <LightbulbIcon size={17} className="text-[hsl(var(--warning))]" />
-        {block.title ?? 'Lesson summary'}
+        <InlineText text={block.title ?? 'Lesson summary'} />
       </h2>
       <ul className="mt-3 space-y-1.5 pl-5 list-disc text-ink">
         {points.map((point) => (
-          <li key={point}>{point}</li>
+          <li key={point}>
+            <InlineText text={point} />
+          </li>
         ))}
       </ul>
       {nextUp ? (
-        <p className="mt-4 border-t border-app pt-3 text-sm text-muted">{nextUp}</p>
+        <p className="mt-4 border-t border-app pt-3 text-sm text-muted">
+          <InlineText text={nextUp} />
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+// --- Retrieval-practice blocks ---------------------------------------------
+//
+// Six block types that share one rule: nothing is revealed until the learner
+// has committed to an attempt. The reveal is always a deliberate action, never
+// a hover, an auto-expand or a `<details>` a reader's eye can slide past —
+// because an answer glimpsed before the attempt turns retrieval practice back
+// into reading, which is the thing it exists to replace.
+
+/** The shared "you have attempted it, here is the answer" panel. */
+function Revealed({
+  id,
+  tone,
+  title,
+  children,
+}: {
+  id: string;
+  tone: 'accent' | 'success';
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      id={id}
+      className={cx(
+        'mt-4 rounded-lg border p-3.5',
+        tone === 'success'
+          ? 'border-[hsl(var(--success)/0.35)] bg-[hsl(var(--success-soft))]'
+          : 'border-[hsl(var(--accent-border))] bg-[hsl(var(--accent-soft))]',
+      )}
+    >
+      <p className="text-xs font-bold uppercase tracking-wide text-accent">{title}</p>
+      <div className="mt-2 text-sm text-ink">{children}</div>
+    </div>
+  );
+}
+
+/** The frame every retrieval block sits in, so they read as one family. */
+function RetrievalFrame({
+  block,
+  eyebrow,
+  children,
+}: {
+  block: LessonBlockRow;
+  eyebrow: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      aria-labelledby={`retrieval-${block.id}`}
+      className="rounded-[var(--radius-card)] border border-[hsl(var(--accent-border))] bg-surface p-5"
+    >
+      <p className="text-xs font-bold uppercase tracking-wide text-accent">{eyebrow}</p>
+      <h3 id={`retrieval-${block.id}`} className="mt-1 font-semibold text-ink">
+        <InlineText text={block.title ?? ''} />
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+/**
+ * A written-answer block: a prompt, a box to write in, and a reveal.
+ *
+ * The learner's writing is deliberately not saved or graded. Nobody can mark
+ * free recall automatically, and pretending to would be worse than not trying:
+ * the value is entirely in the act of retrieving, and the points below are how
+ * the learner marks themselves.
+ */
+function WrittenAnswerBlock({
+  block,
+  eyebrow,
+  placeholder,
+  revealLabel,
+  revealTitle,
+  prompts,
+  reveal,
+}: {
+  block: LessonBlockRow;
+  eyebrow: string;
+  placeholder: string;
+  revealLabel: string;
+  revealTitle: string;
+  prompts: string[];
+  reveal: React.ReactNode;
+}) {
+  const [revealed, setRevealed] = useState(false);
+  const fieldId = `written-${block.id}`;
+  const panelId = `written-panel-${block.id}`;
+
+  return (
+    <RetrievalFrame block={block} eyebrow={eyebrow}>
+      {block.body ? (
+        <div className="mt-2 text-sm">
+          <Prose text={block.body} />
+        </div>
+      ) : null}
+
+      {prompts.length > 0 ? (
+        <ul className="mt-3 space-y-1.5 pl-5 list-disc text-sm text-ink">
+          {prompts.map((prompt) => (
+            <li key={prompt}>
+              <InlineText text={prompt} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <label htmlFor={fieldId} className="mt-4 block text-sm font-medium text-ink">
+        Your answer — write it before you look
+      </label>
+      <textarea
+        id={fieldId}
+        rows={4}
+        placeholder={placeholder}
+        className="mt-1.5 w-full rounded-lg border border-app bg-app p-3 text-sm text-ink placeholder:text-faint focus:border-accent focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent)/0.35)]"
+      />
+      <p className="mt-1 text-xs text-faint">
+        Nothing here is saved or marked. Writing it is what does the work.
+      </p>
+
+      {!revealed ? (
+        <button
+          type="button"
+          onClick={() => setRevealed(true)}
+          aria-expanded={false}
+          aria-controls={panelId}
+          className="mt-3 rounded-lg border border-accent px-3.5 py-2 text-sm font-semibold text-accent transition-colors hover:bg-[hsl(var(--accent-soft))] min-h-[2.5rem]"
+        >
+          {revealLabel}
+        </button>
+      ) : (
+        <Revealed id={panelId} tone="accent" title={revealTitle}>
+          {reveal}
+        </Revealed>
+      )}
+    </RetrievalFrame>
+  );
+}
+
+function PretestBlock({ block }: { block: LessonBlockRow }) {
+  const options = readArray(block.data, 'options').map(str).filter(Boolean);
+  const answer = readString(block.data, 'answer') ?? '';
+  const [chosen, setChosen] = useState<string | null>(null);
+  const [committed, setCommitted] = useState(false);
+  const panelId = `pretest-panel-${block.id}`;
+
+  return (
+    <RetrievalFrame block={block} eyebrow="Before we teach it">
+      {block.body ? (
+        <div className="mt-2 text-sm">
+          <Prose text={block.body} />
+        </div>
+      ) : null}
+
+      <fieldset className="mt-3" disabled={committed}>
+        <legend className="sr-only">Choose your guess</legend>
+        <ul className="space-y-2">
+          {options.map((option) => (
+            <li key={option}>
+              <label
+                className={cx(
+                  'flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm transition-colors',
+                  chosen === option
+                    ? 'border-[hsl(var(--accent))] bg-[hsl(var(--accent-soft))]'
+                    : 'border-app hover:border-strong',
+                  committed && 'cursor-default',
+                )}
+              >
+                <input
+                  type="radio"
+                  name={`pretest-${block.id}`}
+                  value={option}
+                  checked={chosen === option}
+                  onChange={() => setChosen(option)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-[hsl(var(--accent))]"
+                />
+                <span className="text-ink">
+                  <InlineText text={option} />
+                </span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      </fieldset>
+
+      {!committed ? (
+        <>
+          <button
+            type="button"
+            onClick={() => setCommitted(true)}
+            disabled={chosen === null}
+            aria-controls={panelId}
+            className="mt-3 rounded-lg border border-accent px-3.5 py-2 text-sm font-semibold text-accent transition-colors hover:bg-[hsl(var(--accent-soft))] disabled:cursor-not-allowed disabled:opacity-50 min-h-[2.5rem]"
+          >
+            Lock in my guess
+          </button>
+          <p className="mt-1.5 text-xs text-faint">
+            Being wrong here is useful, and expected — you have not been taught this yet. Guessing
+            first is what makes the explanation stick.
+          </p>
+        </>
+      ) : (
+        <Revealed id={panelId} tone="accent" title="What is actually the case">
+          <Prose text={answer} />
+        </Revealed>
+      )}
+    </RetrievalFrame>
+  );
+}
+
+function RecallBlock({ block }: { block: LessonBlockRow }) {
+  const points = readArray(block.data, 'points').map(str).filter(Boolean);
+
+  return (
+    <WrittenAnswerBlock
+      block={block}
+      eyebrow="From memory"
+      placeholder="Everything you can remember, in any order…"
+      revealLabel="Show what a good answer covers"
+      revealTitle="Check yours against these"
+      prompts={[]}
+      reveal={
+        <ul className="space-y-1.5 pl-5 list-disc">
+          {points.map((point) => (
+            <li key={point}>
+              <InlineText text={point} />
+            </li>
+          ))}
+        </ul>
+      }
+    />
+  );
+}
+
+function SelfExplainBlock({ block }: { block: LessonBlockRow }) {
+  const modelAnswer = readString(block.data, 'modelAnswer') ?? '';
+
+  return (
+    <WrittenAnswerBlock
+      block={block}
+      eyebrow="Explain it"
+      placeholder="In your own words, as if explaining to someone else…"
+      revealLabel="Compare with one way of putting it"
+      revealTitle="One way of putting it"
+      prompts={[]}
+      reveal={
+        <>
+          <Prose text={modelAnswer} />
+          <p className="mt-2 text-xs text-muted">
+            Yours does not need to match this. If it covers the same ground in different words, you
+            understand it.
+          </p>
+        </>
+      }
+    />
+  );
+}
+
+function ActiveRecapBlock({ block }: { block: LessonBlockRow }) {
+  const prompts = readArray(block.data, 'prompts').map(str).filter(Boolean);
+  const points = readArray(block.data, 'points').map(str).filter(Boolean);
+
+  return (
+    <WrittenAnswerBlock
+      block={block}
+      eyebrow="Close the book"
+      placeholder="Answer from memory — no scrolling back up…"
+      revealLabel="Show the answers"
+      revealTitle="What the lesson covered"
+      prompts={prompts}
+      reveal={
+        <ul className="space-y-1.5 pl-5 list-disc">
+          {points.map((point) => (
+            <li key={point}>
+              <InlineText text={point} />
+            </li>
+          ))}
+        </ul>
+      }
+    />
+  );
+}
+
+function PredictCheckBlock({ block }: { block: LessonBlockRow }) {
+  const outcome = readString(block.data, 'outcome') ?? '';
+  const [revealed, setRevealed] = useState(false);
+  const fieldId = `predict-${block.id}`;
+  const panelId = `predict-panel-${block.id}`;
+
+  return (
+    <RetrievalFrame block={block} eyebrow="Predict, then check">
+      {block.body ? (
+        <div className="mt-2 text-sm">
+          <Prose text={block.body} />
+        </div>
+      ) : null}
+
+      <pre className="mt-3 overflow-x-auto rounded-lg border border-app bg-[hsl(var(--bg-subtle))] p-3 text-xs">
+        <code>{block.code}</code>
+      </pre>
+
+      <label htmlFor={fieldId} className="mt-4 block text-sm font-medium text-ink">
+        What will the browser do?
+      </label>
+      <textarea
+        id={fieldId}
+        rows={3}
+        placeholder="Say what you expect to see before you run it…"
+        className="mt-1.5 w-full rounded-lg border border-app bg-app p-3 text-sm text-ink placeholder:text-faint focus:border-accent focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent)/0.35)]"
+      />
+
+      {!revealed ? (
+        <button
+          type="button"
+          onClick={() => setRevealed(true)}
+          aria-controls={panelId}
+          className="mt-3 rounded-lg border border-accent px-3.5 py-2 text-sm font-semibold text-accent transition-colors hover:bg-[hsl(var(--accent-soft))] min-h-[2.5rem]"
+        >
+          Run it and see
+        </button>
+      ) : (
+        <Revealed id={panelId} tone="accent" title="What actually happens">
+          <Prose text={outcome} />
+          {block.code ? (
+            <div className="mt-3">
+              <InlinePreview code={block.code} label={`Result of ${block.title ?? 'the example'}`} height={180} />
+            </div>
+          ) : null}
+          <p className="mt-2 text-xs text-muted">
+            If that surprised you, the gap between what you expected and what happened is the most
+            useful thing on this page.
+          </p>
+        </Revealed>
+      )}
+    </RetrievalFrame>
+  );
+}
+
+/**
+ * A worked example, revealed a step at a time.
+ *
+ * Showing every step at once turns it into a finished solution to skim, which
+ * is the format a beginner learns least from — the reasoning is what they
+ * cannot yet supply, and it is exactly what gets skipped. Revealing stepwise
+ * keeps a prediction live at every stage.
+ */
+function WorkedExampleBlock({ block }: { block: LessonBlockRow }) {
+  const steps = readArray(block.data, 'steps').flatMap((entry) => {
+    if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) return [];
+    const record = entry as Record<string, unknown>;
+    return [{ title: str(record.title), code: str(record.code), reasoning: str(record.reasoning) }];
+  });
+
+  const [shown, setShown] = useState(1);
+  const visible = steps.slice(0, shown);
+  const remaining = steps.length - shown;
+
+  if (steps.length === 0) return null;
+
+  return (
+    <section
+      aria-labelledby={`worked-${block.id}`}
+      className="rounded-[var(--radius-card)] border border-app overflow-hidden"
+    >
+      <div className="border-b border-app bg-[hsl(var(--bg-subtle))] px-4 py-3">
+        <p className="text-xs font-bold uppercase tracking-wide text-accent">Worked example</p>
+        <h3 id={`worked-${block.id}`} className="mt-1 font-semibold text-ink">
+          <InlineText text={block.title ?? ''} />
+        </h3>
+        {block.body ? (
+          <p className="mt-0.5 text-sm text-muted">
+            <InlineText text={block.body} />
+          </p>
+        ) : null}
+      </div>
+
+      <ol className="divide-y divide-[hsl(var(--border))]">
+        {visible.map((step, index) => (
+          <li key={step.title} className="px-4 py-3.5">
+            <p className="text-sm font-semibold text-ink">
+              <span className="text-muted">Step {index + 1}. </span>
+              <InlineText text={step.title} />
+            </p>
+            {step.code ? (
+              <pre className="mt-2 overflow-x-auto rounded-lg border border-app bg-surface p-3 text-xs">
+                <code>{step.code}</code>
+              </pre>
+            ) : null}
+            <div className="mt-2 text-sm text-muted">
+              <Prose text={step.reasoning} />
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      {remaining > 0 ? (
+        <div className="border-t border-app bg-[hsl(var(--bg-subtle))] px-4 py-3">
+          <p className="text-sm text-muted">
+            Before you look: what would you do next?
+          </p>
+          <button
+            type="button"
+            onClick={() => setShown((n) => n + 1)}
+            className="mt-2 rounded-lg border border-accent px-3.5 py-2 text-sm font-semibold text-accent transition-colors hover:bg-[hsl(var(--accent-soft))] min-h-[2.5rem]"
+          >
+            Show the next step ({remaining} left)
+          </button>
+        </div>
       ) : null}
     </section>
   );
@@ -489,6 +912,18 @@ export function LessonBlock({ block }: { block: LessonBlockRow }) {
       return <ChecklistBlock block={block} />;
     case 'summary':
       return <SummaryBlock block={block} />;
+    case 'pretest':
+      return <PretestBlock block={block} />;
+    case 'recall':
+      return <RecallBlock block={block} />;
+    case 'predict_check':
+      return <PredictCheckBlock block={block} />;
+    case 'self_explain':
+      return <SelfExplainBlock block={block} />;
+    case 'worked_example':
+      return <WorkedExampleBlock block={block} />;
+    case 'recap':
+      return <ActiveRecapBlock block={block} />;
     default:
       return null;
   }

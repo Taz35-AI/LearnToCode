@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { Quiz, type QuizQuestionView } from '@/components/learn/quiz';
 import { LessonBlock } from '@/components/learn/lesson-blocks';
 import { Badge, Button, Callout, EmptyState, ErrorState, Field, ProgressBar, Stat } from '@/components/ui';
+import { inlineFormat } from '@/lib/utils';
 import type { LessonBlockRow } from '@/lib/supabase/database.types';
 import type { ActionResult } from '@/lib/actions/schemas';
 import type { QuizOutcome } from '@/lib/actions/progress';
@@ -102,6 +103,93 @@ describe('UI primitives', () => {
   });
 });
 
+/**
+ * Authored inline emphasis.
+ *
+ * The curriculum uses backticks for code in roughly 450 places — question
+ * prompts, answer explanations, exercise briefs, summary points, checklists.
+ * Any render site that prints one of those as a bare string shows the learner
+ * literal backticks, and the failure is invisible in code review because the
+ * markup looks perfectly reasonable. These tests pin the formatter and the
+ * places it has to be applied.
+ */
+describe('inline formatting of authored text', () => {
+  it('renders code, bold and italic', () => {
+    expect(inlineFormat('Use `<title>` here')).toBe('Use <code>&lt;title&gt;</code> here');
+    expect(inlineFormat('This is **important**')).toBe('This is <strong>important</strong>');
+    expect(inlineFormat('This is *stressed*')).toBe('This is <em>stressed</em>');
+  });
+
+  it('escapes the input before adding any markup back', () => {
+    // Course content is full of literal tags. They must become text, never
+    // elements — otherwise a lesson about <script> would be a security bug.
+    expect(inlineFormat('<script>alert(1)</script>')).toBe(
+      '&lt;script&gt;alert(1)&lt;/script&gt;',
+    );
+    expect(inlineFormat('A & B')).toBe('A &amp; B');
+  });
+
+  it('leaves text with no emphasis untouched', () => {
+    expect(inlineFormat('Just a plain sentence.')).toBe('Just a plain sentence.');
+  });
+
+  it('renders emphasis in a quiz prompt, its options and its explanation', async () => {
+    const user = userEvent.setup();
+    const backticked: QuizQuestionView[] = [
+      {
+        id: 'q9',
+        prompt: 'In `<p>Hello</p>`, which part is the element?',
+        kind: 'single',
+        xpAward: 10,
+        options: [
+          { id: 'a', label: 'The whole of `<p>Hello</p>`' },
+          { id: 'b', label: 'Just `<p>`' },
+        ],
+      },
+    ];
+    const onAnswer = vi.fn(
+      async (): Promise<ActionResult<QuizOutcome>> => ({
+        ok: true,
+        data: {
+          isCorrect: true,
+          correctOptionIds: ['a'],
+          explanation: 'An element is the opening tag, the content and `</p>` together.',
+          xpAwarded: 10,
+        },
+      }),
+    );
+
+    render(<Quiz questions={backticked} previousAnswers={{}} onAnswer={onAnswer} />);
+
+    expect(screen.queryByText(/`/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'The whole of <p>Hello</p>' }));
+    await user.click(screen.getByRole('radio', { name: 'Certain' }));
+    await user.click(screen.getByRole('button', { name: 'Check answer' }));
+
+    await screen.findByText(/An element is the opening tag/);
+    expect(screen.queryByText(/`/)).not.toBeInTheDocument();
+  });
+
+  it('renders emphasis in summary points and checklist items', () => {
+    render(
+      <LessonBlock
+        block={block({
+          block_type: 'summary',
+          title: 'Lesson summary',
+          data: {
+            points: ['Void elements such as `<br>` have no closing tag.'],
+            nextUp: 'Next: how `<div>` differs.',
+          },
+        })}
+      />,
+    );
+    expect(screen.queryByText(/`/)).not.toBeInTheDocument();
+    expect(screen.getByText('<br>').tagName).toBe('CODE');
+    expect(screen.getByText('<div>').tagName).toBe('CODE');
+  });
+});
+
 describe('lesson blocks', () => {
   it('renders objectives as a list under a heading', () => {
     render(
@@ -181,9 +269,13 @@ describe('lesson blocks', () => {
         block={block({ block_type: 'progressive_detail', title: 'More detail', body: 'The deeper explanation.' })}
       />,
     );
+    // The title sits inside the <summary> rather than being its only child,
+    // because authored titles are run through the inline formatter. What
+    // matters is the nesting — a <summary> inside a <details> is what makes it
+    // a keyboard-operable disclosure — not which element holds the text.
     const disclosure = screen.getByText('More detail');
     expect(disclosure.closest('details')).toBeInTheDocument();
-    expect(disclosure.tagName.toLowerCase()).toBe('summary');
+    expect(disclosure.closest('summary')).toBeInTheDocument();
   });
 
   it('renders an interactive demo as a tab list', async () => {
@@ -250,6 +342,179 @@ describe('lesson blocks', () => {
   });
 });
 
+/**
+ * The retrieval-practice blocks.
+ *
+ * One property matters more than any other and is asserted for every one of
+ * them: the answer is not in the document until the learner has committed to an
+ * attempt. A block that renders its answer alongside its question is not
+ * retrieval practice, it is a paragraph — and the failure would be invisible,
+ * because it would look exactly right.
+ */
+describe('retrieval-practice blocks', () => {
+  it('withholds the pretest answer until a guess is locked in', async () => {
+    const user = userEvent.setup();
+    render(
+      <LessonBlock
+        block={block({
+          block_type: 'pretest',
+          title: 'Before we start — have a guess',
+          body: 'Which part is the element?',
+          data: {
+            options: ['The whole thing', 'Just the opening tag'],
+            answer: 'The element is the whole thing.',
+          },
+        })}
+      />,
+    );
+
+    expect(screen.queryByText(/The element is the whole thing/)).not.toBeInTheDocument();
+
+    const commit = screen.getByRole('button', { name: 'Lock in my guess' });
+    expect(commit).toBeDisabled();
+
+    await user.click(screen.getByRole('radio', { name: 'The whole thing' }));
+    await user.click(commit);
+
+    expect(screen.getByText(/The element is the whole thing/)).toBeInTheDocument();
+  });
+
+  it('formats inline code in options and lists rather than showing backticks', async () => {
+    const user = userEvent.setup();
+    render(
+      <LessonBlock
+        block={block({
+          block_type: 'pretest',
+          title: 'Have a guess',
+          body: 'Which part is the element?',
+          data: {
+            options: ['The whole of `<h1>Hi</h1>`', 'Just `<h1>`'],
+            answer: 'The whole thing.',
+          },
+        })}
+      />,
+    );
+
+    // Authored content uses backticks for code throughout. Rendering a list
+    // item or a radio label as plain text shows them literally, which is what
+    // this caught in the real application.
+    expect(screen.queryByText(/`/)).not.toBeInTheDocument();
+    const option = screen.getByText('<h1>Hi</h1>');
+    expect(option.tagName).toBe('CODE');
+
+    // And the accessible name is still the readable text, without backticks.
+    await user.click(screen.getByRole('radio', { name: 'The whole of <h1>Hi</h1>' }));
+    expect(screen.getByRole('button', { name: 'Lock in my guess' })).toBeEnabled();
+  });
+
+  it('withholds the recall points until the learner has written an answer', async () => {
+    const user = userEvent.setup();
+    render(
+      <LessonBlock
+        block={block({
+          block_type: 'recall',
+          title: 'From memory',
+          body: 'List everything you remember about void elements.',
+          data: { points: ['They wrap no content', 'They have no closing tag'] },
+        })}
+      />,
+    );
+
+    expect(screen.queryByText('They wrap no content')).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Show what a good answer covers/ }));
+    expect(screen.getByText('They wrap no content')).toBeInTheDocument();
+  });
+
+  it('withholds what happens until the prediction is made', async () => {
+    const user = userEvent.setup();
+    render(
+      <LessonBlock
+        block={block({
+          block_type: 'predict_check',
+          title: 'Predict, then check',
+          body: 'What will the browser do?',
+          code: '<p>One</p>',
+          data: { outcome: 'The browser repairs it silently.' },
+        })}
+      />,
+    );
+
+    expect(screen.queryByText(/repairs it silently/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Run it and see' }));
+    expect(screen.getByText(/repairs it silently/)).toBeInTheDocument();
+  });
+
+  it('withholds the model explanation until the learner has written theirs', async () => {
+    const user = userEvent.setup();
+    render(
+      <LessonBlock
+        block={block({
+          block_type: 'self_explain',
+          title: 'Explain it in your own words',
+          body: 'Why do semantic elements matter if the page looks the same?',
+          data: { modelAnswer: 'Looking identical is exactly the point.' },
+        })}
+      />,
+    );
+
+    expect(screen.queryByText(/Looking identical is exactly the point/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Compare with one way of putting it/ }));
+    expect(screen.getByText(/Looking identical is exactly the point/)).toBeInTheDocument();
+  });
+
+  it('reveals a worked example one step at a time', async () => {
+    const user = userEvent.setup();
+    render(
+      <LessonBlock
+        block={block({
+          block_type: 'worked_example',
+          title: 'Working out one path',
+          body: 'Four steps, every time.',
+          data: {
+            steps: [
+              { title: 'Say where you are', code: 'projects/first.html', reasoning: 'Measured from there.' },
+              { title: 'Say where the file is', code: 'images/logo.svg', reasoning: 'Siblings, not nested.' },
+            ],
+          },
+        })}
+      />,
+    );
+
+    // Showing every step at once turns a worked example into a finished
+    // solution to skim, and the reasoning is what gets skipped.
+    expect(screen.getByText('Say where you are')).toBeInTheDocument();
+    expect(screen.queryByText('Say where the file is')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Show the next step/ }));
+    expect(screen.getByText('Say where the file is')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Show the next step/ })).not.toBeInTheDocument();
+  });
+
+  it('withholds the closing recap answers until the learner has attempted them', async () => {
+    const user = userEvent.setup();
+    render(
+      <LessonBlock
+        block={block({
+          block_type: 'recap',
+          title: 'Close the book',
+          data: {
+            prompts: ['What is the difference between a tag and an element?'],
+            points: ['A tag is one label in angle brackets.'],
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByText(/difference between a tag and an element/)).toBeInTheDocument();
+    expect(screen.queryByText(/one label in angle brackets/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Show the answers' }));
+    expect(screen.getByText(/one label in angle brackets/)).toBeInTheDocument();
+  });
+});
+
 describe('quiz', () => {
   const questions: QuizQuestionView[] = [
     {
@@ -277,10 +542,20 @@ describe('quiz', () => {
     render(<Quiz questions={questions} previousAnswers={{}} onAnswer={vi.fn()} />);
     const group = screen.getByRole('group');
     expect(within(group).getByText(/Where does the title element belong/)).toBeInTheDocument();
-    expect(screen.getAllByRole('radio')).toHaveLength(3);
+    for (const option of questions[0]!.options) {
+      expect(screen.getByRole('radio', { name: option.label })).toBeInTheDocument();
+    }
   });
 
-  it('keeps the check button disabled until something is selected', async () => {
+  it('asks for confidence before the answer is checked, not after', () => {
+    render(<Quiz questions={questions} previousAnswers={{}} onAnswer={vi.fn()} />);
+    // Asked afterwards this would be hindsight, which measures nothing — so
+    // the control has to be present while the answer is still unknown.
+    const rating = screen.getByRole('radiogroup', { name: /how sure are you/i });
+    expect(within(rating).getAllByRole('radio')).toHaveLength(4);
+  });
+
+  it('requires both an answer and a confidence rating before checking', async () => {
     const user = userEvent.setup();
     render(<Quiz questions={questions} previousAnswers={{}} onAnswer={vi.fn()} />);
 
@@ -288,6 +563,12 @@ describe('quiz', () => {
     expect(button).toBeDisabled();
 
     await user.click(screen.getByRole('radio', { name: 'Inside <head>' }));
+    // Still disabled: an optional rating would be filled in when the learner
+    // feels sure and skipped when they do not, biasing the very thing it is
+    // meant to measure.
+    expect(button).toBeDisabled();
+
+    await user.click(screen.getByRole('radio', { name: 'Fairly sure' }));
     expect(button).toBeEnabled();
   });
 
@@ -308,9 +589,10 @@ describe('quiz', () => {
     render(<Quiz questions={questions} previousAnswers={{}} onAnswer={onAnswer} />);
 
     await user.click(screen.getByRole('radio', { name: 'Inside <head>' }));
+    await user.click(screen.getByRole('radio', { name: 'Certain' }));
     await user.click(screen.getByRole('button', { name: 'Check answer' }));
 
-    expect(onAnswer).toHaveBeenCalledWith({ questionId: 'q1', optionIds: ['o1'] });
+    expect(onAnswer).toHaveBeenCalledWith({ questionId: 'q1', optionIds: ['o1'], confidence: 4 });
     expect(await screen.findByText(/The title describes the page/)).toBeInTheDocument();
     expect(screen.getByText('Correct')).toBeInTheDocument();
     expect(screen.getByText(/\+10 XP/)).toBeInTheDocument();
@@ -332,6 +614,7 @@ describe('quiz', () => {
 
     render(<Quiz questions={questions} previousAnswers={{}} onAnswer={onAnswer} />);
     await user.click(screen.getByRole('radio', { name: 'Inside <body>' }));
+    await user.click(screen.getByRole('radio', { name: 'Guessing' }));
     await user.click(screen.getByRole('button', { name: 'Check answer' }));
 
     expect(await screen.findByText('Not this time')).toBeInTheDocument();
@@ -349,6 +632,7 @@ describe('quiz', () => {
 
     render(<Quiz questions={questions} previousAnswers={{}} onAnswer={onAnswer} />);
     await user.click(screen.getByRole('radio', { name: 'Inside <head>' }));
+    await user.click(screen.getByRole('radio', { name: 'Fairly sure' }));
     await user.click(screen.getByRole('button', { name: 'Check answer' }));
 
     await screen.findByText('Correct');
@@ -384,9 +668,14 @@ describe('quiz', () => {
 
     await user.click(screen.getByRole('checkbox', { name: '<img>' }));
     await user.click(screen.getByRole('checkbox', { name: '<br>' }));
+    await user.click(screen.getByRole('radio', { name: 'Not sure' }));
     await user.click(screen.getByRole('button', { name: 'Check answer' }));
 
-    expect(onAnswer).toHaveBeenCalledWith({ questionId: 'q2', optionIds: ['a', 'b'] });
+    expect(onAnswer).toHaveBeenCalledWith({
+      questionId: 'q2',
+      optionIds: ['a', 'b'],
+      confidence: 2,
+    });
   });
 
   it('tells a returning learner they have answered before', () => {
