@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-label="A diagram of an HTML document drawn as a tree, with html at the top branching into head and body.">
+  <title>HTML document tree</title>
+  <rect width="640" height="420" fill="#f6f7fb"/>
+  <g fill="none" stroke="#94a3b8" stroke-width="3">
+    <path d="M320 84 V126 M320 126 H180 V166 M320 126 H460 V166"/>
+    <path d="M180 214 V250 M180 250 H110 V286 M180 250 H250 V286"/>
+    <path d="M460 214 V250 M460 250 H392 V286 M460 250 H530 V286"/>
+  </g>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" text-anchor="middle">
+    <rect x="248" y="44" width="144" height="46" rx="10" fill="#1e293b"/><text x="320" y="74" fill="#f8fafc">&lt;html&gt;</text>
+    <rect x="112" y="166" width="136" height="46" rx="10" fill="#2563eb"/><text x="180" y="196" fill="#ffffff">&lt;head&gt;</text>
+    <rect x="392" y="166" width="136" height="46" rx="10" fill="#0f766e"/><text x="460" y="196" fill="#ffffff">&lt;body&gt;</text>
+    <rect x="46" y="286" width="128" height="42" rx="9" fill="#dbeafe" stroke="#2563eb"/><text x="110" y="314" fill="#1e3a8a" font-size="17">&lt;title&gt;</text>
+    <rect x="188" y="286" width="128" height="42" rx="9" fill="#dbeafe" stroke="#2563eb"/><text x="252" y="314" fill="#1e3a8a" font-size="17">&lt;meta&gt;</text>
+    <rect x="328" y="286" width="128" height="42" rx="9" fill="#ccfbf1" stroke="#0f766e"/><text x="392" y="314" fill="#134e4a" font-size="17">&lt;h1&gt;</text>
+    <rect x="466" y="286" width="128" height="42" rx="9" fill="#ccfbf1" stroke="#0f766e"/><text x="530" y="314" fill="#134e4a" font-size="17">&lt;p&gt;</text>
+  </g>
+  <text x="320" y="384" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#475569">Every page is a tree: one root, two branches, many leaves.</text>
+</svg>
