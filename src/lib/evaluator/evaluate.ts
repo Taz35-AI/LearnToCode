@@ -10,6 +10,12 @@ import {
   type ParsedDocument,
 } from './parse';
 import { accessibleName, assessAltText, hasAltAttribute, labelTextFor } from './accessible-name';
+import {
+  CSS_REQUIREMENT_KINDS,
+  buildCssContext,
+  checkCssRequirement,
+  cssRequirementResult,
+} from './css-requirements';
 import { mediaPathExists } from './media-index';
 import type { EvaluationIssue, EvaluationResult, Requirement, RequirementResult } from './types';
 
@@ -584,9 +590,18 @@ export function evaluateSubmission(
   const { failOnSourceErrors = true } = options;
   const doc = parseDocument(html);
 
+  // Built once and shared: parsing every <style> block for each requirement
+  // would be wasted work on an exercise with a dozen CSS checks.
+  const needsCss = requirements.some((req) => CSS_REQUIREMENT_KINDS.has(req.kind));
+  const cssContext = needsCss ? buildCssContext(doc) : null;
+
   const results = [...requirements]
     .sort((a, b) => a.ordinal - b.ordinal)
-    .map((req) => checkRequirement(req, doc));
+    .map((req) =>
+      cssContext && CSS_REQUIREMENT_KINDS.has(req.kind)
+        ? cssRequirementResult(req, checkCssRequirement(req, doc, cssContext))
+        : checkRequirement(req, doc),
+    );
 
   const issues = findIssues(doc);
 

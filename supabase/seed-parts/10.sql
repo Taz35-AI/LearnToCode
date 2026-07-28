@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 10 of 10
+-- HTML Hero — course seed, part 10 of 11
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -10,6 +10,306 @@
 -- Run part 9 first.
 
 begin;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 7, 'element_count'::public.requirement_kind, 'video[preload="auto"]', NULL,
+       NULL, NULL, 0, 0,
+       'The video no longer preloads its whole file', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'final-review-exercise';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 8, 'attribute_present'::public.requirement_kind, 'meta[name="description"]', 'content',
+       NULL, NULL, NULL, NULL,
+       'The page has a meta description', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'final-review-exercise';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 9, 'attribute_value'::public.requirement_kind, 'a[aria-current]', 'aria-current',
+       'page', NULL, NULL, NULL,
+       'The current page is marked in the nav', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'final-review-exercise';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'capstone-final-mission', 2, 'project_mission'::public.exercise_kind, 'Capstone mission: the finished site',
+       'Apply the five reviews to every page of your capstone site and fix everything they turn up. When all five pass, export your project — the files are yours to publish anywhere.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Page — your site</title>
+    <meta name="description" content="A sentence about this page.">
+    <link rel="canonical" href="https://your-site.example/page.html">
+    <link rel="icon" href="/learning-media/favicon.svg" type="image/svg+xml">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <header>
+      <nav aria-label="Main">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main">
+      <h1>Your page heading</h1>
+      <!-- Run the five reviews over everything below -->
+    </main>
+    <footer><p>&copy; 2026 Your site</p></footer>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Our routes — Riverside Cycle Hire</title>
+    <meta name="description" content="Three waymarked routes starting from our Mill Lane workshop.">
+    <link rel="canonical" href="https://riverside-cycles.example/routes.html">
+    <link rel="icon" href="/learning-media/favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="Our routes — Riverside Cycle Hire">
+    <meta property="og:description" content="Three waymarked routes from our Mill Lane workshop.">
+    <meta property="og:image" content="https://riverside-cycles.example/images/share-1200.jpg">
+    <meta property="og:image:alt" content="A sandy path winding between tall trees">
+    <meta property="og:url" content="https://riverside-cycles.example/routes.html">
+    <meta property="og:type" content="website">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <header>
+      <nav aria-label="Main">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="routes.html" aria-current="page">Routes</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main">
+      <h1>Our routes</h1>
+      <h2>Easy routes</h2>
+      <figure>
+        <img src="/learning-media/images/forest-path-1200.jpg"
+             alt="A sandy path winding between tall trees in a sunlit forest"
+             loading="lazy" width="1200" height="800">
+        <figcaption>The wooded section of the valley route.</figcaption>
+      </figure>
+      <ul>
+        <li>Harbour loop — 6 miles, flat</li>
+        <li>Mill and back — 11 miles, one climb</li>
+      </ul>
+    </main>
+    <footer><p>&copy; 2026 Riverside Cycle Hire</p></footer>
+  </body>
+</html>', ARRAY['Run validation first, then the keyboard test, then check the Network panel.', 'Every page needs its own title, description and canonical.', 'Mark the current page in the nav on every page.']::text[],
+       250, 5,
+       (select id from public.skills where slug = 'multi-page'), false
+from public.lessons l where l.slug = 'final-review'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'doctype'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'The page starts with <!DOCTYPE html>', 'The very first line of an HTML file is <!DOCTYPE html>, before anything else.', 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'attribute_present'::public.requirement_kind, 'html', 'lang',
+       NULL, NULL, NULL, NULL,
+       'The page declares its language', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'unique_element'::public.requirement_kind, 'title', NULL,
+       NULL, NULL, NULL, NULL,
+       'The page has its own title', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'attribute_present'::public.requirement_kind, 'meta[name="description"]', 'content',
+       NULL, NULL, NULL, NULL,
+       'The page has its own description', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'element_present'::public.requirement_kind, 'link[rel="canonical"]', NULL,
+       NULL, NULL, NULL, NULL,
+       'A canonical URL is set', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'element_present'::public.requirement_kind, 'link[rel="icon"]', NULL,
+       NULL, NULL, NULL, NULL,
+       'A favicon is linked', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 7, 'attribute_value'::public.requirement_kind, 'a', 'href',
+       '#main', NULL, NULL, NULL,
+       'The skip link matches the main landmark', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 8, 'unique_element'::public.requirement_kind, 'main', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is exactly one main', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 9, 'element_present'::public.requirement_kind, 'header', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a header landmark', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 10, 'element_present'::public.requirement_kind, 'footer', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a footer landmark', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 11, 'attribute_present'::public.requirement_kind, 'nav', 'aria-label',
+       NULL, NULL, NULL, NULL,
+       'The nav is labelled', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 12, 'attribute_value'::public.requirement_kind, 'a[aria-current]', 'aria-current',
+       'page', NULL, NULL, NULL,
+       'The current page is marked', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 13, 'unique_element'::public.requirement_kind, 'h1', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is exactly one h1', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 14, 'heading_order'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'The heading hierarchy is correct: one <h1>, and no skipped levels', 'Start with a single <h1>, then step down one level at a time — h2 before h3.', 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 15, 'alt_quality'::public.requirement_kind, 'img', NULL,
+       NULL, NULL, NULL, NULL,
+       'Images have meaningful alt text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 16, 'local_media_path'::public.requirement_kind, 'img, source, video, track', NULL,
+       NULL, NULL, NULL, NULL,
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 17, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 18, 'valid_nesting'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 19, 'no_deprecated_elements'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'No obsolete elements are used', 'Elements like <center>, <font> and <big> were removed from HTML.', 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 20, 'text_not_empty'::public.requirement_kind, 'main p, main li', NULL,
+       NULL, NULL, NULL, NULL,
+       'The page has real content', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'capstone-final-mission';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'final-review'), NULL, 'q-review-order', 1, 'single'::public.question_kind,
+        'Why validate before running an accessibility check?', 'An accessibility tool reads the repaired DOM. If the markup is invalid the browser has guessed at the structure, so the results describe a document you did not write.', (select id from public.skills where slug = 'validation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Accessibility tools refuse to run on invalid HTML', false, NULL
+from public.quiz_questions where slug = 'q-review-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Validation fixes accessibility automatically', false, NULL
+from public.quiz_questions where slug = 'q-review-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'There is no reason — the order does not matter', false, NULL
+from public.quiz_questions where slug = 'q-review-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Invalid markup means the tool is checking a document the browser guessed at', true, NULL
+from public.quiz_questions where slug = 'q-review-order';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'final-review'), NULL, 'q-publishing', 2, 'single'::public.question_kind,
+        'What build step does a static HTML site need before publishing?', 'None. HTML runs as-is; the files you upload are the files you wrote.', (select id from public.skills where slug = 'multi-page'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Conversion to a server-side language', false, NULL
+from public.quiz_questions where slug = 'q-publishing';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'None — the files run as they are', true, NULL
+from public.quiz_questions where slug = 'q-publishing';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Compilation to a binary format', false, NULL
+from public.quiz_questions where slug = 'q-publishing';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Minification, which is mandatory', false, NULL
+from public.quiz_questions where slug = 'q-publishing';
+-- HTML Hero final assessment questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'html-hero-final'), 'final-q1', 1, 'single'::public.question_kind,
+        'Which must be the first line of an HTML file?', 'The doctype, which switches the browser into standards mode.', (select id from public.skills where slug = 'document-structure'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '<?xml version="1.0"?>', false, NULL
+from public.quiz_questions where slug = 'final-q1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '<!DOCTYPE html>', true, NULL
+from public.quiz_questions where slug = 'final-q1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '<html lang="en">', false, NULL
+from public.quiz_questions where slug = 'final-q1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '<meta charset="utf-8">', false, NULL
+from public.quiz_questions where slug = 'final-q1';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'html-hero-final'), 'final-q2', 2, 'single'::public.question_kind,
+        'How many `<h1>` and `<main>` elements should a page have?', 'Exactly one of each. The h1 names what the page is about, and main holds the content unique to that page — several of either leaves both readers and software with no clear answer.', (select id from public.skills where slug = 'semantic-html'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'One h1 and one main', true, NULL
+from public.quiz_questions where slug = 'final-q2';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'One h1 and several main elements', false, NULL
+from public.quiz_questions where slug = 'final-q2';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Several h1 elements and one main', false, NULL
+from public.quiz_questions where slug = 'final-q2';
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 4, 'As many as the design needs', false, NULL
 from public.quiz_questions where slug = 'final-q2';
@@ -214,2090 +514,1707 @@ insert into public.quiz_options (question_id, ordinal, label, is_correct, feedba
 select id, 4, 'Start from the last error', false, NULL
 from public.quiz_questions where slug = 'final-q12';
 -- --------------------------------------------------------------------------
--- Remove content deleted from the curriculum
+-- CSS Architect — Level 1: The Cascade
 -- --------------------------------------------------------------------------
 
-delete from public.quiz_questions where slug not in ('a1-q1', 'a1-q2', 'a1-q3', 'a1-q4', 'a1-q5', 'a1-q6', 'a1-q7', 'a1-q8', 'a1-q9', 'a1-q10', 'q-what-is-html', 'q-html-purpose', 'q-tag-vs-element', 'q-attribute-syntax', 'q-void-elements', 'q-nesting-order', 'q-dom-meaning', 'q-comments', 'q-doctype-purpose', 'q-head-vs-body', 'q-viewport', 'q-charset', 'q-index-html', 'q-one-h1', 'a2-q1', 'a2-q2', 'a2-q3', 'a2-q4', 'a2-q5', 'a2-q6', 'a2-q7', 'a2-q8', 'q-heading-skip', 'q-heading-purpose', 'q-whitespace', 'q-br-use', 'q-hr-meaning', 'q-strong-vs-em', 'q-small-meaning', 'q-cite-meaning', 'q-datetime-format', 'q-q-quotes', 'q-entity-lt', 'q-list-choice', 'q-nested-list', 'q-semantic-choice', 'a3-q1', 'a3-q2', 'a3-q3', 'a3-q4', 'a3-q5', 'a3-q6', 'a3-q7', 'a3-q8', 'q-link-text', 'q-noopener', 'q-dotdot', 'q-leading-slash', 'q-fragment-case', 'q-tel-format', 'q-download-attr', 'q-nav-list', 'q-skip-link-position', 'q-aria-current', 'q-filenames', 'q-nav-consistency', 'a4-q1', 'a4-q2', 'a4-q3', 'a4-q4', 'a4-q5', 'a4-q6', 'a4-q7', 'a4-q8', 'a4-q9', 'q-img-dimensions', 'q-hotlinking', 'q-empty-alt', 'q-alt-vs-caption', 'q-missing-alt', 'q-srcset-w', 'q-sizes-purpose', 'q-picture-img', 'q-lazy-hero', 'q-picture-vs-srcset', 'q-video-controls', 'q-track-kind', 'q-fallback-placement', 'q-iframe-title', 'q-sandbox', 'a5-q1', 'a5-q2', 'a5-q3', 'a5-q4', 'a5-q5', 'a5-q6', 'a5-q7', 'a5-q8', 'q-semantic-meaning', 'q-main-count', 'q-article-test', 'q-section-heading', 'q-outline-algorithm', 'q-case-sensitivity', 'q-comments-value', 'q-footer-placement', 'a6-q1', 'a6-q2', 'a6-q3', 'a6-q4', 'a6-q5', 'a6-q6', 'a6-q7', 'a6-q8', 'a6-q9', 'a6-q10', 'q-scope-col', 'q-caption-position', 'q-layout-tables', 'q-label-for', 'q-placeholder', 'q-number-type', 'q-name-attribute', 'q-radio-group', 'q-button-type', 'q-legend-position', 'q-client-validation', 'q-get-vs-post', 'q-aria-describedby', 'a7-q1', 'a7-q2', 'a7-q3', 'a7-q4', 'a7-q5', 'a7-q6', 'a7-q7', 'q-summary-position', 'q-details-name', 'q-dialog-close', 'q-popover-js', 'q-modal-content', 'q-progress-vs-meter', 'q-datalist-restrict', 'a8-q1', 'a8-q2', 'a8-q3', 'a8-q4', 'a8-q5', 'a8-q6', 'a8-q7', 'a8-q8', 'a8-q9', 'q-a11y-tree', 'q-keyboard-test', 'q-div-button', 'q-focusable-defaults', 'q-tabindex-negative', 'q-positive-tabindex', 'q-name-order', 'q-alt-empty-vs-missing', 'q-link-text-alone', 'q-aria-first-rule', 'q-aria-behaviour', 'q-labelledby-vs-label', 'q-aria-current-page', 'q-live-region-timing', 'q-assertive-vs-polite', 'q-placeholder-not-label', 'q-fieldset-legend', 'q-autocomplete-requirement', 'q-audit-order', 'q-duplicate-id-impact', 'a9-q1', 'a9-q2', 'a9-q3', 'a9-q4', 'a9-q5', 'a9-q6', 'a9-q7', 'a9-q8', 'q-title-length', 'q-canonical', 'q-noindex-security', 'q-og-property', 'q-structured-data-ranking', 'q-og-image-url', 'q-lang-missing-effect', 'q-wrong-lang-worse', 'q-dir-auto', 'q-metadata-order', 'a10-q1', 'a10-q2', 'a10-q3', 'a10-q4', 'a10-q5', 'a10-q6', 'a10-q7', 'a10-q8', 'q-layout-shift', 'q-defer-async', 'q-preload-overuse', 'q-noopener-why', 'q-hidden-input', 'q-csp-header', 'q-iframe-cost', 'q-sandbox-combination', 'q-defer-vs-async', 'q-preload-auto', 'a11-q1', 'a11-q2', 'a11-q3', 'a11-q4', 'a11-q5', 'a11-q6', 'a11-q7', 'q-validator-order', 'q-validator-limits', 'q-duplicate-id-effect', 'q-elements-panel', 'q-network-404', 'q-one-change', 'q-bisection-steps', 'q-minimal-repro-value', 'q-one-change-at-a-time', 'q-repair-order', 'final-q1', 'final-q2', 'final-q3', 'final-q4', 'final-q5', 'final-q6', 'final-q7', 'final-q8', 'final-q9', 'final-q10', 'final-q11', 'final-q12', 'q-shell-difference', 'q-capstone-media', 'q-review-order', 'q-publishing');
-delete from public.exercises where slug not in ('first-markup-guided', 'first-markup-debug', 'attributes-guided', 'attributes-challenge', 'attributes-debug', 'nesting-guided', 'nesting-debug', 'skeleton-guided', 'skeleton-debug', 'first-page-milestone', 'first-page-mission', 'headings-guided', 'headings-debug', 'paragraphs-guided', 'paragraphs-debug', 'emphasis-guided', 'emphasis-challenge', 'quotes-guided', 'quotes-debug', 'lists-guided', 'entities-debug', 'article-milestone-build', 'article-mission', 'links-guided', 'links-debug', 'paths-guided', 'fragments-challenge', 'paths-debug', 'special-links-guided', 'nav-guided', 'skip-link-challenge', 'nav-debug', 'multipage-milestone-build', 'navigation-mission', 'img-guided', 'img-debug', 'alt-guided', 'figure-challenge', 'srcset-guided', 'srcset-debug', 'picture-guided', 'lazy-challenge', 'video-guided', 'video-debug', 'iframe-guided', 'media-milestone', 'media-mission', 'landmarks-guided', 'section-article-guided', 'section-debug', 'patterns-guided', 'semantic-rebuild', 'semantic-mission', 'table-guided', 'table-debug', 'labels-guided', 'input-types-debug', 'fieldset-guided', 'controls-challenge', 'validation-guided', 'form-milestone', 'form-mission', 'details-guided', 'popover-guided', 'dialog-debug', 'datalist-guided', 'native-milestone', 'native-mission', 'keyboard-debug', 'keyboard-skip-link-guided', 'keyboard-operability-debug', 'accessible-names-challenge', 'accessible-names-debug', 'aria-guided', 'aria-debug', 'aria-state-guided', 'aria-state-debug', 'accessible-form-challenge', 'accessible-form-debug', 'a11y-audit-milestone', 'a11y-mission', 'metadata-guided', 'metadata-debug', 'og-guided', 'jsonld-challenge', 'lang-guided', 'lang-debug', 'seo-milestone-build', 'seo-mission', 'perf-guided', 'security-debug', 'embed-hardening-guided', 'third-party-debug', 'performance-milestone-build', 'performance-mission', 'validation-debug', 'devtools-debug', 'bisection-debug', 'minimal-reproduction-challenge', 'repair-milestone', 'validation-mission', 'shell-guided', 'capstone-main-build', 'final-review-exercise', 'capstone-final-mission');
-delete from public.lessons where slug not in ('what-happens-when-you-open-a-page', 'tags-elements-attributes', 'nesting-and-the-document-tree', 'doctype-html-head-body', 'your-first-complete-page', 'heading-hierarchy', 'paragraphs-breaks-rules', 'emphasis-and-importance', 'quotes-abbreviations-dates', 'code-entities-and-lists', 'article-milestone', 'anchors-and-link-text', 'relative-and-absolute-paths', 'special-links', 'navigation-menus', 'multi-page-milestone', 'the-img-element', 'writing-alt-text', 'srcset-and-sizes', 'picture-and-formats', 'video-and-audio', 'iframes-and-media-milestone', 'semantic-vs-non-semantic', 'section-article-aside', 'file-organisation-and-patterns', 'semantic-rebuild-milestone', 'building-a-table', 'labels-and-inputs', 'grouping-and-controls', 'validation-and-form-milestone', 'details-and-summary', 'dialog-and-popover', 'progress-meter-datalist-milestone', 'how-assistive-tech-reads-a-page', 'keyboard-and-focus-management', 'accessible-names-in-depth', 'aria-fundamentals', 'aria-live-and-state', 'accessible-forms-in-depth', 'accessibility-audit-milestone', 'titles-descriptions-canonicals', 'social-and-structured-data', 'language-and-internationalisation', 'seo-milestone', 'loading-strategy', 'html-security', 'third-party-and-embeds', 'performance-milestone', 'reading-validation-output', 'developer-tools', 'a-method-for-debugging', 'debugging-milestone', 'assembling-the-site', 'capstone-build', 'final-review');
-delete from public.assessments where slug not in ('level-1-milestone', 'level-2-milestone', 'level-3-milestone', 'level-4-milestone', 'level-5-milestone', 'level-6-milestone', 'level-7-milestone', 'level-8-milestone', 'level-9-milestone', 'level-10-milestone', 'level-11-milestone', 'html-hero-final');
-delete from public.modules where slug not in ('how-the-web-works', 'the-html-skeleton', 'headings-and-paragraphs', 'text-level-semantics', 'links-and-paths', 'site-navigation', 'images-and-alt-text', 'responsive-images', 'video-audio-embeds', 'semantic-landmarks', 'organising-a-project', 'data-tables', 'form-foundations', 'disclosure-and-dialog', 'accessibility-foundations', 'aria-and-accessible-forms', 'page-metadata', 'html-performance', 'validation-and-tools', 'completing-the-site', 'review-and-publish');
-delete from public.levels where slug not in ('html-explorer', 'content-builder', 'navigation-architect', 'media-specialist', 'structure-professional', 'data-and-forms', 'native-interaction', 'accessibility-champion', 'metadata-and-seo', 'performance-and-security', 'debugging-and-validation', 'html-hero-capstone');
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'css-cascade', 1, 'The Cascade', 'Why a rule wins, why it loses, and why it sometimes never applied at all',
+       'Every "CSS is not working" is one of four things: the selector did not match, another rule won, the property does not inherit, or it was never valid. This level makes all four visible.', 'You can look at any conflicting pair of CSS rules and say which wins, and why.', 'violet'
+from public.courses c where c.slug = 'css-architect'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, NULL, 'css-level-1-milestone', 'milestone'::public.assessment_kind, 'Level 1 milestone: The Cascade', 'Eight questions on rules, specificity and inheritance. Pass mark 80% — everything later in this course assumes this model.',
+       0.8, 200, 1
+from public.levels l where l.slug = 'css-cascade'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+-- module: Rules, selectors and the cascade
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'css-first-rules', 1, 'Rules, selectors and the cascade', 'What a rule is made of, how the browser decides between two of them, and the inheritance model underneath.',
+       70, false
+from public.levels l where l.slug = 'css-cascade'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'css-first-rules' and s.slug = 'cascade';
+-- lesson: What a rule actually is
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-what-a-rule-is', 1, 'What a rule actually is', 'Selector, declaration block, and where the CSS lives', 'Three parts, one shape, repeated forever. Everything else in CSS is variations on this.',
+       ARRAY['Name the parts of a CSS rule', 'Write a rule that targets an element', 'Explain where a stylesheet can live and which wins']::text[], 14, 40, (select id from public.skills where slug = 'cascade'), 0.7
+from public.modules m where m.slug = 'css-first-rules'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A page has `<p style="color: red">` in the markup and `p { color: blue }` in a stylesheet. What colour is the paragraph?',
+       NULL, NULL, NULL, '{"options":["Red — the inline style wins","Blue — the stylesheet is more official","Whichever appears later in the file","Neither; they cancel out"],"answer":"Red. An inline `style` attribute beats any selector in a stylesheet, however specific — the only thing that outranks it is an `!important` declaration in a rule. This is worth knowing on day one because inline styles are the most common reason a learner''s stylesheet appears to be ignored entirely."}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Identify the selector, property and value in any rule","Write rules that target elements by type and by class","Explain the three places CSS can live, and which one wins"]}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, NULL, 'HTML says what something *is*. CSS says how it should look. The two stay separate on purpose: the same markup can be styled completely differently, and the same stylesheet can serve a thousand pages.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'term'::public.block_type, 'Rule', 'A selector followed by a block of declarations. `p { color: teal; }` is one rule with one declaration.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'term'::public.block_type, 'Declaration', 'A property and a value, separated by a colon and ended with a semicolon. `color: teal;` is one declaration.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'annotated_code'::public.block_type, 'Line by line', NULL,
+       'p {
+  color: teal;
+  line-height: 1.5;
+}', 'html', NULL, '{"annotations":[{"line":"1","text":"`p` is the **selector** — every paragraph on the page."},{"line":"1","text":"The `{` opens the **declaration block**. Everything until the `}` applies to whatever the selector matched."},{"line":"2","text":"`color` is the **property**, `teal` is the **value**, and the semicolon ends the declaration. The last one before `}` may legally omit it — include it anyway, so adding a line later cannot break the one above."},{"line":"3","text":"A second declaration. A rule may have as many as it needs."}]}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'prose'::public.block_type, NULL, 'CSS can live in three places, and knowing which wins saves an afternoon.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'code_example'::public.block_type, 'Where CSS lives', NULL,
+       '1. An external file, linked from the head:
+   <link rel="stylesheet" href="styles.css">
+   The right answer for a real site — one file, every page.
+
+2. A <style> element in the head:
+   <style> p { color: teal } </style>
+   Fine for one page, and what you will use in this course.
+
+3. A style attribute on an element:
+   <p style="color: teal">
+   Beats both of the above, cannot be reused, and is nearly
+   always a mistake outside of email or generated markup.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'callout'::public.block_type, 'Why this course uses `<style>`', 'Everything you write here goes in a `<style>` element in the same file as the markup. That is not how a real site is built, and it removes an entire category of "my stylesheet is not loading" problems — wrong path, wrong filename, cached old copy — that teach you nothing about CSS. Level 10 covers splitting a stylesheet out properly.',
+       NULL, NULL, NULL, '{"tone":"note"}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'interactive_demo'::public.block_type, 'The same paragraph, three ways of styling it', 'Identical markup in all three.',
+       NULL, NULL, NULL, '{"variants":[{"label":"A type selector","code":"<style>\n  p { color: teal; font-size: 1.25rem }\n</style>\n<p>Fresh bread, every morning.</p>","note":"Targets every `<p>` on the page. Simple, and exactly right when you genuinely mean all of them."},{"label":"A class","code":"<style>\n  .lead { color: teal; font-size: 1.25rem }\n</style>\n<p class=\"lead\">Fresh bread, every morning.</p>\n<p>We open at 6am.</p>","note":"Targets only what you opt in. This is the workhorse of real CSS — you decide what gets it."},{"label":"An inline style","code":"<p style=\"color: teal; font-size: 1.25rem\">Fresh bread, every morning.</p>","note":"Works, applies to exactly one element, cannot be reused, and beats any rule you write later. Avoid."}]}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'term'::public.block_type, 'Class', 'A label you put on elements with `class="name"`, selected in CSS with a leading dot: `.name`. An element may carry several, separated by spaces.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'predict_check'::public.block_type, 'Predict, then check', 'The first declaration spells the property the British way. Before you check: does the whole rule fail, does the whole stylesheet fail, or does something else happen?',
+       '<style>
+  p { colour: teal }
+  p { font-size: 1.25rem }
+</style>
+<p>Fresh bread, every morning.</p>', 'html', NULL, '{"outcome":"Only that one declaration is discarded. The browser drops any declaration it does not understand and carries on — so the font size still applies, and the colour silently does nothing. There is no error, no warning, and nothing in the page to suggest a problem. This is the single most important thing to know about debugging CSS: **invalid CSS fails silently, one declaration at a time**. If a property seems to do nothing, checking the spelling is not a beginner move, it is the first thing an expert checks."}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'checklist'::public.block_type, 'The shape of every rule', NULL,
+       NULL, NULL, NULL, '{"items":["A selector saying what to target","A `{` opening the block","One or more `property: value;` declarations","A `}` closing the block","Semicolons after every declaration, including the last"]}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["A rule is a selector plus a block of `property: value` declarations.","CSS lives in an external file, a `<style>` element, or a `style` attribute — in increasing order of how much it wins and how little it should be used.","A class is an opt-in label; a type selector catches everything.","An invalid declaration is dropped silently, and nothing tells you."],"nextUp":"Next: what happens when two rules disagree."}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 15, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Name the four parts of a CSS rule.","Where can CSS live, and which of the three wins?","What happens when you misspell a property name?"],"points":["Selector, declaration block, and within it a property and a value. Declarations are separated by semicolons.","An external file, a `<style>` element, or a `style` attribute. The inline `style` attribute beats the other two — only `!important` in a rule outranks it.","That single declaration is silently discarded. The rest of the rule still applies, nothing warns you, and the page simply looks wrong."]}'::jsonb
+from public.lessons where slug = 'css-what-a-rule-is';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-first-rule-guided', 1, 'guided'::public.exercise_kind, 'Write your first rule',
+       'The page has a heading and two paragraphs. Add a `<style>` element in the head and write one rule so that **every** paragraph is `teal`, and a second rule so the heading is `rebeccapurple`. Use type selectors — no classes yet.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Riverside Bakery</title>
+  </head>
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p>Fresh bread, every morning.</p>
+    <p>We open at 6am and bake until we sell out.</p>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Riverside Bakery</title>
+    <style>
+      h1 { color: rebeccapurple; }
+      p { color: teal; }
+    </style>
+  </head>
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p>Fresh bread, every morning.</p>
+    <p>We open at 6am and bake until we sell out.</p>
+  </body>
+</html>', ARRAY['The <style> element goes inside <head>, after the title.', 'A type selector is just the element name: p { ... }', 'Inside the block: color: teal;']::text[],
+       30, 1,
+       (select id from public.skills where slug = 'cascade'), false
+from public.lessons l where l.slug = 'css-what-a-rule-is'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'element_present'::public.requirement_kind, 'style', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is a <style> element', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-first-rule-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, 'p', 'color',
+       'teal', NULL, NULL, NULL,
+       'Every paragraph resolves to teal', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-first-rule-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, 'h1', 'color',
+       'rebeccapurple', NULL, NULL, NULL,
+       'The heading resolves to rebeccapurple', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-first-rule-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_rule_exists'::public.requirement_kind, NULL, NULL,
+       'p', NULL, NULL, NULL,
+       'A rule targets paragraphs by type', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-first-rule-guided';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-first-rule-debug', 2, 'debug'::public.exercise_kind, 'Three rules that do nothing',
+       'This stylesheet looks reasonable and none of it works. Three faults: a misspelled property, a missing colon, and a selector with a stray dot that matches nothing. Repair all three so the paragraph is `teal` at `1.25rem`, and the heading is `rebeccapurple`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Riverside Bakery</title>
+    <style>
+      p { colour: teal; }
+      p { font-size 1.25rem; }
+      .h1 { color: rebeccapurple; }
+    </style>
+  </head>
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p>Fresh bread, every morning.</p>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Riverside Bakery</title>
+    <style>
+      p { color: teal; }
+      p { font-size: 1.25rem; }
+      h1 { color: rebeccapurple; }
+    </style>
+  </head>
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p>Fresh bread, every morning.</p>
+  </body>
+</html>', ARRAY['CSS uses the American spelling of colour.', 'Every declaration needs a colon between the property and the value.', 'A leading dot means "class". The heading has no class — select it by type.']::text[],
+       40, 2,
+       (select id from public.skills where slug = 'cascade'), false
+from public.lessons l where l.slug = 'css-what-a-rule-is'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, 'p', 'color',
+       'teal', NULL, NULL, NULL,
+       'The paragraph resolves to teal', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-first-rule-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, 'p', 'font-size',
+       '1.25rem', NULL, NULL, NULL,
+       'The paragraph resolves to 1.25rem', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-first-rule-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, 'h1', 'color',
+       'rebeccapurple', NULL, NULL, NULL,
+       'The heading resolves to rebeccapurple', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-first-rule-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-what-a-rule-is'), NULL, 'q-css-rule-parts', 1, 'single'::public.question_kind,
+        'In `p { color: teal; }`, what is `color`?', 'The property. `teal` is its value, and together they are one declaration.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The selector', false, NULL
+from public.quiz_questions where slug = 'q-css-rule-parts';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The declaration', false, NULL
+from public.quiz_questions where slug = 'q-css-rule-parts';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The rule', false, NULL
+from public.quiz_questions where slug = 'q-css-rule-parts';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The property', true, NULL
+from public.quiz_questions where slug = 'q-css-rule-parts';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-what-a-rule-is'), NULL, 'q-css-invalid-declaration', 2, 'single'::public.question_kind,
+        'What happens when a browser meets a property it does not recognise?', 'It discards that one declaration and carries on. Nothing is reported, which is why a misspelling can cost an hour.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The whole stylesheet is ignored', false, NULL
+from public.quiz_questions where slug = 'q-css-invalid-declaration';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'An error appears in the page', false, NULL
+from public.quiz_questions where slug = 'q-css-invalid-declaration';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'That declaration is silently dropped; the rest still applies', true, NULL
+from public.quiz_questions where slug = 'q-css-invalid-declaration';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The whole rule is ignored', false, NULL
+from public.quiz_questions where slug = 'q-css-invalid-declaration';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-what-a-rule-is'), NULL, 'q-css-where-it-lives', 3, 'single'::public.question_kind,
+        'Which form of CSS beats the other two?', 'A `style` attribute on the element. Only an `!important` declaration in a rule outranks it.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'An external stylesheet', false, NULL
+from public.quiz_questions where slug = 'q-css-where-it-lives';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A `<style>` element in the head', false, NULL
+from public.quiz_questions where slug = 'q-css-where-it-lives';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Whichever was written last', false, NULL
+from public.quiz_questions where slug = 'q-css-where-it-lives';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A `style` attribute on the element', true, NULL
+from public.quiz_questions where slug = 'q-css-where-it-lives';
+-- lesson: Specificity
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-specificity', 2, 'Specificity', 'The scoring system that decides which rule wins', 'Two rules, same property, same element. One wins. The system is small, exact, and worth learning in ten minutes rather than absorbing wrongly over months.',
+       ARRAY['Score any selector as ids, classes and elements', 'Predict which of two conflicting rules wins', 'Explain why `!important` is a trap rather than a tool']::text[], 18, 40, (select id from public.skills where slug = 'cascade'), 0.7
+from public.modules m where m.slug = 'css-first-rules'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'Two rules set a colour on the same paragraph: `#main p { color: blue }` and `.intro.lead.card.big { color: red }`. Four classes against one id. Which wins?',
+       NULL, NULL, NULL, '{"options":["Blue — one id beats any number of classes","Red — four beats one","Whichever comes later in the stylesheet","Neither; the browser picks at random"],"answer":"Blue. Specificity is not a sum — it is three separate columns compared left to right, and a single id beats *any* number of classes, even a hundred. This is why a stylesheet that starts using ids becomes progressively harder to override, and why the fix is almost never \"add another id\"."}'::jsonb
+from public.lessons where slug = 'css-specificity';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Count a selector as (ids, classes, elements)","Compare two selectors and say which applies","Explain why raising specificity to win is a debt, not a solution"]}'::jsonb
+from public.lessons where slug = 'css-specificity';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'term'::public.block_type, 'Specificity', 'A score the browser gives every selector, used to decide which rule applies when two set the same property on the same element.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-specificity';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'code_example'::public.block_type, 'Scoring a selector', NULL,
+       'Count three things, and compare them left to right:
+
+  ids        #main                       →  (1, 0, 0)
+  classes    .card  [href]  :hover       →  (0, 1, 0)
+  elements   p  h1  ::before             →  (0, 0, 1)
+
+  p                    (0, 0, 1)
+  .card                (0, 1, 0)   beats every element selector
+  #main                (1, 0, 0)   beats every class selector
+  .card p              (0, 1, 1)
+  #main .card p        (1, 1, 1)
+
+Left to right. Any number in a column beats everything to its right.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-specificity';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, 'It is not a three-digit number', 'A very common shortcut is to read (0, 1, 0) as "10" and (0, 0, 11) as "11", and conclude that eleven elements beat one class. They do not. The columns are compared independently and never carry — which is exactly why one id beats a hundred classes.',
+       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
+from public.lessons where slug = 'css-specificity';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'worked_example'::public.block_type, 'Deciding a real conflict, step by step', 'A link inside a card is the wrong colour. Three rules could apply. This is the reasoning, and it is the same four steps every time.',
+       NULL, NULL, NULL, '{"steps":[{"title":"List every rule that matches","code":"a            { color: blue }\n.card a      { color: teal }\n#sidebar a   { color: crimson }","reasoning":"Not every rule in the file — only the ones whose selector actually matches this element. Rules that do not match are not in the contest at all, and half of all \"why is this not working\" is a selector that never matched."},{"title":"Score each one","code":"a            (0, 0, 1)\n.card a      (0, 1, 1)\n#sidebar a   (1, 0, 1)","reasoning":"Count ids, then classes, then elements. Do it mechanically — the whole value of the system is that it does not require judgement."},{"title":"Compare left to right","code":"(1, 0, 1)  ← #sidebar a wins\n(0, 1, 1)\n(0, 0, 1)","reasoning":"The first column decides it immediately: one id beats zero ids, and nothing in the other columns can rescue the others. Only if the first column ties do you look at the second."},{"title":"Only if everything ties, source order decides","code":".card a { color: teal }\n.card a { color: crimson }   ← this one wins","reasoning":"Equal specificity means the later rule wins. This is the only situation where \"move it further down the file\" is a legitimate fix — and it is why the order of your stylesheet is part of its meaning."}]}'::jsonb
+from public.lessons where slug = 'css-specificity';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'interactive_demo'::public.block_type, 'The same link, four ways of losing the argument', 'Every panel has the same markup and a different winner.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Type only","code":"<style>\n  a { color: teal }\n</style>\n<div class=\"card\"><a href=\"#\">Read the menu</a></div>","note":"One rule, no contest. (0, 0, 1) wins by default."},{"label":"Class beats type","code":"<style>\n  a { color: teal }\n  .card a { color: crimson }\n</style>\n<div class=\"card\"><a href=\"#\">Read the menu</a></div>","note":"(0, 1, 1) beats (0, 0, 1). Note that the *order* is irrelevant here — swapping the two rules changes nothing."},{"label":"Order breaks a tie","code":"<style>\n  .card a { color: crimson }\n  .card a { color: teal }\n</style>\n<div class=\"card\"><a href=\"#\">Read the menu</a></div>","note":"Identical specificity, so the later rule wins. This is the only case where moving a rule down the file is a real fix."},{"label":"important beats everything","code":"<style>\n  a { color: teal !important }\n  #sidebar .card a { color: crimson }\n</style>\n<div id=\"sidebar\"><div class=\"card\"><a href=\"#\">Read the menu</a></div></div>","note":"The weakest selector in the file wins because of one keyword. Now nothing can override it except another !important."}]}'::jsonb
+from public.lessons where slug = 'css-specificity';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'self_explain'::public.block_type, 'Explain it in your own words', 'A colleague fixes a stubborn style by adding `!important`, and says it worked so it was the right call. Write your reply. Do not just say "it is bad practice" — explain what specifically happens next, to them and to the next person.',
+       NULL, NULL, NULL, '{"modelAnswer":"It worked, and it moved the problem rather than solving it. `!important` sits above the entire specificity system, so the only thing that can override this declaration later is another `!important` — and then the only way to override *that* is a more specific `!important`. Within a few months the stylesheet has a second, parallel hierarchy where the ordinary rules are decoration and the real behaviour lives in the important ones, and nobody can predict either. The underlying question was never answered: *why* was the other rule winning? Usually the honest answer is that a selector is more specific than the component needs, and lowering that instead fixes the cause. The defensible uses of `!important` are narrow — overriding a third-party stylesheet you cannot edit, or a utility class that is explicitly meant to be final."}'::jsonb
+from public.lessons where slug = 'css-specificity';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'progressive_detail'::public.block_type, 'Where `:is()`, `:where()` and `:not()` sit', '`:where()` always scores zero, whatever is inside it — which makes it the right tool for a default that must be trivially overridable. `:is()` and `:not()` take the specificity of their *most specific* argument, so `:is(h1, #main)` scores as an id, which surprises people. That difference is the whole reason `:where()` exists, and it is the cleanest way to write a base layer that never fights the components built on it.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-specificity';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Specificity is three columns — ids, classes, elements — compared left to right, never summed.","One id beats any number of classes; one class beats any number of elements.","Source order decides only when specificity is exactly equal.","`!important` sits outside the system and can only be beaten by another `!important`."],"nextUp":"Next: inheritance, and the rule that is not in the contest at all."}'::jsonb
+from public.lessons where slug = 'css-specificity';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Score `#main .card a:hover` as ids, classes and elements.","Why does one id beat ten classes?","When is source order the deciding factor?"],"points":["(1, 2, 1) — one id, two classes (`.card` and the `:hover` pseudo-class), one element (`a`).","Because the columns are compared left to right and never carry. Any non-zero count in a column beats everything to its right, whatever the numbers there.","Only when two selectors have identical specificity. Then the later rule wins — and that is the only situation where moving a rule down the file is a genuine fix rather than a coincidence."]}'::jsonb
+from public.lessons where slug = 'css-specificity';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-specificity-guided', 1, 'guided'::public.exercise_kind, 'Make the more specific rule win',
+       'Both paragraphs should be grey, except the one with `class="lead"`, which should be `rebeccapurple`. Add exactly one rule to achieve that — do not edit the existing rule, and do not use `!important`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Specificity</title>
+    <style>
+      p { color: dimgray; }
+    </style>
+  </head>
+  <body>
+    <p class="lead">Fresh bread, every morning.</p>
+    <p>We open at 6am.</p>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Specificity</title>
+    <style>
+      p { color: dimgray; }
+      .lead { color: rebeccapurple; }
+    </style>
+  </head>
+  <body>
+    <p class="lead">Fresh bread, every morning.</p>
+    <p>We open at 6am.</p>
+  </body>
+</html>', ARRAY['A class selector starts with a dot: .lead', 'A class scores (0, 1, 0), which beats the type selector''s (0, 0, 1).', 'You do not need to repeat the type: .lead on its own is enough.']::text[],
+       40, 2,
+       (select id from public.skills where slug = 'cascade'), false
+from public.lessons l where l.slug = 'css-specificity'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.lead', 'color',
+       'rebeccapurple', NULL, NULL, NULL,
+       'The lead paragraph resolves to rebeccapurple', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-specificity-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, 'p:not(.lead)', 'color',
+       'dimgray', NULL, NULL, NULL,
+       'The other paragraph is still dimgray', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-specificity-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_no_important'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'No declaration uses !important', 'Raising specificity with !important wins this argument and loses the next one — the only way to override it later is another !important.', 1, true, NULL
+from public.exercises e where e.slug = 'css-specificity-guided';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-specificity-debug', 2, 'debug'::public.exercise_kind, 'Untangle a specificity war',
+       'The button should be `teal`. Someone reached for `!important` and an id to force it, and now nothing can be overridden. Repair this properly: remove every `!important` and every id selector, and make the button teal using no selector stronger than a single class.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Buttons</title>
+    <style>
+      button { color: dimgray; }
+      #page .toolbar button { color: crimson !important; }
+      .btn { color: teal; }
+    </style>
+  </head>
+  <body>
+    <div id="page">
+      <div class="toolbar">
+        <button class="btn" type="button">Book a table</button>
+      </div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Buttons</title>
+    <style>
+      button { color: dimgray; }
+      .btn { color: teal; }
+    </style>
+  </head>
+  <body>
+    <div id="page">
+      <div class="toolbar">
+        <button class="btn" type="button">Book a table</button>
+      </div>
+    </div>
+  </body>
+</html>', ARRAY['Delete the rule that uses the id and !important entirely.', 'The .btn rule already says teal — it was simply being outranked.', 'Once the id rule is gone, a single class beats the type selector on its own.']::text[],
+       50, 3,
+       (select id from public.skills where slug = 'cascade'), false
+from public.lessons l where l.slug = 'css-specificity'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.btn', 'color',
+       'teal', NULL, NULL, NULL,
+       'The button resolves to teal', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-specificity-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_no_important'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'No declaration uses !important', 'Raising specificity with !important wins this argument and loses the next one — the only way to override it later is another !important.', 1, true, NULL
+from public.exercises e where e.slug = 'css-specificity-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_max_specificity'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, 256,
+       'No selector is stronger than a single class', 'Remove the id from the selector — a component should not need one.', 1, true, NULL
+from public.exercises e where e.slug = 'css-specificity-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-specificity'), NULL, 'q-css-id-vs-classes', 1, 'single'::public.question_kind,
+        'Which selector wins: `#main` or `.a.b.c.d`?', '`#main`. The columns are compared left to right and never carry, so one id beats any number of classes.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Whichever comes later', false, NULL
+from public.quiz_questions where slug = 'q-css-id-vs-classes';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'They tie', false, NULL
+from public.quiz_questions where slug = 'q-css-id-vs-classes';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`#main` — one id beats any number of classes', true, NULL
+from public.quiz_questions where slug = 'q-css-id-vs-classes';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`.a.b.c.d` — four beats one', false, NULL
+from public.quiz_questions where slug = 'q-css-id-vs-classes';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-specificity'), NULL, 'q-css-source-order', 2, 'single'::public.question_kind,
+        'When does the order of two rules in the file decide the winner?', 'Only when their specificity is exactly equal.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Never; only specificity matters', false, NULL
+from public.quiz_questions where slug = 'q-css-source-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Only inside a media query', false, NULL
+from public.quiz_questions where slug = 'q-css-source-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Only when their specificity is identical', true, NULL
+from public.quiz_questions where slug = 'q-css-source-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Always — later rules always win', false, NULL
+from public.quiz_questions where slug = 'q-css-source-order';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-specificity'), NULL, 'q-css-important-cost', 3, 'single'::public.question_kind,
+        'What is the real cost of fixing a conflict with `!important`?', 'It can only be overridden by another `!important`, so it starts a parallel hierarchy that grows.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It stops the rest of the rule applying', false, NULL
+from public.quiz_questions where slug = 'q-css-important-cost';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Nothing — it is the recommended fix', false, NULL
+from public.quiz_questions where slug = 'q-css-important-cost';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Only another !important can override it later', true, NULL
+from public.quiz_questions where slug = 'q-css-important-cost';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It slows the page down', false, NULL
+from public.quiz_questions where slug = 'q-css-important-cost';
+-- lesson: Inheritance
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-inheritance', 3, 'Inheritance', 'The value that is not in the specificity contest at all', 'Some properties flow down the tree and some do not. Knowing which — and that inheritance loses to everything — closes the last gap in the model.',
+       ARRAY['Name which kinds of property inherit', 'Explain why an inherited value loses to any direct rule', 'Use `inherit` deliberately']::text[], 16, 40, (select id from public.skills where slug = 'cascade'), 0.7
+from public.modules m where m.slug = 'css-first-rules'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', '`#page { color: crimson }` sets a colour on a wrapper. Inside it, `p { color: teal }` sets one on paragraphs. An id against a type selector. What colour are the paragraphs?',
+       NULL, NULL, NULL, '{"options":["Teal — an inherited value loses to any rule on the element itself","Crimson — the id is far more specific","Crimson, because the wrapper is closer to the root","It depends which rule comes first"],"answer":"Teal, and the specificity of the id is completely irrelevant. Inheritance is not part of the specificity contest: it only supplies a value when *nothing at all* set that property on the element itself. Any direct rule, however weak, beats any inherited value, however specific its source. This one fact resolves a large share of the confusion beginners have about the cascade."}'::jsonb
+from public.lessons where slug = 'css-inheritance';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Predict which properties reach a child element","Explain the relationship between inheritance and specificity","Use `inherit` to opt in deliberately"]}'::jsonb
+from public.lessons where slug = 'css-inheritance';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, NULL, 'Some properties pass down the document tree to descendants automatically. Broadly: the ones about *text* inherit, and the ones about *boxes* do not.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-inheritance';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'code_example'::public.block_type, 'What inherits', NULL,
+       'Inherit by default          Do not inherit
+  color                       margin, padding
+  font-family, font-size      border
+  font-weight, font-style     background
+  line-height                 width, height
+  letter-spacing              display, position
+  text-align, text-indent     flex, grid
+  visibility, cursor          box-shadow
+  list-style
+
+The rule of thumb: if it describes the text, it inherits.
+If it describes the box, it does not — because a box that
+inherited its parent''s padding would be unusable.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-inheritance';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, 'This is why `body { font-family: … }` works', 'Setting the font once on `body` styles the entire page, because `font-family` inherits all the way down. Setting `padding` on `body` styles only the body. Once you know which list a property is on, both behaviours stop being surprising.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-inheritance';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'predict_check'::public.block_type, 'Predict, then check', 'An id sets both a colour and a border on the wrapper. A type selector sets a colour on the paragraph. Before you check: what colour is the paragraph text, and does it have a border?',
+       '<style>
+  #page { color: crimson; border: 2px solid crimson; }
+  p     { color: teal; }
+</style>
+<div id="page">
+  <p>Fresh bread, every morning.</p>
+</div>', 'html', NULL, '{"outcome":"The text is **teal**, and there is **no border**. Two separate lessons in one. The colour is teal because inheritance only supplies a value when nothing set the property on the element itself — the id''s specificity never enters into it, because the id''s rule is not competing for the paragraph at all, only for the div. And there is no border because `border` does not inherit: only the wrapper has one. If borders inherited, every element inside a bordered box would have its own, which is obviously not what anyone wants."}'::jsonb
+from public.lessons where slug = 'css-inheritance';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'term'::public.block_type, '`inherit`', 'A value you can give any property to force it to take the parent''s computed value — even for a property that does not normally inherit. `border: inherit` is legal and occasionally useful.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-inheritance';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'comparison'::public.block_type, 'Opting in to inheritance', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"Deliberate","code":"button {\n  font-family: inherit;\n  font-size: inherit;\n}","why":"Form controls do *not* inherit fonts from the page by default — browsers give them their own. This one rule is why a button suddenly matches the rest of your text, and almost every real stylesheet contains it."},"bad":{"label":"Fighting it instead","code":"button {\n  font-family: system-ui, sans-serif;\n  font-size: 1rem;\n}","why":"Works today, and now the button has its own copy of the value. Change the page font later and the buttons quietly stop matching."}}'::jsonb
+from public.lessons where slug = 'css-inheritance';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'interactive_demo'::public.block_type, 'Inheritance versus a direct rule', 'The same nesting, three times.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Inherited","code":"<style>\n  .card { color: rebeccapurple }\n</style>\n<div class=\"card\"><p>Fresh bread, every morning.</p></div>","note":"Nothing sets a colour on the paragraph, so it inherits from the card."},{"label":"Direct rule wins","code":"<style>\n  #page .card { color: rebeccapurple }\n  p { color: teal }\n</style>\n<div id=\"page\"><div class=\"card\"><p>Fresh bread, every morning.</p></div></div>","note":"An id-and-class selector on the ancestor loses to a bare type selector on the element. Inheritance is not in the contest."},{"label":"Boxes do not inherit","code":"<style>\n  .card { border: 2px solid teal; padding: 1rem }\n</style>\n<div class=\"card\"><p>Fresh bread, every morning.</p></div>","note":"The card has a border and padding. The paragraph inside has neither — box properties stop where they are set."}]}'::jsonb
+from public.lessons where slug = 'css-inheritance';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'progressive_detail'::public.block_type, 'The four keywords every property accepts', '`inherit` takes the parent''s value. `initial` resets to the property''s specification default, which is often not what a browser stylesheet gives you — `display: initial` is `inline`, not `block`. `unset` behaves as `inherit` for inherited properties and `initial` for the rest, which makes it the most useful of the four. `revert` rolls back to the browser''s own stylesheet, which is the one you want when undoing your own reset.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-inheritance';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Text properties inherit; box properties do not.","An inherited value only applies when nothing set the property on the element itself.","Inheritance is not part of specificity — any direct rule beats any inherited value.","`inherit` opts in deliberately, and is how form controls are made to match the page."],"nextUp":"Next: the Level 1 milestone."}'::jsonb
+from public.lessons where slug = 'css-inheritance';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Give three properties that inherit and three that do not.","Why does a bare `p { color: teal }` beat `#page { color: crimson }` on a paragraph inside `#page`?","What does `font-family: inherit` on a button fix?"],"points":["Inherit: `color`, `font-family`, `line-height`, `text-align`. Do not: `margin`, `padding`, `border`, `background`, `width`, `display`.","Because the id rule applies to the *wrapper*, not the paragraph. Its value only reaches the paragraph by inheritance, and inheritance supplies a value only when nothing set the property directly. The type selector does set it, so it wins — specificity never enters into it.","Form controls do not inherit fonts from the page; browsers give them their own. `inherit` makes the button follow the page font, and keeps following it if the page font changes later."]}'::jsonb
+from public.lessons where slug = 'css-inheritance';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-inheritance-guided', 1, 'guided'::public.exercise_kind, 'Set the page font once',
+       'Set `font-family` and `color` **once** on `body` so that every piece of text on the page picks them up by inheritance. Then make the button match, using `inherit` rather than repeating the values. Do not add a font or colour to any other selector.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Inheritance</title>
+    <style>
+    </style>
+  </head>
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p>Fresh bread, every morning.</p>
+    <button type="button">Book a table</button>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Inheritance</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        color: rebeccapurple;
+      }
+      button {
+        font-family: inherit;
+        font-size: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Riverside Bakery</h1>
+    <p>Fresh bread, every morning.</p>
+    <button type="button">Book a table</button>
+  </body>
+</html>', ARRAY['One rule on body sets both properties for the whole page.', 'The heading and paragraph need no rules at all — they inherit.', 'For the button, write font-family: inherit rather than naming the font again.']::text[],
+       45, 2,
+       (select id from public.skills where slug = 'cascade'), false
+from public.lessons l where l.slug = 'css-inheritance'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_declared'::public.requirement_kind, 'body', 'font-family',
+       NULL, NULL, NULL, NULL,
+       'The body sets a font family', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-inheritance-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_inherited'::public.requirement_kind, 'p', 'color',
+       NULL, NULL, NULL, NULL,
+       'The paragraph colour is inherited, not set directly', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-inheritance-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_inherited'::public.requirement_kind, 'h1', 'font-family',
+       NULL, NULL, NULL, NULL,
+       'The heading font is inherited, not set directly', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-inheritance-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, 'button', 'font-family',
+       'inherit', NULL, NULL, NULL,
+       'The button opts in with font-family: inherit', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-inheritance-guided';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-inheritance-debug', 2, 'debug'::public.exercise_kind, 'A rule that never had a chance',
+       'The author wanted every paragraph in the card to be `rebeccapurple` and used a very specific selector to be sure. It is still teal. Fix it *without* raising specificity any further — remove what is actually beating it.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Inheritance</title>
+    <style>
+      #page .card { color: rebeccapurple; }
+      p { color: teal; }
+    </style>
+  </head>
+  <body>
+    <div id="page">
+      <div class="card">
+        <p>Fresh bread, every morning.</p>
+      </div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Inheritance</title>
+    <style>
+      #page .card { color: rebeccapurple; }
+    </style>
+  </head>
+  <body>
+    <div id="page">
+      <div class="card">
+        <p>Fresh bread, every morning.</p>
+      </div>
+    </div>
+  </body>
+</html>', ARRAY['The specific selector is not losing a specificity contest — it is not in one.', 'The paragraph has its own colour, so it never inherits anything.', 'Delete the p rule and the inherited value reaches the paragraph.']::text[],
+       50, 3,
+       (select id from public.skills where slug = 'cascade'), false
+from public.lessons l where l.slug = 'css-inheritance'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, 'p', 'color',
+       'rebeccapurple', NULL, NULL, NULL,
+       'The paragraph resolves to rebeccapurple', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-inheritance-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_inherited'::public.requirement_kind, 'p', 'color',
+       NULL, NULL, NULL, NULL,
+       'It gets there by inheritance, not a rule of its own', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-inheritance-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_no_important'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'No declaration uses !important', 'Raising specificity with !important wins this argument and loses the next one — the only way to override it later is another !important.', 1, true, NULL
+from public.exercises e where e.slug = 'css-inheritance-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-inheritance'), NULL, 'q-css-what-inherits', 1, 'single'::public.question_kind,
+        'Which of these inherits by default?', '`color` inherits, along with the other text properties. Box properties such as padding, border and width do not.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`width`', false, NULL
+from public.quiz_questions where slug = 'q-css-what-inherits';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`color`', true, NULL
+from public.quiz_questions where slug = 'q-css-what-inherits';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`padding`', false, NULL
+from public.quiz_questions where slug = 'q-css-what-inherits';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`border`', false, NULL
+from public.quiz_questions where slug = 'q-css-what-inherits';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-inheritance'), NULL, 'q-css-inheritance-vs-specificity', 2, 'single'::public.question_kind,
+        'Why does `p { color: teal }` beat an inherited value from `#page { color: crimson }`?', 'Inheritance only supplies a value when nothing set the property on the element itself. It is not part of the specificity contest.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Type selectors beat id selectors', false, NULL
+from public.quiz_questions where slug = 'q-css-inheritance-vs-specificity';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The p rule comes later in the file', false, NULL
+from public.quiz_questions where slug = 'q-css-inheritance-vs-specificity';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Because `#page` is not a real selector', false, NULL
+from public.quiz_questions where slug = 'q-css-inheritance-vs-specificity';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Inheritance only applies when nothing sets the property directly', true, NULL
+from public.quiz_questions where slug = 'q-css-inheritance-vs-specificity';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-inheritance'), NULL, 'q-css-button-font', 3, 'single'::public.question_kind,
+        'Why do buttons usually need `font-family: inherit`?', 'Form controls do not inherit fonts from the page — browsers give them their own — so they must opt in.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Form controls do not inherit fonts by default', true, NULL
+from public.quiz_questions where slug = 'q-css-button-font';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Buttons cannot have a font-family set directly', false, NULL
+from public.quiz_questions where slug = 'q-css-button-font';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It makes the button load faster', false, NULL
+from public.quiz_questions where slug = 'q-css-button-font';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It is required for accessibility', false, NULL
+from public.quiz_questions where slug = 'q-css-button-font';
+-- lesson: Milestone: make the page obey you
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-cascade-milestone', 4, 'Milestone: make the page obey you', 'Six conflicts, one stylesheet', 'A stylesheet where nothing does what its author intended. Every fault is a cascade fault, and none of them needs a new property.',
+       ARRAY['Diagnose why a rule is not applying', 'Repair conflicts without raising specificity', 'Produce a stylesheet with no `!important` and no id selectors']::text[], 24, 40, (select id from public.skills where slug = 'cascade'), 0.8
+from public.modules m where m.slug = 'css-first-rules'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Work through cascade faults methodically","Repair each without escalating specificity","Explain every change you made"]}'::jsonb
+from public.lessons where slug = 'css-cascade-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'checklist'::public.block_type, 'When a rule is not applying, check in this order', NULL,
+       NULL, NULL, NULL, '{"items":["Does the selector actually match anything?","Is the property spelled correctly, and the value valid?","Is another rule winning on specificity?","Is another rule winning on source order at equal specificity?","Is there an `!important` anywhere?","Is there an inline `style` attribute on the element?","Does the property even inherit, if you set it on an ancestor?"]}'::jsonb
+from public.lessons where slug = 'css-cascade-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'callout'::public.block_type, 'Check the cheap things first', 'The list above is in order of how quickly you can rule each one out. A misspelled property takes five seconds to check and accounts for a surprising share of lost afternoons — checking it before you start reasoning about specificity is not laziness, it is efficiency.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-cascade-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'interactive_demo'::public.block_type, 'The four ways a rule fails', 'One symptom, four completely different causes.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Selector never matched","code":"<style>\n  .intro { color: teal }\n</style>\n<p class=\"lead\">Fresh bread.</p>","note":"Nothing is wrong with the CSS. The class in the markup is `lead`, not `intro`, so the rule is not in the contest at all."},{"label":"Invalid value","code":"<style>\n  p { color: tealish }\n</style>\n<p>Fresh bread.</p>","note":"`tealish` is not a colour, so the declaration is dropped silently. The selector matched perfectly."},{"label":"Outranked","code":"<style>\n  p { color: teal }\n  .card p { color: crimson }\n</style>\n<div class=\"card\"><p>Fresh bread.</p></div>","note":"Both matched, both valid. The more specific one simply won."},{"label":"Never inherited","code":"<style>\n  .card { border: 2px solid teal }\n</style>\n<div class=\"card\"><p>Fresh bread.</p></div>","note":"The author expected the paragraph to get a border too. `border` does not inherit, so it never could."}]}'::jsonb
+from public.lessons where slug = 'css-cascade-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'recall'::public.block_type, 'From memory', 'Close the page. From memory, write the checklist for diagnosing a rule that is not applying — in order, cheapest check first.',
+       NULL, NULL, NULL, '{"points":["Does the selector match anything at all?","Is the property spelled right and the value valid?","Is another rule winning on specificity?","At equal specificity, is another rule later in the file?","Is there an `!important`?","Is there an inline `style` attribute?","Does the property inherit, if you set it on an ancestor?"]}'::jsonb
+from public.lessons where slug = 'css-cascade-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Almost every cascade fault is one of four things: no match, invalid, outranked, or not inherited.","Check the cheap causes before reasoning about specificity.","Repair by lowering the winning selector, not by raising the losing one."],"nextUp":"Next: the box model."}'::jsonb
+from public.lessons where slug = 'css-cascade-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Name the four reasons a valid-looking rule does nothing.","Why repair a conflict by lowering specificity rather than raising it?"],"points":["The selector matched nothing; the declaration was invalid and silently dropped; another rule outranked it; or the property was set on an ancestor and does not inherit.","Because raising it is unbounded — every future override has to beat the new high-water mark, and the stylesheet ratchets upwards until only `!important` works. Lowering the winner puts the ceiling back down for everyone."]}'::jsonb
+from public.lessons where slug = 'css-cascade-milestone';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-cascade-milestone-debug', 1, 'debug'::public.exercise_kind, 'Six conflicts, one stylesheet',
+       'Every intended style is being defeated. Repair the stylesheet so that: the page font is inherited from `body`; every paragraph is `dimgray`; the `.lead` paragraph is `rebeccapurple`; the `.btn` button is `teal` and matches the page font. Remove every `!important`, every id selector and the inline style. No selector may be stronger than a single class.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Cascade milestone</title>
+    <style>
+      body { font-family: system-ui, sans-serif; }
+      p { color: dimgray; }
+      #page .lead { color: rebeccapurple; }
+      .lead { color: dimgray !important; }
+      button { color: crimson; }
+      .btn { color: teal; }
+    </style>
+  </head>
+  <body>
+    <div id="page">
+      <p class="lead" style="color: crimson">Fresh bread, every morning.</p>
+      <p>We open at 6am and bake until we sell out.</p>
+      <button class="btn" type="button">Book a table</button>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Cascade milestone</title>
+    <style>
+      body { font-family: system-ui, sans-serif; }
+      p { color: dimgray; }
+      .lead { color: rebeccapurple; }
+      button { color: crimson; font-family: inherit; }
+      .btn { color: teal; }
+    </style>
+  </head>
+  <body>
+    <div id="page">
+      <p class="lead">Fresh bread, every morning.</p>
+      <p>We open at 6am and bake until we sell out.</p>
+      <button class="btn" type="button">Book a table</button>
+    </div>
+  </body>
+</html>', ARRAY['Start by deleting the inline style attribute — nothing in the stylesheet can beat it.', 'The two .lead rules disagree; keep the one that says rebeccapurple and drop the !important.', 'Remove #page from the selector so no rule is stronger than one class.', 'The button needs font-family: inherit to pick up the body font.']::text[],
+       70, 4,
+       (select id from public.skills where slug = 'cascade'), false
+from public.lessons l where l.slug = 'css-cascade-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.lead', 'color',
+       'rebeccapurple', NULL, NULL, NULL,
+       'The lead paragraph is rebeccapurple', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-cascade-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, 'p:not(.lead)', 'color',
+       'dimgray', NULL, NULL, NULL,
+       'Ordinary paragraphs are dimgray', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-cascade-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.btn', 'color',
+       'teal', NULL, NULL, NULL,
+       'The button is teal', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-cascade-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, 'button', 'font-family',
+       'inherit', NULL, NULL, NULL,
+       'The button inherits the page font', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-cascade-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_inherited'::public.requirement_kind, 'p', 'font-family',
+       NULL, NULL, NULL, NULL,
+       'Paragraph fonts come from body by inheritance', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-cascade-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'css_no_important'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'No declaration uses !important', 'Raising specificity with !important wins this argument and loses the next one — the only way to override it later is another !important.', 1, true, NULL
+from public.exercises e where e.slug = 'css-cascade-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 7, 'css_max_specificity'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, 256,
+       'No selector is stronger than a single class', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-cascade-milestone-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-cascade-milestone'), NULL, 'q-css-diagnose-order', 1, 'single'::public.question_kind,
+        'A rule looks correct and does nothing. What is the cheapest thing to check first?', 'Whether the selector matches anything at all, and whether the property is spelled correctly. Both take seconds and account for a large share of lost time.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Whether another rule is more specific', false, NULL
+from public.quiz_questions where slug = 'q-css-diagnose-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Whether the browser supports the property', false, NULL
+from public.quiz_questions where slug = 'q-css-diagnose-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Whether the stylesheet loaded', false, NULL
+from public.quiz_questions where slug = 'q-css-diagnose-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Whether the selector matches, and whether the property is spelled right', true, NULL
+from public.quiz_questions where slug = 'q-css-diagnose-order';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-cascade-milestone'), NULL, 'q-css-repair-direction', 2, 'single'::public.question_kind,
+        'Why repair a conflict by lowering the winning selector rather than raising the losing one?', 'Raising is unbounded: every future override must beat the new high-water mark, until only `!important` works.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Lower specificity renders faster', false, NULL
+from public.quiz_questions where slug = 'q-css-repair-direction';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Raising specificity is invalid CSS', false, NULL
+from public.quiz_questions where slug = 'q-css-repair-direction';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'There is no difference', false, NULL
+from public.quiz_questions where slug = 'q-css-repair-direction';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Raising ratchets the whole stylesheet upwards without limit', true, NULL
+from public.quiz_questions where slug = 'q-css-repair-direction';
+-- Level 1 milestone: The Cascade questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-1-milestone'), 'a-css-1-specificity-order', 1, 'single'::public.question_kind,
+        'Put these in order, weakest first: `.card p`, `p`, `#main p`.', 'Elements, then classes, then ids — compared left to right.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'They are all equal', false, NULL
+from public.quiz_questions where slug = 'a-css-1-specificity-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`p`, `.card p`, `#main p`', true, NULL
+from public.quiz_questions where slug = 'a-css-1-specificity-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`p`, `#main p`, `.card p`', false, NULL
+from public.quiz_questions where slug = 'a-css-1-specificity-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`.card p`, `p`, `#main p`', false, NULL
+from public.quiz_questions where slug = 'a-css-1-specificity-order';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-1-milestone'), 'a-css-1-inheritance-loses', 2, 'single'::public.question_kind,
+        'An ancestor with an id sets `color`. The element itself has a type-selector rule setting `color`. Which applies?', 'The rule on the element. Inheritance supplies a value only when nothing set the property directly.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The ancestor, because of the id', false, NULL
+from public.quiz_questions where slug = 'a-css-1-inheritance-loses';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Whichever is later in the file', false, NULL
+from public.quiz_questions where slug = 'a-css-1-inheritance-loses';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Neither applies', false, NULL
+from public.quiz_questions where slug = 'a-css-1-inheritance-loses';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The rule on the element itself', true, NULL
+from public.quiz_questions where slug = 'a-css-1-inheritance-loses';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-1-milestone'), 'a-css-1-invalid-silent', 3, 'single'::public.question_kind,
+        'What does a browser do with `colour: teal`?', 'Discards that declaration silently and applies the rest of the rule.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Drops the whole rule', false, NULL
+from public.quiz_questions where slug = 'a-css-1-invalid-silent';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Logs an error to the console', false, NULL
+from public.quiz_questions where slug = 'a-css-1-invalid-silent';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Treats it as `color`', false, NULL
+from public.quiz_questions where slug = 'a-css-1-invalid-silent';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Drops that declaration and keeps the rest of the rule', true, NULL
+from public.quiz_questions where slug = 'a-css-1-invalid-silent';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-1-milestone'), 'a-css-1-inline-beats', 4, 'single'::public.question_kind,
+        'What beats a `style` attribute on the element?', 'Only an `!important` declaration in a rule.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Nothing at all', false, NULL
+from public.quiz_questions where slug = 'a-css-1-inline-beats';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'An `!important` declaration in a rule', true, NULL
+from public.quiz_questions where slug = 'a-css-1-inline-beats';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'An id selector', false, NULL
+from public.quiz_questions where slug = 'a-css-1-inline-beats';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A rule later in the stylesheet', false, NULL
+from public.quiz_questions where slug = 'a-css-1-inline-beats';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-1-milestone'), 'a-css-1-does-not-inherit', 5, 'single'::public.question_kind,
+        'Which of these does **not** inherit?', 'Box properties such as padding stop where they are set.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`line-height`', false, NULL
+from public.quiz_questions where slug = 'a-css-1-does-not-inherit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`padding`', true, NULL
+from public.quiz_questions where slug = 'a-css-1-does-not-inherit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`color`', false, NULL
+from public.quiz_questions where slug = 'a-css-1-does-not-inherit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`font-family`', false, NULL
+from public.quiz_questions where slug = 'a-css-1-does-not-inherit';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-1-milestone'), 'a-css-1-where-zero', 6, 'single'::public.question_kind,
+        'What is the specificity of `:where(.card) p`?', '`:where()` always contributes zero, so this scores as a single element selector.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The same as `p`', true, NULL
+from public.quiz_questions where slug = 'a-css-1-where-zero';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The same as `.card p`', false, NULL
+from public.quiz_questions where slug = 'a-css-1-where-zero';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The same as `#card p`', false, NULL
+from public.quiz_questions where slug = 'a-css-1-where-zero';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Zero for the whole selector', false, NULL
+from public.quiz_questions where slug = 'a-css-1-where-zero';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-1-milestone'), 'a-css-1-tie-break', 7, 'single'::public.question_kind,
+        'Two rules have identical specificity and set the same property. Which applies?', 'The later one in source order.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The one later in the stylesheet', true, NULL
+from public.quiz_questions where slug = 'a-css-1-tie-break';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The one earlier in the stylesheet', false, NULL
+from public.quiz_questions where slug = 'a-css-1-tie-break';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Neither; it is undefined', false, NULL
+from public.quiz_questions where slug = 'a-css-1-tie-break';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Both, merged together', false, NULL
+from public.quiz_questions where slug = 'a-css-1-tie-break';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-1-milestone'), 'a-css-1-button-inherit', 8, 'single'::public.question_kind,
+        'Why does `button { font-family: inherit }` appear in almost every real stylesheet?', 'Browsers give form controls their own font, so they do not follow the page unless told to.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It is required by the HTML specification', false, NULL
+from public.quiz_questions where slug = 'a-css-1-button-inherit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It improves rendering performance', false, NULL
+from public.quiz_questions where slug = 'a-css-1-button-inherit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Form controls do not inherit the page font by default', true, NULL
+from public.quiz_questions where slug = 'a-css-1-button-inherit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Buttons cannot be given a font directly', false, NULL
+from public.quiz_questions where slug = 'a-css-1-button-inherit';
 -- --------------------------------------------------------------------------
--- Reviewable items (spaced repetition)
+-- CSS Architect — Level 2: Boxes and Selectors
 -- --------------------------------------------------------------------------
 
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-what-is-html', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'document-structure'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'what-happens-when-you-open-a-page' and qq.slug = 'q-what-is-html'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-html-purpose', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'document-structure'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'what-happens-when-you-open-a-page' and qq.slug = 'q-html-purpose'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-first-markup-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'syntax'),
-       l.id, e.id, 1
-from public.lessons l, public.exercises e
-where l.slug = 'what-happens-when-you-open-a-page' and e.slug = 'first-markup-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-first-markup-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'syntax'),
-       l.id, e.id, 1
-from public.lessons l, public.exercises e
-where l.slug = 'what-happens-when-you-open-a-page' and e.slug = 'first-markup-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-tag-vs-element', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'syntax'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'tags-elements-attributes' and qq.slug = 'q-tag-vs-element'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-attribute-syntax', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'syntax'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'tags-elements-attributes' and qq.slug = 'q-attribute-syntax'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-void-elements', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'syntax'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'tags-elements-attributes' and qq.slug = 'q-void-elements'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-attributes-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'syntax'),
-       l.id, e.id, 1
-from public.lessons l, public.exercises e
-where l.slug = 'tags-elements-attributes' and e.slug = 'attributes-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-attributes-challenge', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'syntax'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'tags-elements-attributes' and e.slug = 'attributes-challenge'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-attributes-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'validation'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'tags-elements-attributes' and e.slug = 'attributes-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-nesting-order', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'syntax'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'nesting-and-the-document-tree' and qq.slug = 'q-nesting-order'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-dom-meaning', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'syntax'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'nesting-and-the-document-tree' and qq.slug = 'q-dom-meaning'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-comments', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'syntax'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'nesting-and-the-document-tree' and qq.slug = 'q-comments'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-nesting-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'syntax'),
-       l.id, e.id, 1
-from public.lessons l, public.exercises e
-where l.slug = 'nesting-and-the-document-tree' and e.slug = 'nesting-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-nesting-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'validation'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'nesting-and-the-document-tree' and e.slug = 'nesting-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-doctype-purpose', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'document-structure'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'doctype-html-head-body' and qq.slug = 'q-doctype-purpose'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-head-vs-body', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'document-structure'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'doctype-html-head-body' and qq.slug = 'q-head-vs-body'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-viewport', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'document-structure'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'doctype-html-head-body' and qq.slug = 'q-viewport'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-charset', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'metadata'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'doctype-html-head-body' and qq.slug = 'q-charset'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-skeleton-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'document-structure'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'doctype-html-head-body' and e.slug = 'skeleton-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-skeleton-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'document-structure'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'doctype-html-head-body' and e.slug = 'skeleton-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-index-html', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'multi-page'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'your-first-complete-page' and qq.slug = 'q-index-html'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-one-h1', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'your-first-complete-page' and qq.slug = 'q-one-h1'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-first-page-milestone', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'document-structure'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'your-first-complete-page' and e.slug = 'first-page-milestone'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-heading-skip', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'heading-hierarchy' and qq.slug = 'q-heading-skip'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-heading-purpose', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'heading-hierarchy' and qq.slug = 'q-heading-purpose'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-headings-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'heading-hierarchy' and e.slug = 'headings-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-headings-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'heading-hierarchy' and e.slug = 'headings-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-whitespace', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'paragraphs-breaks-rules' and qq.slug = 'q-whitespace'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-br-use', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'paragraphs-breaks-rules' and qq.slug = 'q-br-use'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-hr-meaning', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'paragraphs-breaks-rules' and qq.slug = 'q-hr-meaning'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-paragraphs-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'paragraphs-breaks-rules' and e.slug = 'paragraphs-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-paragraphs-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'paragraphs-breaks-rules' and e.slug = 'paragraphs-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-strong-vs-em', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'emphasis-and-importance' and qq.slug = 'q-strong-vs-em'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-small-meaning', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'emphasis-and-importance' and qq.slug = 'q-small-meaning'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-emphasis-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'emphasis-and-importance' and e.slug = 'emphasis-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-emphasis-challenge', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'emphasis-and-importance' and e.slug = 'emphasis-challenge'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-cite-meaning', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'quotes-abbreviations-dates' and qq.slug = 'q-cite-meaning'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-datetime-format', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'quotes-abbreviations-dates' and qq.slug = 'q-datetime-format'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-q-quotes', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'quotes-abbreviations-dates' and qq.slug = 'q-q-quotes'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-quotes-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'quotes-abbreviations-dates' and e.slug = 'quotes-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-quotes-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'quotes-abbreviations-dates' and e.slug = 'quotes-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-entity-lt', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'code-entities-and-lists' and qq.slug = 'q-entity-lt'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-list-choice', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'lists'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'code-entities-and-lists' and qq.slug = 'q-list-choice'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-nested-list', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'lists'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'code-entities-and-lists' and qq.slug = 'q-nested-list'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-lists-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'lists'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'code-entities-and-lists' and e.slug = 'lists-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-entities-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'validation'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'code-entities-and-lists' and e.slug = 'entities-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-semantic-choice', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'article-milestone' and qq.slug = 'q-semantic-choice'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-article-milestone-build', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'text-semantics'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'article-milestone' and e.slug = 'article-milestone-build'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-link-text', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'anchors-and-link-text' and qq.slug = 'q-link-text'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-noopener', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'security'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'anchors-and-link-text' and qq.slug = 'q-noopener'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-links-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'links'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'anchors-and-link-text' and e.slug = 'links-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-links-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'links'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'anchors-and-link-text' and e.slug = 'links-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-dotdot', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'links'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'relative-and-absolute-paths' and qq.slug = 'q-dotdot'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-leading-slash', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'links'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'relative-and-absolute-paths' and qq.slug = 'q-leading-slash'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-fragment-case', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'links'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'relative-and-absolute-paths' and qq.slug = 'q-fragment-case'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-paths-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'links'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'relative-and-absolute-paths' and e.slug = 'paths-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-fragments-challenge', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'links'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'relative-and-absolute-paths' and e.slug = 'fragments-challenge'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-paths-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'links'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'relative-and-absolute-paths' and e.slug = 'paths-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-tel-format', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'links'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'special-links' and qq.slug = 'q-tel-format'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-download-attr', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'links'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'special-links' and qq.slug = 'q-download-attr'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-special-links-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'links'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'special-links' and e.slug = 'special-links-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-nav-list', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'navigation'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'navigation-menus' and qq.slug = 'q-nav-list'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-skip-link-position', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'navigation-menus' and qq.slug = 'q-skip-link-position'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-aria-current', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'navigation-menus' and qq.slug = 'q-aria-current'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-nav-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'navigation'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'navigation-menus' and e.slug = 'nav-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-skip-link-challenge', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'navigation'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'navigation-menus' and e.slug = 'skip-link-challenge'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-nav-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'navigation'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'navigation-menus' and e.slug = 'nav-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-filenames', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'multi-page'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'multi-page-milestone' and qq.slug = 'q-filenames'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-nav-consistency', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'navigation'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'multi-page-milestone' and qq.slug = 'q-nav-consistency'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-multipage-milestone-build', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'multi-page'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'multi-page-milestone' and e.slug = 'multipage-milestone-build'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-img-dimensions', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'images'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'the-img-element' and qq.slug = 'q-img-dimensions'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-hotlinking', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'images'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'the-img-element' and qq.slug = 'q-hotlinking'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-img-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'images'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'the-img-element' and e.slug = 'img-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-img-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'images'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'the-img-element' and e.slug = 'img-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-empty-alt', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'images'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'writing-alt-text' and qq.slug = 'q-empty-alt'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-alt-vs-caption', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'images'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'writing-alt-text' and qq.slug = 'q-alt-vs-caption'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-missing-alt', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'writing-alt-text' and qq.slug = 'q-missing-alt'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-alt-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'images'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'writing-alt-text' and e.slug = 'alt-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-figure-challenge', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'images'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'writing-alt-text' and e.slug = 'figure-challenge'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-srcset-w', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'responsive-images'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'srcset-and-sizes' and qq.slug = 'q-srcset-w'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-sizes-purpose', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'responsive-images'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'srcset-and-sizes' and qq.slug = 'q-sizes-purpose'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-srcset-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'responsive-images'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'srcset-and-sizes' and e.slug = 'srcset-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-srcset-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'responsive-images'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'srcset-and-sizes' and e.slug = 'srcset-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-picture-img', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'responsive-images'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'picture-and-formats' and qq.slug = 'q-picture-img'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-lazy-hero', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'performance'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'picture-and-formats' and qq.slug = 'q-lazy-hero'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-picture-vs-srcset', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'responsive-images'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'picture-and-formats' and qq.slug = 'q-picture-vs-srcset'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-picture-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'responsive-images'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'picture-and-formats' and e.slug = 'picture-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-lazy-challenge', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'performance'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'picture-and-formats' and e.slug = 'lazy-challenge'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-video-controls', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'audio-video'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'video-and-audio' and qq.slug = 'q-video-controls'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-track-kind', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'audio-video'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'video-and-audio' and qq.slug = 'q-track-kind'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-fallback-placement', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'audio-video'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'video-and-audio' and qq.slug = 'q-fallback-placement'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-video-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'audio-video'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'video-and-audio' and e.slug = 'video-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-video-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'audio-video'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'video-and-audio' and e.slug = 'video-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-iframe-title', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'iframes-and-media-milestone' and qq.slug = 'q-iframe-title'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-sandbox', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'security'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'iframes-and-media-milestone' and qq.slug = 'q-sandbox'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-iframe-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'embedded-content'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'iframes-and-media-milestone' and e.slug = 'iframe-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-media-milestone', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'audio-video'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'iframes-and-media-milestone' and e.slug = 'media-milestone'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-semantic-meaning', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'semantic-html'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'semantic-vs-non-semantic' and qq.slug = 'q-semantic-meaning'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-main-count', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'semantic-html'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'semantic-vs-non-semantic' and qq.slug = 'q-main-count'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-landmarks-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'semantic-html'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'semantic-vs-non-semantic' and e.slug = 'landmarks-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-article-test', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'semantic-html'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'section-article-aside' and qq.slug = 'q-article-test'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-section-heading', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'semantic-html'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'section-article-aside' and qq.slug = 'q-section-heading'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-outline-algorithm', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'semantic-html'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'section-article-aside' and qq.slug = 'q-outline-algorithm'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-section-article-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'semantic-html'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'section-article-aside' and e.slug = 'section-article-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-section-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'semantic-html'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'section-article-aside' and e.slug = 'section-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-case-sensitivity', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'multi-page'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'file-organisation-and-patterns' and qq.slug = 'q-case-sensitivity'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-comments-value', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'maintainability'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'file-organisation-and-patterns' and qq.slug = 'q-comments-value'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-patterns-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'maintainability'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'file-organisation-and-patterns' and e.slug = 'patterns-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-footer-placement', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'semantic-html'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'semantic-rebuild-milestone' and qq.slug = 'q-footer-placement'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-semantic-rebuild', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'semantic-html'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'semantic-rebuild-milestone' and e.slug = 'semantic-rebuild'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-scope-col', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'tables'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'building-a-table' and qq.slug = 'q-scope-col'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-caption-position', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'tables'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'building-a-table' and qq.slug = 'q-caption-position'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-layout-tables', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'tables'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'building-a-table' and qq.slug = 'q-layout-tables'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-table-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'tables'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'building-a-table' and e.slug = 'table-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-table-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'tables'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'building-a-table' and e.slug = 'table-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-label-for', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'forms'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'labels-and-inputs' and qq.slug = 'q-label-for'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-placeholder', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'labels-and-inputs' and qq.slug = 'q-placeholder'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-number-type', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'forms'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'labels-and-inputs' and qq.slug = 'q-number-type'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-name-attribute', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'forms'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'labels-and-inputs' and qq.slug = 'q-name-attribute'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-labels-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'forms'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'labels-and-inputs' and e.slug = 'labels-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-input-types-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'forms'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'labels-and-inputs' and e.slug = 'input-types-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-radio-group', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'forms'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'grouping-and-controls' and qq.slug = 'q-radio-group'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-button-type', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'forms'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'grouping-and-controls' and qq.slug = 'q-button-type'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-legend-position', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'forms'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'grouping-and-controls' and qq.slug = 'q-legend-position'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-fieldset-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'forms'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'grouping-and-controls' and e.slug = 'fieldset-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-controls-challenge', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'forms'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'grouping-and-controls' and e.slug = 'controls-challenge'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-client-validation', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'security'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'validation-and-form-milestone' and qq.slug = 'q-client-validation'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-get-vs-post', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'security'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'validation-and-form-milestone' and qq.slug = 'q-get-vs-post'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-aria-describedby', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'aria'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'validation-and-form-milestone' and qq.slug = 'q-aria-describedby'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-validation-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'forms'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'validation-and-form-milestone' and e.slug = 'validation-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-form-milestone', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'forms'),
-       l.id, e.id, 5
-from public.lessons l, public.exercises e
-where l.slug = 'validation-and-form-milestone' and e.slug = 'form-milestone'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-summary-position', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'native-interaction'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'details-and-summary' and qq.slug = 'q-summary-position'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-details-name', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'native-interaction'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'details-and-summary' and qq.slug = 'q-details-name'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-details-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'native-interaction'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'details-and-summary' and e.slug = 'details-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-dialog-close', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'native-interaction'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'dialog-and-popover' and qq.slug = 'q-dialog-close'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-popover-js', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'native-interaction'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'dialog-and-popover' and qq.slug = 'q-popover-js'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-modal-content', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'progressive-enhancement'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'dialog-and-popover' and qq.slug = 'q-modal-content'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-popover-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'native-interaction'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'dialog-and-popover' and e.slug = 'popover-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-dialog-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'native-interaction'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'dialog-and-popover' and e.slug = 'dialog-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-progress-vs-meter', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'native-interaction'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'progress-meter-datalist-milestone' and qq.slug = 'q-progress-vs-meter'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-datalist-restrict', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'native-interaction'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'progress-meter-datalist-milestone' and qq.slug = 'q-datalist-restrict'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-datalist-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'native-interaction'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'progress-meter-datalist-milestone' and e.slug = 'datalist-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-native-milestone', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'native-interaction'),
-       l.id, e.id, 5
-from public.lessons l, public.exercises e
-where l.slug = 'progress-meter-datalist-milestone' and e.slug = 'native-milestone'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-a11y-tree', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'how-assistive-tech-reads-a-page' and qq.slug = 'q-a11y-tree'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-keyboard-test', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'how-assistive-tech-reads-a-page' and qq.slug = 'q-keyboard-test'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-div-button', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'how-assistive-tech-reads-a-page' and qq.slug = 'q-div-button'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-keyboard-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'how-assistive-tech-reads-a-page' and e.slug = 'keyboard-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-focusable-defaults', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'keyboard-and-focus-management' and qq.slug = 'q-focusable-defaults'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-tabindex-negative', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'keyboard-and-focus-management' and qq.slug = 'q-tabindex-negative'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-positive-tabindex', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'keyboard-and-focus-management' and qq.slug = 'q-positive-tabindex'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-keyboard-skip-link-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'keyboard-and-focus-management' and e.slug = 'keyboard-skip-link-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-keyboard-operability-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'keyboard-and-focus-management' and e.slug = 'keyboard-operability-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-name-order', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'accessible-names-in-depth' and qq.slug = 'q-name-order'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-alt-empty-vs-missing', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'accessible-names-in-depth' and qq.slug = 'q-alt-empty-vs-missing'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-link-text-alone', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'accessible-names-in-depth' and qq.slug = 'q-link-text-alone'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-accessible-names-challenge', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'accessible-names-in-depth' and e.slug = 'accessible-names-challenge'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-accessible-names-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'accessible-names-in-depth' and e.slug = 'accessible-names-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-aria-first-rule', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'aria'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'aria-fundamentals' and qq.slug = 'q-aria-first-rule'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-aria-behaviour', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'aria'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'aria-fundamentals' and qq.slug = 'q-aria-behaviour'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-labelledby-vs-label', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'aria'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'aria-fundamentals' and qq.slug = 'q-labelledby-vs-label'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-aria-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'aria'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'aria-fundamentals' and e.slug = 'aria-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-aria-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'aria'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'aria-fundamentals' and e.slug = 'aria-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-aria-current-page', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'aria'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'aria-live-and-state' and qq.slug = 'q-aria-current-page'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-live-region-timing', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'aria'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'aria-live-and-state' and qq.slug = 'q-live-region-timing'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-assertive-vs-polite', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'aria'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'aria-live-and-state' and qq.slug = 'q-assertive-vs-polite'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-aria-state-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'aria'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'aria-live-and-state' and e.slug = 'aria-state-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-aria-state-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'aria'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'aria-live-and-state' and e.slug = 'aria-state-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-placeholder-not-label', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'accessible-forms-in-depth' and qq.slug = 'q-placeholder-not-label'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-fieldset-legend', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'accessible-forms-in-depth' and qq.slug = 'q-fieldset-legend'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-autocomplete-requirement', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'accessible-forms-in-depth' and qq.slug = 'q-autocomplete-requirement'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-accessible-form-challenge', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'accessible-forms-in-depth' and e.slug = 'accessible-form-challenge'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-accessible-form-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'accessible-forms-in-depth' and e.slug = 'accessible-form-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-audit-order', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'accessibility-audit-milestone' and qq.slug = 'q-audit-order'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-duplicate-id-impact', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'validation'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'accessibility-audit-milestone' and qq.slug = 'q-duplicate-id-impact'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-a11y-audit-milestone', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'accessibility'),
-       l.id, e.id, 5
-from public.lessons l, public.exercises e
-where l.slug = 'accessibility-audit-milestone' and e.slug = 'a11y-audit-milestone'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-title-length', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'seo'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'titles-descriptions-canonicals' and qq.slug = 'q-title-length'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-canonical', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'seo'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'titles-descriptions-canonicals' and qq.slug = 'q-canonical'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-noindex-security', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'security'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'titles-descriptions-canonicals' and qq.slug = 'q-noindex-security'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-metadata-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'metadata'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'titles-descriptions-canonicals' and e.slug = 'metadata-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-metadata-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'metadata'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'titles-descriptions-canonicals' and e.slug = 'metadata-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-og-property', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'seo'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'social-and-structured-data' and qq.slug = 'q-og-property'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-structured-data-ranking', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'structured-data'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'social-and-structured-data' and qq.slug = 'q-structured-data-ranking'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-og-image-url', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'seo'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'social-and-structured-data' and qq.slug = 'q-og-image-url'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-og-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'seo'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'social-and-structured-data' and e.slug = 'og-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-jsonld-challenge', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'structured-data'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'social-and-structured-data' and e.slug = 'jsonld-challenge'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-lang-missing-effect', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'metadata'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'language-and-internationalisation' and qq.slug = 'q-lang-missing-effect'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-wrong-lang-worse', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'metadata'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'language-and-internationalisation' and qq.slug = 'q-wrong-lang-worse'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-dir-auto', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'metadata'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'language-and-internationalisation' and qq.slug = 'q-dir-auto'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-lang-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'metadata'),
-       l.id, e.id, 2
-from public.lessons l, public.exercises e
-where l.slug = 'language-and-internationalisation' and e.slug = 'lang-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-lang-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'metadata'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'language-and-internationalisation' and e.slug = 'lang-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-metadata-order', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'metadata'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'seo-milestone' and qq.slug = 'q-metadata-order'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-seo-milestone-build', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'seo'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'seo-milestone' and e.slug = 'seo-milestone-build'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-layout-shift', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'performance'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'loading-strategy' and qq.slug = 'q-layout-shift'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-defer-async', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'performance'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'loading-strategy' and qq.slug = 'q-defer-async'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-preload-overuse', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'performance'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'loading-strategy' and qq.slug = 'q-preload-overuse'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-perf-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'performance'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'loading-strategy' and e.slug = 'perf-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-noopener-why', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'security'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'html-security' and qq.slug = 'q-noopener-why'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-hidden-input', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'security'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'html-security' and qq.slug = 'q-hidden-input'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-csp-header', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'security'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'html-security' and qq.slug = 'q-csp-header'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-security-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'security'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'html-security' and e.slug = 'security-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-iframe-cost', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'performance'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'third-party-and-embeds' and qq.slug = 'q-iframe-cost'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-sandbox-combination', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'security'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'third-party-and-embeds' and qq.slug = 'q-sandbox-combination'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-defer-vs-async', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'performance'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'third-party-and-embeds' and qq.slug = 'q-defer-vs-async'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-embed-hardening-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'performance'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'third-party-and-embeds' and e.slug = 'embed-hardening-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-third-party-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'performance'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'third-party-and-embeds' and e.slug = 'third-party-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-preload-auto', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'performance'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'performance-milestone' and qq.slug = 'q-preload-auto'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-performance-milestone-build', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'performance'),
-       l.id, e.id, 5
-from public.lessons l, public.exercises e
-where l.slug = 'performance-milestone' and e.slug = 'performance-milestone-build'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-validator-order', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'validation'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'reading-validation-output' and qq.slug = 'q-validator-order'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-validator-limits', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'validation'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'reading-validation-output' and qq.slug = 'q-validator-limits'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-duplicate-id-effect', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'validation'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'reading-validation-output' and qq.slug = 'q-duplicate-id-effect'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-validation-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'validation'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'reading-validation-output' and e.slug = 'validation-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-elements-panel', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'debugging'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'developer-tools' and qq.slug = 'q-elements-panel'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-network-404', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'debugging'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'developer-tools' and qq.slug = 'q-network-404'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-one-change', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'debugging'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'developer-tools' and qq.slug = 'q-one-change'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-devtools-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'debugging'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'developer-tools' and e.slug = 'devtools-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-bisection-steps', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'debugging'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'a-method-for-debugging' and qq.slug = 'q-bisection-steps'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-minimal-repro-value', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'debugging'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'a-method-for-debugging' and qq.slug = 'q-minimal-repro-value'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-one-change-at-a-time', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'debugging'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'a-method-for-debugging' and qq.slug = 'q-one-change-at-a-time'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-bisection-debug', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'debugging'),
-       l.id, e.id, 3
-from public.lessons l, public.exercises e
-where l.slug = 'a-method-for-debugging' and e.slug = 'bisection-debug'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-minimal-reproduction-challenge', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'debugging'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'a-method-for-debugging' and e.slug = 'minimal-reproduction-challenge'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-repair-order', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'debugging'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'debugging-milestone' and qq.slug = 'q-repair-order'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-repair-milestone', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'debugging'),
-       l.id, e.id, 5
-from public.lessons l, public.exercises e
-where l.slug = 'debugging-milestone' and e.slug = 'repair-milestone'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-shell-difference', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'multi-page'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'assembling-the-site' and qq.slug = 'q-shell-difference'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-shell-guided', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'multi-page'),
-       l.id, e.id, 4
-from public.lessons l, public.exercises e
-where l.slug = 'assembling-the-site' and e.slug = 'shell-guided'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-capstone-media', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'images'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'capstone-build' and qq.slug = 'q-capstone-media'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-capstone-main-build', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'multi-page'),
-       l.id, e.id, 5
-from public.lessons l, public.exercises e
-where l.slug = 'capstone-build' and e.slug = 'capstone-main-build'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-review-order', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'validation'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'final-review' and qq.slug = 'q-review-order'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
-select 'rv-q-q-publishing', 'question'::public.review_item_kind,
-       (select id from public.skills where slug = 'multi-page'),
-       l.id, qq.id, 2
-from public.lessons l, public.quiz_questions qq
-where l.slug = 'final-review' and qq.slug = 'q-publishing'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  question_id = excluded.question_id, difficulty = excluded.difficulty;
-insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
-select 'rv-e-final-review-exercise', 'exercise'::public.review_item_kind,
-       (select id from public.skills where slug = 'debugging'),
-       l.id, e.id, 5
-from public.lessons l, public.exercises e
-where l.slug = 'final-review' and e.slug = 'final-review-exercise'
-on conflict (slug) do update set
-  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
-  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
--- Items whose question or exercise has left the curriculum.
-delete from public.review_items where slug not in ('rv-q-q-what-is-html', 'rv-q-q-html-purpose', 'rv-e-first-markup-guided', 'rv-e-first-markup-debug', 'rv-q-q-tag-vs-element', 'rv-q-q-attribute-syntax', 'rv-q-q-void-elements', 'rv-e-attributes-guided', 'rv-e-attributes-challenge', 'rv-e-attributes-debug', 'rv-q-q-nesting-order', 'rv-q-q-dom-meaning', 'rv-q-q-comments', 'rv-e-nesting-guided', 'rv-e-nesting-debug', 'rv-q-q-doctype-purpose', 'rv-q-q-head-vs-body', 'rv-q-q-viewport', 'rv-q-q-charset', 'rv-e-skeleton-guided', 'rv-e-skeleton-debug', 'rv-q-q-index-html', 'rv-q-q-one-h1', 'rv-e-first-page-milestone', 'rv-q-q-heading-skip', 'rv-q-q-heading-purpose', 'rv-e-headings-guided', 'rv-e-headings-debug', 'rv-q-q-whitespace', 'rv-q-q-br-use', 'rv-q-q-hr-meaning', 'rv-e-paragraphs-guided', 'rv-e-paragraphs-debug', 'rv-q-q-strong-vs-em', 'rv-q-q-small-meaning', 'rv-e-emphasis-guided', 'rv-e-emphasis-challenge', 'rv-q-q-cite-meaning', 'rv-q-q-datetime-format', 'rv-q-q-q-quotes', 'rv-e-quotes-guided', 'rv-e-quotes-debug', 'rv-q-q-entity-lt', 'rv-q-q-list-choice', 'rv-q-q-nested-list', 'rv-e-lists-guided', 'rv-e-entities-debug', 'rv-q-q-semantic-choice', 'rv-e-article-milestone-build', 'rv-q-q-link-text', 'rv-q-q-noopener', 'rv-e-links-guided', 'rv-e-links-debug', 'rv-q-q-dotdot', 'rv-q-q-leading-slash', 'rv-q-q-fragment-case', 'rv-e-paths-guided', 'rv-e-fragments-challenge', 'rv-e-paths-debug', 'rv-q-q-tel-format', 'rv-q-q-download-attr', 'rv-e-special-links-guided', 'rv-q-q-nav-list', 'rv-q-q-skip-link-position', 'rv-q-q-aria-current', 'rv-e-nav-guided', 'rv-e-skip-link-challenge', 'rv-e-nav-debug', 'rv-q-q-filenames', 'rv-q-q-nav-consistency', 'rv-e-multipage-milestone-build', 'rv-q-q-img-dimensions', 'rv-q-q-hotlinking', 'rv-e-img-guided', 'rv-e-img-debug', 'rv-q-q-empty-alt', 'rv-q-q-alt-vs-caption', 'rv-q-q-missing-alt', 'rv-e-alt-guided', 'rv-e-figure-challenge', 'rv-q-q-srcset-w', 'rv-q-q-sizes-purpose', 'rv-e-srcset-guided', 'rv-e-srcset-debug', 'rv-q-q-picture-img', 'rv-q-q-lazy-hero', 'rv-q-q-picture-vs-srcset', 'rv-e-picture-guided', 'rv-e-lazy-challenge', 'rv-q-q-video-controls', 'rv-q-q-track-kind', 'rv-q-q-fallback-placement', 'rv-e-video-guided', 'rv-e-video-debug', 'rv-q-q-iframe-title', 'rv-q-q-sandbox', 'rv-e-iframe-guided', 'rv-e-media-milestone', 'rv-q-q-semantic-meaning', 'rv-q-q-main-count', 'rv-e-landmarks-guided', 'rv-q-q-article-test', 'rv-q-q-section-heading', 'rv-q-q-outline-algorithm', 'rv-e-section-article-guided', 'rv-e-section-debug', 'rv-q-q-case-sensitivity', 'rv-q-q-comments-value', 'rv-e-patterns-guided', 'rv-q-q-footer-placement', 'rv-e-semantic-rebuild', 'rv-q-q-scope-col', 'rv-q-q-caption-position', 'rv-q-q-layout-tables', 'rv-e-table-guided', 'rv-e-table-debug', 'rv-q-q-label-for', 'rv-q-q-placeholder', 'rv-q-q-number-type', 'rv-q-q-name-attribute', 'rv-e-labels-guided', 'rv-e-input-types-debug', 'rv-q-q-radio-group', 'rv-q-q-button-type', 'rv-q-q-legend-position', 'rv-e-fieldset-guided', 'rv-e-controls-challenge', 'rv-q-q-client-validation', 'rv-q-q-get-vs-post', 'rv-q-q-aria-describedby', 'rv-e-validation-guided', 'rv-e-form-milestone', 'rv-q-q-summary-position', 'rv-q-q-details-name', 'rv-e-details-guided', 'rv-q-q-dialog-close', 'rv-q-q-popover-js', 'rv-q-q-modal-content', 'rv-e-popover-guided', 'rv-e-dialog-debug', 'rv-q-q-progress-vs-meter', 'rv-q-q-datalist-restrict', 'rv-e-datalist-guided', 'rv-e-native-milestone', 'rv-q-q-a11y-tree', 'rv-q-q-keyboard-test', 'rv-q-q-div-button', 'rv-e-keyboard-debug', 'rv-q-q-focusable-defaults', 'rv-q-q-tabindex-negative', 'rv-q-q-positive-tabindex', 'rv-e-keyboard-skip-link-guided', 'rv-e-keyboard-operability-debug', 'rv-q-q-name-order', 'rv-q-q-alt-empty-vs-missing', 'rv-q-q-link-text-alone', 'rv-e-accessible-names-challenge', 'rv-e-accessible-names-debug', 'rv-q-q-aria-first-rule', 'rv-q-q-aria-behaviour', 'rv-q-q-labelledby-vs-label', 'rv-e-aria-guided', 'rv-e-aria-debug', 'rv-q-q-aria-current-page', 'rv-q-q-live-region-timing', 'rv-q-q-assertive-vs-polite', 'rv-e-aria-state-guided', 'rv-e-aria-state-debug', 'rv-q-q-placeholder-not-label', 'rv-q-q-fieldset-legend', 'rv-q-q-autocomplete-requirement', 'rv-e-accessible-form-challenge', 'rv-e-accessible-form-debug', 'rv-q-q-audit-order', 'rv-q-q-duplicate-id-impact', 'rv-e-a11y-audit-milestone', 'rv-q-q-title-length', 'rv-q-q-canonical', 'rv-q-q-noindex-security', 'rv-e-metadata-guided', 'rv-e-metadata-debug', 'rv-q-q-og-property', 'rv-q-q-structured-data-ranking', 'rv-q-q-og-image-url', 'rv-e-og-guided', 'rv-e-jsonld-challenge', 'rv-q-q-lang-missing-effect', 'rv-q-q-wrong-lang-worse', 'rv-q-q-dir-auto', 'rv-e-lang-guided', 'rv-e-lang-debug', 'rv-q-q-metadata-order', 'rv-e-seo-milestone-build', 'rv-q-q-layout-shift', 'rv-q-q-defer-async', 'rv-q-q-preload-overuse', 'rv-e-perf-guided', 'rv-q-q-noopener-why', 'rv-q-q-hidden-input', 'rv-q-q-csp-header', 'rv-e-security-debug', 'rv-q-q-iframe-cost', 'rv-q-q-sandbox-combination', 'rv-q-q-defer-vs-async', 'rv-e-embed-hardening-guided', 'rv-e-third-party-debug', 'rv-q-q-preload-auto', 'rv-e-performance-milestone-build', 'rv-q-q-validator-order', 'rv-q-q-validator-limits', 'rv-q-q-duplicate-id-effect', 'rv-e-validation-debug', 'rv-q-q-elements-panel', 'rv-q-q-network-404', 'rv-q-q-one-change', 'rv-e-devtools-debug', 'rv-q-q-bisection-steps', 'rv-q-q-minimal-repro-value', 'rv-q-q-one-change-at-a-time', 'rv-e-bisection-debug', 'rv-e-minimal-reproduction-challenge', 'rv-q-q-repair-order', 'rv-e-repair-milestone', 'rv-q-q-shell-difference', 'rv-e-shell-guided', 'rv-q-q-capstone-media', 'rv-e-capstone-main-build', 'rv-q-q-review-order', 'rv-q-q-publishing', 'rv-e-final-review-exercise');
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'css-box-model', 2, 'Boxes and Selectors', 'How a box gets its size, and how to target exactly what you mean',
+       'Every element is a box. Four layers decide how big it is, one property changes the maths entirely, and a handful of selectors let you reach any element without escalating specificity.', 'You can size any element predictably and write selectors that target precisely what you intend.', 'violet'
+from public.courses c where c.slug = 'css-architect'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, NULL, 'css-level-2-milestone', 'milestone'::public.assessment_kind, 'Level 2 milestone: Boxes and Selectors', 'Six questions on the box model and selectors. Pass mark 75%.',
+       0.75, 180, 2
+from public.levels l where l.slug = 'css-box-model'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+-- module: The box model
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'css-boxes', 1, 'The box model', 'Content, padding, border, margin — and the property that changes what width means.',
+       50, false
+from public.levels l where l.slug = 'css-box-model'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'css-boxes' and p.slug = 'css-first-rules';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'css-boxes' and s.slug = 'box-model';
+-- lesson: The four layers of a box
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-the-four-layers', 1, 'The four layers of a box', 'Content, padding, border, margin — and what `width` actually measures', 'An element declared 300px wide is often not 300px wide. One property fixes that, and almost every real stylesheet sets it on the first line.',
+       ARRAY['Name the four layers of the box model', 'Explain what `width` measures by default', 'Use `box-sizing: border-box` and say why']::text[], 16, 40, (select id from public.skills where slug = 'box-model'), 0.7
+from public.modules m where m.slug = 'css-boxes'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A box has `width: 300px`, `padding: 20px` and `border: 5px solid`. How wide is it on screen, by default?',
+       NULL, NULL, NULL, '{"options":["350px — padding and border are added on top of the width","300px — width means the whole box","260px — padding and border eat into the width","345px"],"answer":"350px: 300 + 20 + 20 + 5 + 5. By default `width` sets the **content** box only, and padding and border are added *outside* it. This is why a layout of \"four 25% columns\" overflows the moment anyone adds padding, and why `box-sizing: border-box` — which makes `width` mean the whole visible box — appears at the top of nearly every professional stylesheet."}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Identify content, padding, border and margin on any element","Predict the rendered width of a box","Apply `border-box` sizing and explain the difference"]}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'term'::public.block_type, 'Content box', 'The area the text or image itself occupies. This is what `width` and `height` set by default.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'term'::public.block_type, 'Padding', 'Space *inside* the box, between the content and the border. It takes the background colour.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'term'::public.block_type, 'Border', 'A line drawn at the edge of the padding. It has a width, a style and a colour, and the style is required — `border: 1px solid` shows nothing without it.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'term'::public.block_type, 'Margin', 'Space *outside* the box, pushing other elements away. It is always transparent.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'code_example'::public.block_type, 'The four layers', NULL,
+       '┌─────────────────────────────────────┐
+│ margin            (transparent)     │
+│  ┌───────────────────────────────┐  │
+│  │ border                        │  │
+│  │  ┌─────────────────────────┐  │  │
+│  │  │ padding   (background)  │  │  │
+│  │  │  ┌───────────────────┐  │  │  │
+│  │  │  │ content           │  │  │  │
+│  │  │  └───────────────────┘  │  │  │
+│  │  └─────────────────────────┘  │  │
+│  └───────────────────────────────┘  │
+└─────────────────────────────────────┘
+
+Outward from the middle: content, padding, border, margin.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'worked_example'::public.block_type, 'Working out a real width', 'A card is meant to be exactly half of an 800px container. Here is why the obvious answer overflows, and the two ways to fix it.',
+       NULL, NULL, NULL, '{"steps":[{"title":"The obvious attempt","code":".card { width: 50%; padding: 1rem; border: 1px solid; }","reasoning":"50% of 800 is 400. But `width` sets the content box, so the visible box is 400 + 16 + 16 + 1 + 1 = 434px. Two of them are 868px in an 800px container, and the second wraps."},{"title":"The fix nobody should have to discover","code":"*, *::before, *::after { box-sizing: border-box; }","reasoning":"Now `width` means the whole visible box, so 50% is genuinely 400px and the padding and border come out of that. Two fit exactly. This is why it goes at the top of the stylesheet, applied to everything, before any component is written."},{"title":"Why the universal selector, and why the pseudo-elements","code":"*, *::before, *::after { box-sizing: border-box; }","reasoning":"`box-sizing` does not inherit, so setting it on `body` reaches nothing else. The universal selector is the only way to reach everything, and generated content needs it too or a `::before` sized in percentages behaves differently from its element."},{"title":"What it does not change","code":".card { width: 50%; margin: 1rem; }","reasoning":"Margin is still outside the box under either model — `border-box` never included it. Two 50% cards with margins still overflow, and that is the problem `gap` solves once you reach flexbox."}]}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'interactive_demo'::public.block_type, 'The same declared width, two sizing models', 'Both boxes say `width: 300px`.',
+       NULL, NULL, NULL, '{"variants":[{"label":"border-box","code":"<style>\n  .box { box-sizing: border-box; width: 300px; padding: 20px; border: 5px solid teal; background: #eef; }\n</style>\n<div class=\"box\">Exactly 300px wide on screen.</div>","note":"The padding and border come *out of* the 300px. What you declared is what you measure."},{"label":"content-box (the default)","code":"<style>\n  .box { box-sizing: content-box; width: 300px; padding: 20px; border: 5px solid crimson; background: #fee; }\n</style>\n<div class=\"box\">350px wide on screen.</div>","note":"300px of content, plus 40px of padding, plus 10px of border. The declared number is the one part you cannot see."}]}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'predict_check'::public.block_type, 'Predict, then check', 'One element has 40px of margin below it, the next has 20px above. Before you check: how much space is between them — 60px, 40px, or 20px?',
+       '<style>
+  .a { margin-bottom: 40px; }
+  .b { margin-top: 20px; }
+</style>
+<p class="a">First paragraph.</p>
+<p class="b">Second paragraph.</p>', 'html', NULL, '{"outcome":"40px. Adjacent vertical margins **collapse** into one, and the larger wins rather than the two adding up. This catches everyone, and it is deliberate: it is why consecutive paragraphs are evenly spaced rather than accumulating gaps. Collapsing only happens vertically, only in normal flow, and it stops entirely inside a flex or grid container — which is one more reason modern layouts use `gap` instead of margins."}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'callout'::public.block_type, 'Margin collapse is not a bug', 'The three surprises are: adjacent siblings collapse to the larger of the two; a parent and its first or last child collapse together unless something separates them (padding, a border, or a new formatting context); and an empty element collapses its own top and bottom margins into one. Flex and grid containers do not collapse margins at all.',
+       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'checklist'::public.block_type, 'Box model checklist', NULL,
+       NULL, NULL, NULL, '{"items":["`box-sizing: border-box` on `*, *::before, *::after`, once, at the top","Padding for space inside; margin for space between","A border needs a style — `1px solid`, not just `1px`","Vertical margins between siblings collapse to the larger","Margin is outside the box under both sizing models"]}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Every element is content, padding, border and margin, outward from the middle.","By default `width` sets the content box, so padding and border are added on top.","`box-sizing: border-box` makes `width` mean the whole visible box.","Adjacent vertical margins collapse to the larger of the two."],"nextUp":"Next: selectors, and reaching what you mean."}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 14, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Name the four layers, from the inside out.","A box has `width: 200px`, `padding: 10px`, `border: 2px`. How wide is it in each sizing model?","What happens between a 30px bottom margin and a 10px top margin?"],"points":["Content, padding, border, margin.","`content-box`: 200 + 20 + 4 = 224px on screen. `border-box`: 200px on screen, with the padding and border taken out of it, leaving 176px of content.","They collapse to 30px — the larger, not the sum. Vertical margins between siblings in normal flow always do this."]}'::jsonb
+from public.lessons where slug = 'css-the-four-layers';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-border-box-guided', 1, 'guided'::public.exercise_kind, 'Make width mean what it says',
+       'Apply `border-box` sizing to everything, then give `.card` a width of `300px`, `1rem` of padding and a `2px solid teal` border. With border-box in place the card should measure exactly 300px on screen.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Boxes</title>
+    <style>
+    </style>
+  </head>
+  <body>
+    <div class="card">Fresh bread, every morning.</div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Boxes</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .card {
+        width: 300px;
+        padding: 1rem;
+        border: 2px solid teal;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">Fresh bread, every morning.</div>
+  </body>
+</html>', ARRAY['The sizing rule targets everything: *, *::before, *::after', 'box-sizing does not inherit, which is why it needs the universal selector.', 'A border needs three parts: width, style, colour.']::text[],
+       40, 2,
+       (select id from public.skills where slug = 'box-model'), false
+from public.lessons l where l.slug = 'css-the-four-layers'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.card', 'box-sizing',
+       'border-box', NULL, NULL, NULL,
+       'The card uses border-box sizing', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-border-box-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.card', 'width',
+       '300px', NULL, NULL, NULL,
+       'The card is 300px wide', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-border-box-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.card', 'padding',
+       '1rem', NULL, NULL, NULL,
+       'The card has 1rem of padding', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-border-box-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value_matches'::public.requirement_kind, '.card', 'border',
+       '2px\s+solid\s+teal', NULL, NULL, NULL,
+       'The card has a 2px solid teal border', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-border-box-guided';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-box-debug', 2, 'debug'::public.exercise_kind, 'Two columns that will not fit',
+       'Two `.col` elements are each 50% wide and they wrap onto separate lines instead of sitting side by side in the 800px container. The cause is the sizing model, not the width. Fix it by adding the sizing rule — do not change the 50%.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Columns</title>
+    <style>
+      .row { width: 800px; }
+      .col {
+        float: left;
+        width: 50%;
+        padding: 1rem;
+        border: 1px solid teal;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="row">
+      <div class="col">Sourdough</div>
+      <div class="col">Rye</div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Columns</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .row { width: 800px; }
+      .col {
+        float: left;
+        width: 50%;
+        padding: 1rem;
+        border: 1px solid teal;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="row">
+      <div class="col">Sourdough</div>
+      <div class="col">Rye</div>
+    </div>
+  </body>
+</html>', ARRAY['Each column is 50% *plus* its padding and border, so the pair exceeds 100%.', 'Add the universal border-box rule at the top of the stylesheet.', 'Do not reduce the 50% — that would only hide the real cause.']::text[],
+       45, 3,
+       (select id from public.skills where slug = 'box-model'), false
+from public.lessons l where l.slug = 'css-the-four-layers'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.col', 'box-sizing',
+       'border-box', NULL, NULL, NULL,
+       'Columns use border-box sizing', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-box-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.col', 'width',
+       '50%', NULL, NULL, NULL,
+       'The declared width is still 50%', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-box-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.col', 'padding',
+       '1rem', NULL, NULL, NULL,
+       'The padding is unchanged', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-box-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-the-four-layers'), NULL, 'q-css-width-measures', 1, 'single'::public.question_kind,
+        'By default, what does `width` measure?', 'The content box only. Padding and border are added outside it.', (select id from public.skills where slug = 'box-model'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The box including its margin', false, NULL
+from public.quiz_questions where slug = 'q-css-width-measures';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It depends on the element', false, NULL
+from public.quiz_questions where slug = 'q-css-width-measures';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The content box only', true, NULL
+from public.quiz_questions where slug = 'q-css-width-measures';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The whole visible box', false, NULL
+from public.quiz_questions where slug = 'q-css-width-measures';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-the-four-layers'), NULL, 'q-css-border-box-selector', 2, 'single'::public.question_kind,
+        'Why is `box-sizing: border-box` applied with `*` rather than on `body`?', '`box-sizing` does not inherit, so setting it on an ancestor reaches nothing else.', (select id from public.skills where slug = 'box-model'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Because box-sizing does not inherit', true, NULL
+from public.quiz_questions where slug = 'q-css-border-box-selector';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Because body is not a real element', false, NULL
+from public.quiz_questions where slug = 'q-css-border-box-selector';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Because the universal selector is faster', false, NULL
+from public.quiz_questions where slug = 'q-css-border-box-selector';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It makes no difference which you use', false, NULL
+from public.quiz_questions where slug = 'q-css-border-box-selector';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-the-four-layers'), NULL, 'q-css-margin-collapse', 3, 'single'::public.question_kind,
+        'A 30px bottom margin sits above a 10px top margin. How much space is between them?', 'They collapse to the larger of the two: 30px.', (select id from public.skills where slug = 'box-model'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '10px', false, NULL
+from public.quiz_questions where slug = 'q-css-margin-collapse';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '20px', false, NULL
+from public.quiz_questions where slug = 'q-css-margin-collapse';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '30px', true, NULL
+from public.quiz_questions where slug = 'q-css-margin-collapse';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '40px', false, NULL
+from public.quiz_questions where slug = 'q-css-margin-collapse';
+-- lesson: Selectors that reach what you mean
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-selectors', 2, 'Selectors that reach what you mean', 'Combinators, attributes and pseudo-classes — without escalating specificity', 'A handful of selectors cover almost everything, and choosing well keeps specificity low enough that the next person can override you.',
+       ARRAY['Use descendant, child and sibling combinators', 'Select by attribute and by state', 'Keep specificity low deliberately']::text[], 16, 40, (select id from public.skills where slug = 'selectors'), 0.7
+from public.modules m where m.slug = 'css-boxes'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'You want to style only the paragraphs that are *directly* inside `.card`, not ones nested deeper. Which selector does that?',
+       NULL, NULL, NULL, '{"options":["`.card > p`","`.card p`","`.card + p`","`.card ~ p`"],"answer":"`.card > p` — the child combinator, which matches only direct children. `.card p` is the *descendant* combinator and matches paragraphs at any depth, which is the default when you write a space and the source of a great many accidental matches. `+` and `~` are sibling combinators and match elements alongside `.card`, not inside it."}'::jsonb
+from public.lessons where slug = 'css-selectors';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Choose the right combinator for a relationship","Select elements by attribute and by state","Explain why `:where()` exists"]}'::jsonb
+from public.lessons where slug = 'css-selectors';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'code_example'::public.block_type, 'The selectors worth knowing', NULL,
+       '.card p        descendant  — any p inside, at any depth
+.card > p      child       — only direct children
+.card + p      adjacent    — the p immediately after .card
+.card ~ p      sibling     — every p after .card, same parent
+
+a[href]                 has the attribute at all
+a[href^="https"]        starts with
+a[href$=".pdf"]         ends with
+a[href*="example"]      contains
+
+a:hover, a:focus-visible    state
+li:first-child, li:last-child, li:nth-child(2n)
+input:checked, input:disabled, input:invalid
+p:not(.lead)                negation', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-selectors';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'interactive_demo'::public.block_type, 'Descendant versus child', 'Identical markup, one character different in the CSS.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Child only","code":"<style>\n  .card > p { color: teal }\n</style>\n<div class=\"card\">\n  <p>Direct child — teal.</p>\n  <blockquote><p>Nested deeper — untouched.</p></blockquote>\n</div>","note":"Only the direct child matches. The nested paragraph keeps its inherited colour."},{"label":"Any descendant","code":"<style>\n  .card p { color: teal }\n</style>\n<div class=\"card\">\n  <p>Direct child — teal.</p>\n  <blockquote><p>Nested deeper — also teal.</p></blockquote>\n</div>","note":"Both match. Usually fine, occasionally a surprise when a component is nested inside another."},{"label":"Attribute selector","code":"<style>\n  a[href^=\"https\"] { color: teal }\n  a[href$=\".pdf\"] { font-weight: bold }\n</style>\n<a href=\"https://example.org\">External</a>\n<a href=\"/menu.pdf\">Menu (PDF)</a>\n<a href=\"about.html\">About</a>","note":"Style by what the markup says rather than by an extra class. The third link matches neither."}]}'::jsonb
+from public.lessons where slug = 'css-selectors';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, 'Style state with `:focus-visible`, not just `:hover`', 'A rule that only responds to `:hover` is invisible to keyboard users. `:focus-visible` shows a focus style when the browser judges it useful — on keyboard focus but not on a mouse click — which is what you want. Never remove a focus outline without replacing it with something at least as visible.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-selectors';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'self_explain'::public.block_type, 'Explain it in your own words', 'Your team writes `#sidebar .widget ul li a { color: teal }` for a link in a sidebar widget. It works. Explain what it costs, and what you would write instead.',
+       NULL, NULL, NULL, '{"modelAnswer":"It works and it sets a specificity of one id, one class and three elements — so every future override of that link has to match or beat it. A theme, a dark mode, a utility class, or simply a different state all now need selectors at least that strong, and the stylesheet ratchets upwards. Nothing in that chain is doing useful work either: the `ul li` describes the markup structure rather than the thing being styled, so moving the link out of a list breaks the rule for no reason. What it should be is a single class on the thing itself — `.widget-link { color: teal }` — which is one class of specificity, survives the markup changing, and can be overridden by anything that needs to."}'::jsonb
+from public.lessons where slug = 'css-selectors';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'progressive_detail'::public.block_type, '`:is()`, `:where()` and the specificity escape hatch', '`:is(h1, h2, h3)` matches any of them and takes the specificity of its *most specific* argument. `:where(h1, h2, h3)` matches the same elements and always scores **zero**. That makes `:where()` the right tool for a base layer — defaults that anything can override without a fight. A reset written as `:where(ul, ol) { margin: 0 }` never needs to be beaten, because it contributes nothing to the contest.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-selectors';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["A space is the descendant combinator; `>` restricts to direct children.","`+` and `~` select siblings, not descendants.","Attribute selectors style what the markup already says.","`:where()` scores zero, which makes it right for defaults."],"nextUp":"Next: the Level 2 milestone."}'::jsonb
+from public.lessons where slug = 'css-selectors';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What is the difference between `.card p` and `.card > p`?","Why pair `:hover` with `:focus-visible`?","When would you reach for `:where()`?"],"points":["`.card p` matches paragraphs at any depth inside `.card`; `.card > p` matches only direct children.","Because a hover-only style is invisible to anyone navigating by keyboard. `:focus-visible` gives them the same signal without showing a ring on every mouse click.","For base styles and resets that must be trivially overridable — it always contributes zero specificity, so nothing ever has to fight it."]}'::jsonb
+from public.lessons where slug = 'css-selectors';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-selectors-guided', 1, 'guided'::public.exercise_kind, 'Target precisely',
+       'Using no selector stronger than one class: make only the *direct* paragraph children of `.card` teal; make links whose `href` starts with `https` bold; and give links a visible style on both hover and keyboard focus.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Selectors</title>
+    <style>
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <p>Direct child.</p>
+      <blockquote><p>Nested deeper.</p></blockquote>
+      <a href="https://example.org">External link</a>
+      <a href="about.html">Internal link</a>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Selectors</title>
+    <style>
+      .card > p { color: teal; }
+      a[href^="https"] { font-weight: bold; }
+      a:hover,
+      a:focus-visible { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <p>Direct child.</p>
+      <blockquote><p>Nested deeper.</p></blockquote>
+      <a href="https://example.org">External link</a>
+      <a href="about.html">Internal link</a>
+    </div>
+  </body>
+</html>', ARRAY['The child combinator is a greater-than sign between the two parts.', 'Attribute "starts with" is written [href^="https"].', 'Put the hover and focus-visible selectors in one comma-separated rule.']::text[],
+       50, 3,
+       (select id from public.skills where slug = 'selectors'), false
+from public.lessons l where l.slug = 'css-selectors'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.card > p', 'color',
+       'teal', NULL, NULL, NULL,
+       'Direct child paragraphs are teal', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-selectors-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, 'blockquote p', 'color',
+       'teal', NULL, NULL, NULL,
+       'The nested paragraph is not targeted directly', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-selectors-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, 'a[href^="https"]', 'font-weight',
+       'bold', NULL, NULL, NULL,
+       'External links are bold', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-selectors-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_declared'::public.requirement_kind, 'a:hover', 'text-decoration',
+       NULL, NULL, NULL, NULL,
+       'Links respond to hover', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-selectors-guided';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-selectors'), NULL, 'q-css-child-combinator', 1, 'single'::public.question_kind,
+        'What does the space in `.card p` mean?', 'Descendant — any `p` inside `.card`, at any depth.', (select id from public.skills where slug = 'selectors'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Nothing; it is ignored', false, NULL
+from public.quiz_questions where slug = 'q-css-child-combinator';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Any descendant, at any depth', true, NULL
+from public.quiz_questions where slug = 'q-css-child-combinator';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Only direct children', false, NULL
+from public.quiz_questions where slug = 'q-css-child-combinator';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The next sibling', false, NULL
+from public.quiz_questions where slug = 'q-css-child-combinator';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-selectors'), NULL, 'q-css-where-zero-specificity', 2, 'single'::public.question_kind,
+        'What makes `:where()` useful for a reset?', 'It always contributes zero specificity, so nothing ever has to fight it.', (select id from public.skills where slug = 'selectors'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It is faster to evaluate', false, NULL
+from public.quiz_questions where slug = 'q-css-where-zero-specificity';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It always scores zero specificity', true, NULL
+from public.quiz_questions where slug = 'q-css-where-zero-specificity';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It matches more elements than `:is()`', false, NULL
+from public.quiz_questions where slug = 'q-css-where-zero-specificity';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It applies only to the first match', false, NULL
+from public.quiz_questions where slug = 'q-css-where-zero-specificity';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-selectors'), NULL, 'q-css-focus-visible', 3, 'single'::public.question_kind,
+        'Why style `:focus-visible` alongside `:hover`?', 'A hover-only style is invisible to anyone navigating with a keyboard.', (select id from public.skills where slug = 'selectors'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It is required for the selector to be valid', false, NULL
+from public.quiz_questions where slug = 'q-css-focus-visible';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Otherwise keyboard users get no feedback at all', true, NULL
+from public.quiz_questions where slug = 'q-css-focus-visible';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Because `:hover` does not work on links', false, NULL
+from public.quiz_questions where slug = 'q-css-focus-visible';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'To make the style apply faster', false, NULL
+from public.quiz_questions where slug = 'q-css-focus-visible';
+-- lesson: Milestone: size a card component
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-box-milestone', 3, 'Milestone: size a card component', 'Predictable boxes, precise selectors', 'Build a card that measures exactly what it says, with selectors no stronger than they need to be.',
+       ARRAY['Apply border-box sizing project-wide', 'Size and space a component predictably', 'Keep every selector to one class']::text[], 20, 40, (select id from public.skills where slug = 'box-model'), 0.8
+from public.modules m where m.slug = 'css-boxes'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Build a component with predictable dimensions","Use padding and margin for their correct purposes","Keep specificity flat"]}'::jsonb
+from public.lessons where slug = 'css-box-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'checklist'::public.block_type, 'Before you call a component sized', NULL,
+       NULL, NULL, NULL, '{"items":["`border-box` applied to everything, once","Padding for internal space, margin for external","Borders written with a style, not just a width","No selector stronger than a single class","Vertical rhythm not relying on collapsed margins you did not intend"]}'::jsonb
+from public.lessons where slug = 'css-box-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'recall'::public.block_type, 'From memory', 'From memory: what are the four layers of the box model, what does `width` measure in each sizing model, and what happens to two adjacent vertical margins?',
+       NULL, NULL, NULL, '{"points":["Content, padding, border, margin — outward from the middle.","`content-box`: `width` is the content only, and padding and border are added outside it. `border-box`: `width` is the whole visible box, and padding and border come out of it.","They collapse to the larger of the two rather than adding up. This stops entirely inside a flex or grid container."]}'::jsonb
+from public.lessons where slug = 'css-box-milestone';
 
 commit;

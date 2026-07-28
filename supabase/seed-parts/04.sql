@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 4 of 10
+-- HTML Hero — course seed, part 4 of 11
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -10,29 +10,125 @@
 -- Run part 3 first.
 
 begin;
+-- lesson: The img element
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'the-img-element', 1, 'The img element', 'src, alt, width, height — and why the last two matter more than you think', 'Four attributes. Each one prevents a specific, common problem.',
+       ARRAY['Place an image with a correct path', 'Give every image an alt attribute', 'Set width and height to stop the page jumping as it loads']::text[], 14, 40, (select id from public.skills where slug = 'images'), 0.7
+from public.modules m where m.slug = 'images-and-alt-text'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Insert an image using a correct local path","Write an alt attribute for an informative image","Explain what width and height prevent"]}'::jsonb
+from public.lessons where slug = 'the-img-element';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'prose'::public.block_type, NULL, '`<img>` is a void element — one tag, no closing tag. It needs two attributes to be usable, and two more to be professional.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'the-img-element';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'media_example'::public.block_type, 'A complete image element', 'Every attribute here is doing a job. The image comes from the media library built into this platform, so it works offline and its licence is documented.',
+       '<img
+  src="/learning-media/images/coast-sunrise.jpg"
+  alt="Sunrise over a calm sea, with low headlands silhouetted against an orange sky"
+  width="1200"
+  height="800">', 'html', 'coast-sunrise', '{}'::jsonb
+from public.lessons where slug = 'the-img-element';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'annotated_code'::public.block_type, 'Line by line', NULL,
+       '<img src="/learning-media/images/coast-sunrise.jpg"
+     alt="Sunrise over a calm sea, with low headlands against an orange sky"
+     width="1200" height="800">', 'html', NULL, '{"annotations":[{"line":"1","text":"`src` is the path to the image file. Get this wrong and you see a broken-image icon."},{"line":"2","text":"`alt` is the text a screen reader announces, and what displays if the image fails to load. It is required on every image."},{"line":"3","text":"`width` and `height` are the image''s real pixel dimensions, written as plain numbers with no \"px\". The browser uses them to reserve the right amount of space before the file arrives, so the page does not jump when it loads."}]}'::jsonb
+from public.lessons where slug = 'the-img-element';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, 'Width and height are not sizing instructions', 'They tell the browser the image''s aspect ratio so it can reserve space. CSS still controls the displayed size. Omitting them causes "layout shift" — text jumping down the page as images pop in — which is one of the most irritating things a website can do, and one of the easiest to prevent.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'the-img-element';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'prose'::public.block_type, NULL, 'Every image on your page needs a path that resolves. In this course the media library gives you images that are guaranteed to work: click the media button in the editor toolbar to browse them and insert a correct path.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'the-img-element';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'callout'::public.block_type, 'Never hotlink someone else''s image', 'Pointing `src` at an image on another website — "hotlinking" — uses their bandwidth without permission, breaks the moment they move or delete the file, and is usually a copyright problem. Download images you have the right to use, put them in your own `images/` folder, and record where they came from.',
+       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
+from public.lessons where slug = 'the-img-element';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'interactive_demo'::public.block_type, 'What happens when a path is wrong', 'The alt text is what saves the page.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Correct path","code":"<img src=\"/learning-media/images/forest-path.jpg\" alt=\"A sandy path winding between tall trees\" width=\"1200\" height=\"800\">","note":"The image loads."},{"label":"Broken path, good alt","code":"<img src=\"/learning-media/images/forest-pathh.jpg\" alt=\"A sandy path winding between tall trees\" width=\"1200\" height=\"800\">","note":"The image fails, but the alt text is displayed instead — the reader still learns what was meant to be there."},{"label":"Broken path, no alt","code":"<img src=\"/learning-media/images/forest-pathh.jpg\" width=\"1200\" height=\"800\">","note":"A broken icon and nothing else. The content is simply gone."}]}'::jsonb
+from public.lessons where slug = 'the-img-element';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'progressive_detail'::public.block_type, 'Image formats, briefly', 'JPEG suits photographs. PNG suits graphics with sharp edges or transparency. SVG is drawn from instructions rather than pixels, so it stays crisp at any size — ideal for logos, icons and diagrams. WebP and AVIF are modern formats that produce noticeably smaller files than JPEG at the same quality; the next module shows how to offer them with a fallback so older browsers still get an image.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'the-img-element';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["`<img>` is a void element needing `src` and `alt`.","`width` and `height` reserve space and prevent the page jumping.","Alt text is displayed when the image fails, and read aloud by screen readers.","Use local files from your own project; never hotlink."],"nextUp":"Next: what to actually write in that alt attribute."}'::jsonb
+from public.lessons where slug = 'the-img-element';
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'img-guided', 1, 'guided'::public.exercise_kind, 'Place an image correctly',
+       'Add an image of the workshop to this page. Use the media library path `/learning-media/images/workshop-tools.jpg`, give it descriptive alt text, and set `width="1200"` and `height="800"`.', '<h2>Our workshop</h2>
+<p>Everything is serviced on site by our own mechanics.</p>
+', '<h2>Our workshop</h2>
+<p>Everything is serviced on site by our own mechanics.</p>
+<img
+  src="/learning-media/images/workshop-tools.jpg"
+  alt="Hand tools hanging in rows on a workshop wall above a wooden workbench"
+  width="1200"
+  height="800">', ARRAY['<img> is a single tag with no closing tag.', 'Start with src="/learning-media/images/workshop-tools.jpg".', 'Then add alt="…" describing what is in the picture, plus width="1200" height="800".']::text[],
+       40, 2,
+       (select id from public.skills where slug = 'images'), false
+from public.lessons l where l.slug = 'the-img-element'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'element_present'::public.requirement_kind, 'img', NULL,
+       NULL, NULL, NULL, NULL,
+       'There is an image', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'img-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'attribute_value'::public.requirement_kind, 'img', 'src',
+       '/learning-media/images/workshop-tools.jpg', NULL, NULL, NULL,
+       'The image uses the correct library path', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'img-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'attribute_present'::public.requirement_kind, 'img', 'alt',
+       NULL, NULL, NULL, NULL,
+       'The image has an alt attribute', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'img-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'alt_quality'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'The alt text describes what the image shows', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+       'The alt text describes what the image shows', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true, NULL
 from public.exercises e where e.slug = 'img-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'attribute_present'::public.requirement_kind, 'img', 'width',
        NULL, NULL, NULL, NULL,
-       'The image declares its width', NULL, 1, true
+       'The image declares its width', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'img-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'attribute_present'::public.requirement_kind, 'img', 'height',
        NULL, NULL, NULL, NULL,
-       'The image declares its height', NULL, 1, true
+       'The image declares its height', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'img-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 7, 'local_media_path'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'img-guided';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -52,34 +148,34 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_count'::public.requirement_kind, 'img', NULL,
        NULL, NULL, 3, 3,
-       'All three images remain', NULL, 1, true
+       'All three images remain', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'img-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'local_media_path'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'img-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'attribute_present'::public.requirement_kind, 'img', 'alt',
        NULL, NULL, NULL, NULL,
-       'Every image has an alt attribute', NULL, 1, true
+       'Every image has an alt attribute', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'img-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'alt_quality'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every image has meaningful alt text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+       'Every image has meaningful alt text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true, NULL
 from public.exercises e where e.slug = 'img-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'attribute_absent'::public.requirement_kind, 'img[src^="http"]', 'src',
        NULL, NULL, NULL, NULL,
-       'No image is hotlinked from another site', NULL, 1, true
+       'No image is hotlinked from another site', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'img-debug';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'the-img-element'), NULL, 'q-img-dimensions', 1, 'single'::public.question_kind,
@@ -210,34 +306,34 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_count'::public.requirement_kind, 'img', NULL,
        NULL, NULL, 4, 4,
-       'All four images remain', NULL, 1, true
+       'All four images remain', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'alt-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_present'::public.requirement_kind, 'img', 'alt',
        NULL, NULL, NULL, NULL,
-       'Every image has an alt attribute', NULL, 1, true
+       'Every image has an alt attribute', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'alt-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'alt_quality'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'No alt text is a filename, a placeholder, or starts with "image of"', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+       'No alt text is a filename, a placeholder, or starts with "image of"', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true, NULL
 from public.exercises e where e.slug = 'alt-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'local_media_path'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'alt-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'element_count'::public.requirement_kind, 'img[alt=""]', NULL,
        NULL, NULL, 1, 1,
-       'Exactly one image is marked decorative with alt=""', NULL, 1, true
+       'Exactly one image is marked decorative with alt=""', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'alt-guided';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -260,52 +356,52 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_present'::public.requirement_kind, 'figure', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a figure', NULL, 1, true
+       'There is a figure', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'figure-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'nesting'::public.requirement_kind, 'img', NULL,
        NULL, 'figure', 1, NULL,
-       'The image is inside the figure', NULL, 1, true
+       'The image is inside the figure', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'figure-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'nesting'::public.requirement_kind, 'figcaption', NULL,
        NULL, 'figure', 1, NULL,
-       'The caption is inside the figure', NULL, 1, true
+       'The caption is inside the figure', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'figure-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'text_not_empty'::public.requirement_kind, 'figcaption', NULL,
        NULL, NULL, NULL, NULL,
-       'The caption has text', NULL, 1, true
+       'The caption has text', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'figure-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'alt_quality'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'The image has meaningful alt text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+       'The image has meaningful alt text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true, NULL
 from public.exercises e where e.slug = 'figure-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'attribute_present'::public.requirement_kind, 'img', 'width',
        NULL, NULL, NULL, NULL,
-       'The image declares its dimensions', NULL, 1, true
+       'The image declares its dimensions', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'figure-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 7, 'local_media_path'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'figure-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 8, 'valid_nesting'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
-       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
+       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true, NULL
 from public.exercises e where e.slug = 'figure-challenge';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'writing-alt-text'), NULL, 'q-empty-alt', 1, 'single'::public.question_kind,
@@ -477,46 +573,46 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'attribute_present'::public.requirement_kind, 'img', 'srcset',
        NULL, NULL, NULL, NULL,
-       'The image has a srcset', NULL, 1, true
+       'The image has a srcset', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'srcset-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_matches'::public.requirement_kind, 'img', 'srcset',
        '480w', NULL, NULL, NULL,
-       'The srcset offers the 480 pixel version', NULL, 1, true
+       'The srcset offers the 480 pixel version', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'srcset-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'attribute_matches'::public.requirement_kind, 'img', 'srcset',
        '1600w', NULL, NULL, NULL,
-       'The srcset offers the 1600 pixel version', NULL, 1, true
+       'The srcset offers the 1600 pixel version', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'srcset-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'attribute_present'::public.requirement_kind, 'img', 'sizes',
        NULL, NULL, NULL, NULL,
-       'The image has a sizes attribute', NULL, 1, true
+       'The image has a sizes attribute', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'srcset-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'attribute_present'::public.requirement_kind, 'img', 'src',
        NULL, NULL, NULL, NULL,
-       'A fallback src remains', NULL, 1, true
+       'A fallback src remains', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'srcset-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'local_media_path'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'srcset-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 7, 'alt_quality'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every image has meaningful alternative text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+       'Every image has meaningful alternative text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true, NULL
 from public.exercises e where e.slug = 'srcset-guided';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -545,28 +641,28 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'attribute_matches'::public.requirement_kind, 'img', 'srcset',
        '\d+w', NULL, NULL, NULL,
-       'The srcset uses w descriptors', NULL, 1, true
+       'The srcset uses w descriptors', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'srcset-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_absent'::public.requirement_kind, 'img[srcset*="px"]', 'srcset',
        NULL, NULL, NULL, NULL,
-       'No px units in the srcset', NULL, 1, true
+       'No px units in the srcset', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'srcset-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'attribute_present'::public.requirement_kind, 'img', 'sizes',
        NULL, NULL, NULL, NULL,
-       'A sizes attribute is present', NULL, 1, true
+       'A sizes attribute is present', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'srcset-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'local_media_path'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'srcset-debug';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'srcset-and-sizes'), NULL, 'q-srcset-w', 1, 'single'::public.question_kind,
@@ -723,46 +819,46 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_present'::public.requirement_kind, 'picture', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a picture element', NULL, 1, true
+       'There is a picture element', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'picture-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'nesting'::public.requirement_kind, 'source', NULL,
        NULL, 'picture', 1, NULL,
-       'A source element is inside the picture', NULL, 1, true
+       'A source element is inside the picture', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'picture-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'attribute_value'::public.requirement_kind, 'source', 'type',
        'image/webp', NULL, NULL, NULL,
-       'The source declares the WebP type', NULL, 1, true
+       'The source declares the WebP type', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'picture-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'attribute_present'::public.requirement_kind, 'source', 'srcset',
        NULL, NULL, NULL, NULL,
-       'The source has a srcset', NULL, 1, true
+       'The source has a srcset', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'picture-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'nesting'::public.requirement_kind, 'img', NULL,
        NULL, 'picture', 1, NULL,
-       'The img fallback is inside the picture', NULL, 1, true
+       'The img fallback is inside the picture', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'picture-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'alt_quality'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'The img still carries the alt text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+       'The img still carries the alt text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true, NULL
 from public.exercises e where e.slug = 'picture-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 7, 'local_media_path'::public.requirement_kind, 'img, source', NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'picture-guided';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -791,46 +887,46 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_count'::public.requirement_kind, 'img', NULL,
        NULL, NULL, 3, 3,
-       'There are three images', NULL, 1, true
+       'There are three images', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'lazy-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'element_count'::public.requirement_kind, 'img[loading="lazy"]', NULL,
        NULL, NULL, 2, 2,
-       'Exactly two images are lazy-loaded', NULL, 1, true
+       'Exactly two images are lazy-loaded', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'lazy-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'attribute_value'::public.requirement_kind, 'img', 'fetchpriority',
        'high', NULL, NULL, NULL,
-       'The hero image is marked high priority', NULL, 1, true
+       'The hero image is marked high priority', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'lazy-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'element_count'::public.requirement_kind, 'img[fetchpriority="high"][loading="lazy"]', NULL,
        NULL, NULL, 0, 0,
-       'The hero image is not also lazy-loaded', 'Lazy-loading the hero image delays the most important image on the page.', 1, true
+       'The hero image is not also lazy-loaded', 'Lazy-loading the hero image delays the most important image on the page.', 1, true, NULL
 from public.exercises e where e.slug = 'lazy-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'alt_quality'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every image has meaningful alternative text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+       'Every image has meaningful alternative text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true, NULL
 from public.exercises e where e.slug = 'lazy-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'attribute_present'::public.requirement_kind, 'img', 'width',
        NULL, NULL, NULL, NULL,
-       'Every image declares its width', NULL, 1, true
+       'Every image declares its width', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'lazy-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 7, 'local_media_path'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'lazy-challenge';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'picture-and-formats'), NULL, 'q-picture-img', 1, 'single'::public.question_kind,
@@ -1053,52 +1149,52 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'attribute_present'::public.requirement_kind, 'video', 'controls',
        NULL, NULL, NULL, NULL,
-       'The video has visible controls', NULL, 1, true
+       'The video has visible controls', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'video-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_present'::public.requirement_kind, 'video', 'poster',
        NULL, NULL, NULL, NULL,
-       'The video has a poster image', NULL, 1, true
+       'The video has a poster image', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'video-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'element_count'::public.requirement_kind, 'video source', NULL,
        NULL, NULL, 2, NULL,
-       'There are at least two sources', NULL, 1, true
+       'There are at least two sources', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'video-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'attribute_value'::public.requirement_kind, 'source', 'type',
        'video/mp4', NULL, NULL, NULL,
-       'An MP4 source is offered', NULL, 1, true
+       'An MP4 source is offered', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'video-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'element_present'::public.requirement_kind, 'track[kind="captions"]', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a captions track', NULL, 1, true
+       'There is a captions track', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'video-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'attribute_value'::public.requirement_kind, 'track', 'srclang',
        'en', NULL, NULL, NULL,
-       'The captions declare their language', NULL, 1, true
+       'The captions declare their language', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'video-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 7, 'nesting'::public.requirement_kind, 'a', NULL,
        NULL, 'video', 1, NULL,
-       'Fallback content offers a download link', NULL, 1, true
+       'Fallback content offers a download link', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'video-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 8, 'local_media_path'::public.requirement_kind, 'video, source, track', NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'video-guided';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -1127,40 +1223,40 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'attribute_absent'::public.requirement_kind, 'video', 'autoplay',
        NULL, NULL, NULL, NULL,
-       'The video no longer autoplays', 'Delete the autoplay attribute.', 1, true
+       'The video no longer autoplays', 'Delete the autoplay attribute.', 1, true, NULL
 from public.exercises e where e.slug = 'video-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_present'::public.requirement_kind, 'video', 'controls',
        NULL, NULL, NULL, NULL,
-       'The video has controls', NULL, 1, true
+       'The video has controls', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'video-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'attribute_present'::public.requirement_kind, 'video', 'poster',
        NULL, NULL, NULL, NULL,
-       'The video has a poster image', NULL, 1, true
+       'The video has a poster image', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'video-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'element_present'::public.requirement_kind, 'track[kind="captions"]', NULL,
        NULL, NULL, NULL, NULL,
-       'Captions are provided', NULL, 1, true
+       'Captions are provided', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'video-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'nesting'::public.requirement_kind, 'a', NULL,
        NULL, 'video', 1, NULL,
-       'There is fallback content with a download link', NULL, 1, true
+       'There is fallback content with a download link', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'video-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'local_media_path'::public.requirement_kind, 'video, source, track', NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'video-debug';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'video-and-audio'), NULL, 'q-video-controls', 1, 'single'::public.question_kind,
@@ -1296,34 +1392,34 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'attribute_present'::public.requirement_kind, 'iframe', 'title',
        NULL, NULL, NULL, NULL,
-       'The iframe has a title', NULL, 1, true
+       'The iframe has a title', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'iframe-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_matches'::public.requirement_kind, 'iframe', 'title',
        '\S{4,}', NULL, NULL, NULL,
-       'The title actually describes the embedded content', NULL, 1, true
+       'The title actually describes the embedded content', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'iframe-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'attribute_value'::public.requirement_kind, 'iframe', 'loading',
        'lazy', NULL, NULL, NULL,
-       'The iframe is lazy-loaded', NULL, 1, true
+       'The iframe is lazy-loaded', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'iframe-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'attribute_present'::public.requirement_kind, 'iframe', 'sandbox',
        NULL, NULL, NULL, NULL,
-       'The iframe is sandboxed', NULL, 1, true
+       'The iframe is sandboxed', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'iframe-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'attribute_matches'::public.requirement_kind, 'iframe', 'sandbox',
        'allow-scripts', NULL, NULL, NULL,
-       'Scripts are permitted inside the sandbox', NULL, 1, true
+       'Scripts are permitted inside the sandbox', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'iframe-guided';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -1375,88 +1471,88 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_count'::public.requirement_kind, 'img', NULL,
        NULL, NULL, 3, NULL,
-       'There are at least three images', NULL, 1, true
+       'There are at least three images', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_present'::public.requirement_kind, 'img[srcset]', 'sizes',
        NULL, NULL, NULL, NULL,
-       'The responsive image has both srcset and sizes', NULL, 1, true
+       'The responsive image has both srcset and sizes', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'element_present'::public.requirement_kind, 'figure > figcaption', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a figure with a caption', NULL, 1, true
+       'There is a figure with a caption', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'element_present'::public.requirement_kind, 'video[controls]', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a video with controls', NULL, 1, true
+       'There is a video with controls', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'attribute_present'::public.requirement_kind, 'video', 'poster',
        NULL, NULL, NULL, NULL,
-       'The video has a poster image', NULL, 1, true
+       'The video has a poster image', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'element_count'::public.requirement_kind, 'video source', NULL,
        NULL, NULL, 2, NULL,
-       'The video offers at least two sources', NULL, 1, true
+       'The video offers at least two sources', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 7, 'element_present'::public.requirement_kind, 'track[kind="captions"]', NULL,
        NULL, NULL, NULL, NULL,
-       'The video has captions', NULL, 1, true
+       'The video has captions', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 8, 'nesting'::public.requirement_kind, 'a', NULL,
        NULL, 'video', 1, NULL,
-       'The video has fallback content with a link', NULL, 1, true
+       'The video has fallback content with a link', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 9, 'element_count'::public.requirement_kind, 'img[alt=""]', NULL,
        NULL, NULL, 1, NULL,
-       'At least one decorative image uses alt=""', NULL, 1, true
+       'At least one decorative image uses alt=""', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 10, 'element_count'::public.requirement_kind, 'img[loading="lazy"]', NULL,
        NULL, NULL, 1, NULL,
-       'At least one image below the fold is lazy-loaded', NULL, 1, true
+       'At least one image below the fold is lazy-loaded', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 11, 'alt_quality'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every informative image has meaningful alt text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+       'Every informative image has meaningful alt text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 12, 'local_media_path'::public.requirement_kind, 'img, source, track, video', NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 13, 'heading_order'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
-       'The heading hierarchy is correct', 'One <h1>, then step down one level at a time.', 1, true
+       'The heading hierarchy is correct', 'One <h1>, then step down one level at a time.', 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 14, 'valid_nesting'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
-       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
+       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true, NULL
 from public.exercises e where e.slug = 'media-milestone';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -1501,34 +1597,34 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'attribute_present'::public.requirement_kind, 'img[srcset]', 'sizes',
        NULL, NULL, NULL, NULL,
-       'The hero image has srcset and sizes', NULL, 1, true
+       'The hero image has srcset and sizes', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-mission';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'element_present'::public.requirement_kind, 'figure > figcaption', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a captioned figure', NULL, 1, true
+       'There is a captioned figure', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-mission';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'alt_quality'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every image has meaningful alternative text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+       'Every image has meaningful alternative text', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true, NULL
 from public.exercises e where e.slug = 'media-mission';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'attribute_present'::public.requirement_kind, 'img', 'width',
        NULL, NULL, NULL, NULL,
-       'Images declare their dimensions', NULL, 1, true
+       'Images declare their dimensions', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'media-mission';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'local_media_path'::public.requirement_kind, 'img, source', NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'media-mission';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'iframes-and-media-milestone'), NULL, 'q-iframe-title', 1, 'single'::public.question_kind,
@@ -1899,46 +1995,46 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'unique_element'::public.requirement_kind, 'main', NULL,
        NULL, NULL, NULL, NULL,
-       'There is exactly one main element', NULL, 1, true
+       'There is exactly one main element', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'landmarks-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'element_present'::public.requirement_kind, 'header', NULL,
        NULL, NULL, NULL, NULL,
-       'The page has a header landmark', NULL, 1, true
+       'The page has a header landmark', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'landmarks-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'element_present'::public.requirement_kind, 'nav', NULL,
        NULL, NULL, NULL, NULL,
-       'The navigation uses a nav element', NULL, 1, true
+       'The navigation uses a nav element', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'landmarks-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'element_present'::public.requirement_kind, 'footer', NULL,
        NULL, NULL, NULL, NULL,
-       'The page has a footer landmark', NULL, 1, true
+       'The page has a footer landmark', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'landmarks-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'element_count'::public.requirement_kind, 'div', NULL,
        NULL, NULL, 0, 0,
-       'No generic divs remain', NULL, 1, true
+       'No generic divs remain', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'landmarks-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'nesting'::public.requirement_kind, 'h1', NULL,
        NULL, 'main', 1, NULL,
-       'The h1 is inside main', NULL, 1, true
+       'The h1 is inside main', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'landmarks-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 7, 'attribute_present'::public.requirement_kind, 'nav', 'aria-label',
        NULL, NULL, NULL, NULL,
-       'The nav is labelled', NULL, 1, true
+       'The nav is labelled', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'landmarks-guided';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'semantic-vs-non-semantic'), NULL, 'q-semantic-meaning', 1, 'single'::public.question_kind,
@@ -1960,172 +2056,5 @@ from public.quiz_questions where slug = 'q-semantic-meaning';
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 4, 'It has default styling applied', false, NULL
 from public.quiz_questions where slug = 'q-semantic-meaning';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'semantic-vs-non-semantic'), NULL, 'q-main-count', 2, 'single'::public.question_kind,
-        'How many `<main>` elements should a page have?', 'One. It holds the content unique to that page.', (select id from public.skills where slug = 'semantic-html'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'None — main is optional and rarely used', false, NULL
-from public.quiz_questions where slug = 'q-main-count';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Exactly one', true, NULL
-from public.quiz_questions where slug = 'q-main-count';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'One per section', false, NULL
-from public.quiz_questions where slug = 'q-main-count';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'As many as the layout needs', false, NULL
-from public.quiz_questions where slug = 'q-main-count';
--- lesson: Section, article and aside
-insert into public.lessons
-  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'section-article-aside', 2, 'Section, article and aside', 'The three that are most often confused', 'Two simple tests settle almost every case: could it stand alone, and does it have a heading?',
-       ARRAY['Decide between section, article and div', 'Use aside for genuinely tangential content', 'Understand what a document outline is and is not']::text[], 14, 40, (select id from public.skills where slug = 'semantic-html'), 0.7
-from public.modules m where m.slug = 'semantic-landmarks'
-on conflict (slug) do update set
-  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
-  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
-  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
-  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
-       NULL, NULL, NULL, '{"items":["Apply the \"would it make sense alone?\" test for <article>","Apply the \"does it have a heading?\" test for <section>","Use <aside> correctly and sparingly"]}'::jsonb
-from public.lessons where slug = 'section-article-aside';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'prose'::public.block_type, NULL, '`<article>` is for something self-contained: a blog post, a news item, a product card, a single review, a comment. The test is whether it would still make sense if you lifted it out and put it somewhere else — in a feed reader, or in a search result.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'section-article-aside';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'prose'::public.block_type, NULL, '`<section>` is a thematic grouping within a larger document. The test is whether it has, or could sensibly have, its own heading. If you cannot write a heading for it, it is almost certainly not a section — it is a `<div>`.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'section-article-aside';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'code_example'::public.block_type, 'Two self-contained articles in a listing page', NULL,
-       '<main>
-  <h1>Route guides</h1>
-
-  <article>
-    <h2>The valley route</h2>
-    <p>Twenty-four miles, mostly flat.</p>
-  </article>
-
-  <article>
-    <h2>The harbour loop</h2>
-    <p>Six miles, entirely traffic-free.</p>
-  </article>
-</main>', 'html', NULL, '{}'::jsonb
-from public.lessons where slug = 'section-article-aside';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'code_example'::public.block_type, 'One article, divided into sections, with an aside', NULL,
-       '<article>
-  <h1>The valley route</h1>
-
-  <section>
-    <h2>Getting there</h2>
-    <p>The route starts at the workshop on Mill Lane.</p>
-  </section>
-
-  <section>
-    <h2>What to expect</h2>
-    <p>One long climb near the reservoir; the rest is flat.</p>
-  </section>
-
-  <aside>
-    <h2>Bike hire</h2>
-    <p>We hire hybrids suited to this route from £22 a day.</p>
-  </aside>
-</article>', 'html', NULL, '{}'::jsonb
-from public.lessons where slug = 'section-article-aside';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'annotated_code'::public.block_type, 'Line by line', NULL,
-       '<aside aria-label="Related routes">
-  <h2>You might also like</h2>
-  <ul>
-    <li><a href="harbour.html">The harbour loop</a></li>
-  </ul>
-</aside>', 'html', NULL, '{"annotations":[{"line":"1","text":"`<aside>` means \"related to the content around it, but not part of it\". Removing it should not damage the main content."},{"line":"1","text":"An `aria-label` names the landmark, so a screen reader announces \"complementary, Related routes\" rather than just \"complementary\"."},{"line":"2","text":"A heading inside an aside is good practice — it tells everyone what the aside is for."}]}'::jsonb
-from public.lessons where slug = 'section-article-aside';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'callout'::public.block_type, '`<section>` is not a styling wrapper', 'Using `<section>` where you mean "a box" adds a meaningless region to the page''s structure. If it has no heading and no thematic identity, use `<div>`. There is no penalty for a `<div>` in the right place, but there is a real cost to a `<section>` in the wrong one.',
-       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
-from public.lessons where slug = 'section-article-aside';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'interactive_demo'::public.block_type, 'section, article or div?', 'Three candidates for the same block of markup.',
-       NULL, NULL, NULL, '{"variants":[{"label":"article — correct","code":"<article>\n  <h2>Slow-roast lamb</h2>\n  <p>Served with charred aubergine.</p>\n</article>","note":"A menu item is self-contained and would make sense on its own. article is right."},{"label":"section — correct","code":"<section>\n  <h2>Main courses</h2>\n  <p>All served with bread.</p>\n</section>","note":"A themed part of the menu page, with its own heading. section is right."},{"label":"div — correct","code":"<div class=\"price-badge\">\n  <span>£18</span>\n</div>","note":"Just a box for styling, with no heading and no theme. div is right."}]}'::jsonb
-from public.lessons where slug = 'section-article-aside';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'progressive_detail'::public.block_type, 'The document outline algorithm', 'Older material said that `<section>` created a new heading level automatically, so you could use `<h1>` everywhere and the nesting would sort it out. That algorithm was never implemented by any browser or screen reader, and it has been removed from the specification. Set heading levels explicitly: an `<h2>` is an `<h2>` no matter how deeply it is nested. If you read otherwise on an older tutorial, it is out of date.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'section-article-aside';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'checklist'::public.block_type, 'Choosing a container', NULL,
-       NULL, NULL, NULL, '{"items":["Would it make sense lifted out of the page? → `<article>`","Is it a themed part of a larger whole, with a heading? → `<section>`","Is it related but not essential? → `<aside>`","Is it just a box for layout? → `<div>`"]}'::jsonb
-from public.lessons where slug = 'section-article-aside';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
-       NULL, NULL, NULL, '{"points":["`<article>` = self-contained; `<section>` = themed group with a heading.","`<aside>` = related but removable without damaging the content.","`<div>` is correct when nothing else fits — that is what it is for.","Heading levels are always explicit; sectioning does not adjust them."],"nextUp":"Next: file organisation and repeated page patterns."}'::jsonb
-from public.lessons where slug = 'section-article-aside';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'section-article-guided', 1, 'guided'::public.exercise_kind, 'Choose the right containers',
-       'Rewrite this listing page. The two route entries are self-contained items; the block introducing them is a themed part of the page; the hire offer is related but tangential.', '<main>
-  <h1>Route guides</h1>
-  <div>
-    <h2>Easy routes</h2>
-    <p>Both of these are flat and traffic-free.</p>
-  </div>
-  <div>
-    <h3>The harbour loop</h3>
-    <p>Six miles from the workshop door.</p>
-  </div>
-  <div>
-    <h3>The mill and back</h3>
-    <p>Eleven miles, one gentle climb.</p>
-  </div>
-  <div>
-    <h2>Bike hire</h2>
-    <p>Hybrids from £22 a day.</p>
-  </div>
-</main>', '<main>
-  <h1>Route guides</h1>
-  <section>
-    <h2>Easy routes</h2>
-    <p>Both of these are flat and traffic-free.</p>
-
-    <article>
-      <h3>The harbour loop</h3>
-      <p>Six miles from the workshop door.</p>
-    </article>
-
-    <article>
-      <h3>The mill and back</h3>
-      <p>Eleven miles, one gentle climb.</p>
-    </article>
-  </section>
-
-  <aside aria-label="Bike hire">
-    <h2>Bike hire</h2>
-    <p>Hybrids from £22 a day.</p>
-  </aside>
-</main>', ARRAY['The two routes are self-contained items — each becomes an <article>.', 'The "Easy routes" block groups them under a heading — that is a <section>.', 'The hire offer is related but not part of the guides — that is an <aside>.']::text[],
-       50, 3,
-       (select id from public.skills where slug = 'semantic-html'), false
-from public.lessons l where l.slug = 'section-article-aside'
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
-  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
-  reference_solution = excluded.reference_solution, hints = excluded.hints,
-  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
-  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'element_count'::public.requirement_kind, 'article', NULL,
-       NULL, NULL, 2, 2,
-       'The two routes are articles', NULL, 1, true
-from public.exercises e where e.slug = 'section-article-guided';
 
 commit;

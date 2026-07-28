@@ -26,6 +26,14 @@ export interface Requirement {
   weight: number;
   /** A non-critical requirement can fail without failing the whole exercise. */
   isCritical: boolean;
+  /**
+   * Media or container query treated as active while checking, e.g.
+   * `(min-width: 40rem)`. Null means the page's default state.
+   *
+   * This is what lets one exercise examine responsive CSS at two widths — the
+   * only honest way to grade a layout that is supposed to change.
+   */
+  condition: string | null;
 }
 
 /**
@@ -52,6 +60,7 @@ export function requirementFromRow(row: ExerciseRequirementRow): Requirement {
     hint: row.hint,
     weight: Number(row.weight),
     isCritical: row.is_critical,
+    condition: row.condition ?? null,
   };
 }
 

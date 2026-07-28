@@ -30,7 +30,7 @@ more here than usual: they will discover any gap by walking into it.
 |---|---|---|
 | **A** | Rebuild the learning engine on evidence | **Done and verified against the live database** |
 | **B** | Fix the HTML course's known gaps | **Done** |
-| **C** | Complete CSS course | **Foundation done**, content not started |
+| **C** | Complete CSS course | Foundation done; **2 of 12 levels** authored |
 | **D** | Complete JavaScript course | Not started |
 
 Order matters and was agreed: the engine changes how every later lesson is
@@ -61,7 +61,7 @@ Tailwind 4, Supabase auth + Postgres with RLS on every table.
 | Reviewable items | 236 (both questions and exercises served) |
 | Tracked skills | 26 |
 | Media assets | 38 (136 files, all CC0, self-generated) |
-| Automated tests | 582 across 9 files |
+| Automated tests | 594 across 9 files |
 | RLS assertions | 29, against real PostgreSQL |
 
 Live at `learn-to-code-nine.vercel.app`, Supabase project `fulazwoiwhtwumerjiex`.
@@ -349,12 +349,27 @@ HTML parser has no such selector, so every `var()` resolved empty), media
 queries compared with significant whitespace, and a stray `}` silently discarded
 the rest of a stylesheet — which would have let broken CSS pass.
 
-### Still to build
+### Content — 2 of 12 levels
 
-The twelve levels. The planned order is in `src/content/courses/css.ts` and
-starts with the cascade rather than ending with it, because nearly every hour
-lost to CSS is a cascade misunderstanding. The capstone styles the site the
-learner already built in the HTML course.
+Authored, seeded and passing every check:
+
+- **Level 1, The Cascade** — 4 lessons: what a rule is, specificity,
+  inheritance, and a diagnostic milestone. Teaches the cascade *first*, which is
+  the course's central pedagogical bet.
+- **Level 2, Boxes and Selectors** — 3 lessons: the four layers and
+  `box-sizing`, combinators and attribute selectors, and a sizing milestone.
+
+Both levels use the retrieval blocks throughout and their exercises are graded
+by resolved CSS values, not source text.
+
+**Ten levels remain**: flow and positioning, flexbox, grid, responsive and
+container queries, custom properties, typography and colour, transitions and
+animation, architecture, developer tools, and the capstone. The planned order is
+documented in `src/content/courses/css.ts`.
+
+`tests/curriculum.test.ts` will start demanding full skill coverage for CSS the
+moment `isPublished` is flipped to true — so publishing an incomplete course
+fails the build rather than shipping quietly.
 
 ### The original Part C assessment, for reference
 

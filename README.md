@@ -60,7 +60,7 @@ learner has actually completed.
 | Capstone project types | 10 |
 | Learning-media assets | 38 (136 files) |
 | Estimated learner time | ~2,250 minutes (~37 hours, ≈64 min/day over 30 days) |
-| Automated tests | 582 |
+| Automated tests | 594 |
 
 ### The twelve levels
 
@@ -225,7 +225,7 @@ the lessons actually completed to produce a live completion estimate.
 │       ├── preview/               Sanitising and the starter stylesheet
 │       ├── progress/              XP, mastery, pace, achievements
 │       └── project/               Capstone checklist and export
-└── tests/                         582 tests across 9 files
+└── tests/                         594 tests across 9 files
 ```
 
 ---
@@ -457,7 +457,7 @@ Do not add anything whose licensing is unclear.
 ## Testing
 
 ```bash
-npm test          # 582 tests
+npm test          # 594 tests
 npm run test:rls  # 21 database-level assertions (needs PostgreSQL)
 ```
 

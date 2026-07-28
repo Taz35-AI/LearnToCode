@@ -1,3 +1,5 @@
+import { CSS_LEVEL_01 } from '../levels/css-level-01';
+import { CSS_LEVEL_02 } from '../levels/css-level-02';
 import type { CourseSpec } from '../types';
 
 /**
@@ -54,5 +56,5 @@ export const CSS_COURSE: CourseSpec = {
   version: '0.1.0',
   prerequisites: ['html-hero'],
   isPublished: false,
-  levels: [],
+  levels: [CSS_LEVEL_01, CSS_LEVEL_02],
 };

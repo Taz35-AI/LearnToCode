@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { parseDocument } from '@/lib/evaluator/parse';
+import { evaluateSubmission } from '@/lib/evaluator/evaluate';
+import type { Requirement } from '@/lib/evaluator/types';
+import { SPECIFICITY_ONE_CLASS } from '@/content/types';
 import {
   extractStyleSheets,
   parseDeclarations,
@@ -321,5 +324,151 @@ describe('robustness', () => {
     const style = ':root { --a: var(--b); --b: var(--a) } p { color: var(--a) }';
     const html = `<html><head><style>${style}</style></head><body><p>Hi</p></body></html>`;
     expect(() => valueOf(html, 'p', 'color')).not.toThrow();
+  });
+});
+
+/**
+ * The requirement kinds themselves, exercised end to end through the real
+ * evaluator — the same path a learner's submission takes.
+ */
+describe('CSS requirements through the evaluator', () => {
+  const page = (style: string, body = '<main class="card"><h1>Hi</h1><p>Text</p></main>') =>
+    `<!DOCTYPE html><html lang="en"><head><style>${style}</style></head><body>${body}</body></html>`;
+
+  const requirement = (partial: Partial<Requirement> & { kind: Requirement['kind'] }): Requirement => ({
+    id: 'r1',
+    ordinal: 1,
+    selector: null,
+    attribute: null,
+    expectedValue: null,
+    ancestorSelector: null,
+    minCount: null,
+    maxCount: null,
+    message: 'requirement',
+    hint: null,
+    weight: 1,
+    isCritical: true,
+    condition: null,
+    ...partial,
+  });
+
+  const grade = (html: string, partial: Partial<Requirement> & { kind: Requirement['kind'] }) =>
+    evaluateSubmission(html, [requirement(partial)]);
+
+  it('accepts any route to the same resolved value', () => {
+    const check = { kind: 'css_value' as const, selector: 'p', attribute: 'color', expectedValue: 'teal' };
+    for (const style of [
+      'p { color: teal }',
+      'main p { color: teal }',
+      '.card { color: teal }',
+      ':root { --c: teal } p { color: var(--c) }',
+    ]) {
+      expect(grade(page(style), check).passed, style).toBe(true);
+    }
+  });
+
+  it('fails a value that resolves to something else, and names the winning rule', () => {
+    const result = grade(page('p { color: teal } .card p { color: crimson }'), {
+      kind: 'css_value',
+      selector: 'p',
+      attribute: 'color',
+      expectedValue: 'teal',
+    });
+    expect(result.passed).toBe(false);
+    expect(result.results[0]?.detail).toContain('crimson');
+    expect(result.results[0]?.detail).toContain('.card p');
+  });
+
+  it('treats equivalent notations as equal', () => {
+    expect(
+      grade(page('p { color: #ffffff }'), {
+        kind: 'css_value',
+        selector: 'p',
+        attribute: 'color',
+        expectedValue: '#fff',
+      }).passed,
+    ).toBe(true);
+  });
+
+  it('distinguishes inherited from directly set', () => {
+    const inherited = grade(page('.card { color: teal }'), {
+      kind: 'css_inherited',
+      selector: 'p',
+      attribute: 'color',
+    });
+    expect(inherited.passed).toBe(true);
+
+    const direct = grade(page('.card { color: teal } p { color: teal }'), {
+      kind: 'css_inherited',
+      selector: 'p',
+      attribute: 'color',
+    });
+    expect(direct.passed).toBe(false);
+  });
+
+  it('grades a responsive layout at two widths from one stylesheet', () => {
+    const style =
+      '.card { display: grid; grid-template-columns: 1fr }' +
+      '@media (min-width: 40rem) { .card { grid-template-columns: repeat(3, 1fr) } }';
+
+    expect(
+      grade(page(style), {
+        kind: 'css_value',
+        selector: '.card',
+        attribute: 'grid-template-columns',
+        expectedValue: '1fr',
+      }).passed,
+    ).toBe(true);
+
+    expect(
+      grade(page(style), {
+        kind: 'css_value',
+        selector: '.card',
+        attribute: 'grid-template-columns',
+        expectedValue: 'repeat(3, 1fr)',
+        condition: '(min-width: 40rem)',
+      }).passed,
+    ).toBe(true);
+  });
+
+  it('reports when a selector matches nothing, rather than blaming the CSS', () => {
+    const result = grade(page('p { color: teal }'), {
+      kind: 'css_value',
+      selector: '.missing',
+      attribute: 'color',
+      expectedValue: 'teal',
+    });
+    expect(result.passed).toBe(false);
+    expect(result.results[0]?.detail).toContain('Nothing matches');
+  });
+
+  it('catches !important and names the offender', () => {
+    const result = grade(page('p { color: teal !important }'), { kind: 'css_no_important' });
+    expect(result.passed).toBe(false);
+    expect(result.results[0]?.detail).toContain('!important');
+  });
+
+  it('enforces a specificity budget', () => {
+    const budget = { kind: 'css_max_specificity' as const, maxCount: SPECIFICITY_ONE_CLASS };
+    expect(grade(page('.card { color: teal }'), budget).passed).toBe(true);
+    expect(grade(page('#main .card p { color: teal }'), budget).passed).toBe(false);
+  });
+
+  it('checks a custom property is defined', () => {
+    const check = { kind: 'css_custom_property' as const, selector: 'p', attribute: '--brand' };
+    expect(grade(page(':root { --brand: teal }'), check).passed).toBe(true);
+    expect(grade(page('p { color: teal }'), check).passed).toBe(false);
+  });
+
+  it('checks a media query exists at all', () => {
+    const check = { kind: 'css_media_rule' as const, expectedValue: '(min-width: 40rem)' };
+    expect(grade(page('@media (min-width:40rem) { p { color: teal } }'), check).passed).toBe(true);
+    expect(grade(page('p { color: teal }'), check).passed).toBe(false);
+  });
+
+  it('checks a property is deliberately not set', () => {
+    const check = { kind: 'css_property_absent' as const, selector: 'p', attribute: 'float' };
+    expect(grade(page('p { color: teal }'), check).passed).toBe(true);
+    expect(grade(page('p { float: left }'), check).passed).toBe(false);
   });
 });

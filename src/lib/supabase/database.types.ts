@@ -63,7 +63,19 @@ export type RequirementKind =
   | 'no_inline_script'
   | 'local_media_path'
   | 'no_deprecated_elements'
-  | 'valid_nesting';
+  | 'valid_nesting'
+  // Added by migration 0009. These judge the *resolved* value after the
+  // cascade, never the source text — see src/lib/evaluator/css-cascade.ts.
+  | 'css_declared'
+  | 'css_value'
+  | 'css_value_matches'
+  | 'css_inherited'
+  | 'css_property_absent'
+  | 'css_custom_property'
+  | 'css_rule_exists'
+  | 'css_media_rule'
+  | 'css_no_important'
+  | 'css_max_specificity';
 
 export type QuestionKind = 'single' | 'multi' | 'true_false';
 export type LessonStatus = 'not_started' | 'in_progress' | 'completed';
@@ -189,6 +201,8 @@ export type ExerciseRequirementRow = {
   hint: string | null;
   weight: number;
   is_critical: boolean;
+  /** Media or container query treated as active while checking (0009). */
+  condition: string | null;
   created_at: string;
 }
 

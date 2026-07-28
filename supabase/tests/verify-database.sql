@@ -54,9 +54,9 @@ with checks(item, ok, detail) as (
     and condeferrable
   union all
   select 'Course content loaded',
-         (select count(*) from lessons) = 55
-         and (select count(*) from quiz_questions) = 241
-         and (select count(*) from lesson_blocks) = 664,
+         (select count(*) from lessons) = 62
+         and (select count(*) from quiz_questions) = 274
+         and (select count(*) from lesson_blocks) = 737,
          -- The block count is in the detail because it is the figure that
          -- changes most often, and a failure that does not say which of the
          -- three numbers is wrong sends you looking in the wrong place.
@@ -69,9 +69,9 @@ with checks(item, ok, detail) as (
   -- existed and never reloaded, so /review was silently empty. A health check
   -- that cannot see an entirely absent feature is not checking much.
   select 'Reviewable items loaded',
-         (select count(*) from review_items) = 230
-         and (select count(*) from review_items where kind = 'exercise') = 93
-         and (select count(*) from review_items where kind = 'question') = 137,
+         (select count(*) from review_items) = 261
+         and (select count(*) from review_items where kind = 'exercise') = 105
+         and (select count(*) from review_items where kind = 'question') = 156,
          (select count(*) from review_items)::text || ' items ('
          || (select count(*) from review_items where kind = 'question')::text || ' questions, '
          || (select count(*) from review_items where kind = 'exercise')::text || ' exercises)'
@@ -88,8 +88,8 @@ with checks(item, ok, detail) as (
              where block_type in ('pretest','recall','predict_check','self_explain','worked_example','recap'))::text
          || ' of 6 types'
   union all
-  select 'All 12 levels and 21 modules',
-         (select count(*) from levels) = 12 and (select count(*) from modules) = 21,
+  select 'All 14 levels and 23 modules',
+         (select count(*) from levels) = 14 and (select count(*) from modules) = 23,
          (select count(*) from levels)::text || ' levels, ' || (select count(*) from modules)::text || ' modules'
   union all
   select 'Media library registered',

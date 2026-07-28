@@ -213,6 +213,108 @@ export const SKILLS: SkillSpec[] = [
     category: 'Production',
     prerequisites: ['native-interaction', 'accessibility'],
   },
+
+  // --- CSS ------------------------------------------------------------------
+  //
+  // Every one of these rests on `semantic-html`: you cannot style a structure
+  // that is not there, and the commonest cause of unstylable CSS is markup that
+  // never described anything in the first place.
+  {
+    slug: 'cascade',
+    name: 'The cascade and specificity',
+    description:
+      'Working out which rule wins and why: specificity, source order, importance and inheritance. The model everything else in CSS rests on.',
+    category: 'CSS foundations',
+    prerequisites: ['semantic-html'],
+  },
+  {
+    slug: 'selectors',
+    name: 'Selectors',
+    description:
+      'Targeting exactly the elements you mean — combinators, attribute selectors, pseudo-classes — without reaching for specificity you will regret.',
+    category: 'CSS foundations',
+    prerequisites: ['cascade'],
+  },
+  {
+    slug: 'box-model',
+    name: 'The box model',
+    description:
+      'How a box gets its size: content, padding, border, margin, box-sizing, and why two margins sometimes become one.',
+    category: 'CSS foundations',
+    prerequisites: ['cascade'],
+  },
+  {
+    slug: 'layout-flow',
+    name: 'Flow, positioning and stacking',
+    description:
+      'Normal flow, the display property, position, and the stacking contexts that decide what covers what.',
+    category: 'CSS layout',
+    prerequisites: ['box-model'],
+  },
+  {
+    slug: 'flexbox',
+    name: 'Flexbox',
+    description:
+      'One-dimensional layout: main and cross axes, growing, shrinking and distributing space.',
+    category: 'CSS layout',
+    prerequisites: ['layout-flow'],
+  },
+  {
+    slug: 'grid',
+    name: 'Grid',
+    description:
+      'Two-dimensional layout: tracks, areas, implicit rows, and the functions that make a grid responsive without a single media query.',
+    category: 'CSS layout',
+    prerequisites: ['flexbox'],
+  },
+  {
+    slug: 'responsive',
+    name: 'Responsive design',
+    description:
+      'Layouts that adapt: fluid values, media queries, container queries, and choosing a breakpoint from the content rather than from a device.',
+    category: 'CSS layout',
+    prerequisites: ['grid'],
+  },
+  {
+    slug: 'custom-properties',
+    name: 'Custom properties',
+    description:
+      'Design tokens that live in the cascade: declaring, inheriting, scoping and overriding values by name.',
+    category: 'CSS craft',
+    prerequisites: ['cascade'],
+  },
+  {
+    slug: 'typography',
+    name: 'Typography and colour',
+    description:
+      'Readable type and usable colour: scale, measure, line height, contrast and the parts of both that are accessibility requirements rather than taste.',
+    category: 'CSS craft',
+    prerequisites: ['custom-properties'],
+  },
+  {
+    slug: 'animation',
+    name: 'Transitions and animation',
+    description:
+      'Motion that helps rather than distracts — what is cheap to animate, what is not, and honouring a reduced-motion preference.',
+    category: 'CSS craft',
+    prerequisites: ['layout-flow'],
+  },
+  {
+    slug: 'css-architecture',
+    name: 'CSS architecture',
+    description:
+      'Naming, layering and scoping so a stylesheet stays workable at size, and so deleting a component deletes its CSS too.',
+    category: 'CSS craft',
+    prerequisites: ['selectors', 'custom-properties'],
+  },
+  {
+    slug: 'css-debugging',
+    name: 'Debugging CSS',
+    description:
+      'Finding why a rule did not apply: the inspector, computed values, and the small set of causes behind almost every "this is not working".',
+    category: 'CSS craft',
+    prerequisites: ['cascade', 'box-model'],
+  },
 ];
 
 export const SKILL_SLUGS = SKILLS.map((s) => s.slug);

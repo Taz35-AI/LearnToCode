@@ -15,7 +15,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
-import { COURSES, allLessons, allProgrammeLessons, courseStats, programmeStats, totalCourseMinutes } from '../src/content/course';
+import { COURSES, allProgrammeLessons, courseStats, programmeStats, totalCourseMinutes } from '../src/content/course';
 import { SKILLS } from '../src/content/skills';
 import { ACHIEVEMENTS } from '../src/content/achievements';
 import { PROJECT_TEMPLATES } from '../src/content/projects';
@@ -391,10 +391,10 @@ on conflict do nothing;`,
 function emitRequirement(exerciseSlug: string, req: RequirementSpec, ordinal: number): void {
   sql.push(
     `insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, ${ordinal}, ${q(req.kind)}::public.requirement_kind, ${q(req.selector)}, ${q(req.attribute)},
        ${q(req.expectedValue)}, ${q(req.ancestorSelector)}, ${n(req.minCount)}, ${n(req.maxCount)},
-       ${q(req.message)}, ${q(req.hint)}, ${req.weight ?? 1}, ${req.critical === false ? 'false' : 'true'}
+       ${q(req.message)}, ${q(req.hint)}, ${req.weight ?? 1}, ${req.critical === false ? 'false' : 'true'}, ${q(req.condition ?? null)}
 from public.exercises e where e.slug = ${q(exerciseSlug)};`,
   );
 }
@@ -704,30 +704,35 @@ function emitStaleCleanup(): void {
  * or its patterns stop matching.
  */
 async function syncHealthCheck(): Promise<void> {
-  const reviewQuestions = allLessons().flatMap((lesson) => lesson.quiz).length;
-  const reviewExercises = allLessons()
+  // Programme totals, not one course's. The database holds every course the
+  // seed emits — including unpublished ones, which are seeded precisely so they
+  // can be verified — so the health check must count all of them or it reports
+  // a failure every time a course is being written.
+  const programme = programmeStats();
+  const lessons = allProgrammeLessons();
+
+  const reviewQuestions = lessons.flatMap((lesson) => lesson.quiz).length;
+  const reviewExercises = lessons
     .flatMap((lesson) => lesson.exercises)
     .filter((exercise) => exercise.kind !== 'project_mission').length;
 
   const replacements: [RegExp, string][] = [
-    [/(\(select count\(\*\) from lessons\) = )\d+/, `$1${allLessons().length}`],
-    [/(\(select count\(\*\) from lesson_blocks\) = )\d+/, `$1${stats.blocks}`],
-    [/(\(select count\(\*\) from quiz_questions\) = )\d+/, `$1${stats.quizQuestions}`],
-    [/(\(select count\(\*\) from levels\) = )\d+/, `$1${stats.levels}`],
-    [/(\(select count\(\*\) from modules\) = )\d+/, `$1${stats.modules}`],
+    [/(\(select count\(\*\) from lessons\) = )\d+/, `$1${lessons.length}`],
+    [/(\(select count\(\*\) from lesson_blocks\) = )\d+/, `$1${programme.blocks}`],
+    [/(\(select count\(\*\) from quiz_questions\) = )\d+/, `$1${programme.quizQuestions}`],
+    [/(\(select count\(\*\) from levels\) = )\d+/, `$1${programme.levels}`],
+    [/(\(select count\(\*\) from modules\) = )\d+/, `$1${programme.modules}`],
     [/(\(select count\(\*\) from review_items\) = )\d+/, `$1${reviewQuestions + reviewExercises}`],
     [/(where kind = 'question'\) = )\d+/, `$1${reviewQuestions}`],
     [/(where kind = 'exercise'\) = )\d+/, `$1${reviewExercises}`],
     [/(\(select count\(\*\) from learning_media\) = )\d+/, `$1${MEDIA_ASSETS.length}`],
-    [/(' of )\d+'\n\s+from public\.learning_media/, `$1${MEDIA_ASSETS.length}'`],
-    [/'All \d+ levels and \d+ modules'/, `'All ${stats.levels} levels and ${stats.modules} modules'`],
+    [/'All \d+ levels and \d+ modules'/, `'All ${programme.levels} levels and ${programme.modules} modules'`],
   ];
 
   let sql = await readFile(HEALTH_CHECK, 'utf8');
   for (const [pattern, value] of replacements) {
     sql = sql.replace(pattern, value);
   }
-  // The media count appears twice on one line; handle the detail string too.
   sql = sql.replace(
     /(\(select count\(\*\) from learning_media\)::text \|\| ' of )\d+'/,
     `$1${MEDIA_ASSETS.length}'`,

@@ -30,6 +30,7 @@ function req(partial: Partial<Requirement> & { kind: Requirement['kind'] }): Req
     hint: null,
     weight: 1,
     isCritical: true,
+    condition: null,
     ...partial,
   };
 }
@@ -60,6 +61,7 @@ describe('requirements loaded from the database', () => {
     // mapping coerces rather than trusting the type.
     weight: 0.5 as unknown as number,
     is_critical: false,
+    condition: null,
     created_at: '2026-01-01T00:00:00Z',
   };
 
@@ -78,6 +80,7 @@ describe('requirements loaded from the database', () => {
       hint: 'Add a second <p>.',
       weight: 0.5,
       isCritical: false,
+      condition: null,
     });
   });
 

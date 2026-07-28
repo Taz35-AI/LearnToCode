@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 1 of 10
+-- HTML Hero — course seed, part 1 of 11
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -92,6 +92,30 @@ insert into public.skills (slug, name, description, category, ordinal) values ('
 insert into public.skills (slug, name, description, category, ordinal) values ('maintainability', 'Maintainable HTML', 'Code that another person — including future you — can read: consistent formatting, useful comments, reusable patterns and no needless containers.', 'Craft', 25)
   on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
 insert into public.skills (slug, name, description, category, ordinal) values ('progressive-enhancement', 'Progressive enhancement', 'Building so the page works everywhere first, then improves where the browser supports more.', 'Production', 26)
+  on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
+insert into public.skills (slug, name, description, category, ordinal) values ('cascade', 'The cascade and specificity', 'Working out which rule wins and why: specificity, source order, importance and inheritance. The model everything else in CSS rests on.', 'CSS foundations', 27)
+  on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
+insert into public.skills (slug, name, description, category, ordinal) values ('selectors', 'Selectors', 'Targeting exactly the elements you mean — combinators, attribute selectors, pseudo-classes — without reaching for specificity you will regret.', 'CSS foundations', 28)
+  on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
+insert into public.skills (slug, name, description, category, ordinal) values ('box-model', 'The box model', 'How a box gets its size: content, padding, border, margin, box-sizing, and why two margins sometimes become one.', 'CSS foundations', 29)
+  on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
+insert into public.skills (slug, name, description, category, ordinal) values ('layout-flow', 'Flow, positioning and stacking', 'Normal flow, the display property, position, and the stacking contexts that decide what covers what.', 'CSS layout', 30)
+  on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
+insert into public.skills (slug, name, description, category, ordinal) values ('flexbox', 'Flexbox', 'One-dimensional layout: main and cross axes, growing, shrinking and distributing space.', 'CSS layout', 31)
+  on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
+insert into public.skills (slug, name, description, category, ordinal) values ('grid', 'Grid', 'Two-dimensional layout: tracks, areas, implicit rows, and the functions that make a grid responsive without a single media query.', 'CSS layout', 32)
+  on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
+insert into public.skills (slug, name, description, category, ordinal) values ('responsive', 'Responsive design', 'Layouts that adapt: fluid values, media queries, container queries, and choosing a breakpoint from the content rather than from a device.', 'CSS layout', 33)
+  on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
+insert into public.skills (slug, name, description, category, ordinal) values ('custom-properties', 'Custom properties', 'Design tokens that live in the cascade: declaring, inheriting, scoping and overriding values by name.', 'CSS craft', 34)
+  on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
+insert into public.skills (slug, name, description, category, ordinal) values ('typography', 'Typography and colour', 'Readable type and usable colour: scale, measure, line height, contrast and the parts of both that are accessibility requirements rather than taste.', 'CSS craft', 35)
+  on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
+insert into public.skills (slug, name, description, category, ordinal) values ('animation', 'Transitions and animation', 'Motion that helps rather than distracts — what is cheap to animate, what is not, and honouring a reduced-motion preference.', 'CSS craft', 36)
+  on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
+insert into public.skills (slug, name, description, category, ordinal) values ('css-architecture', 'CSS architecture', 'Naming, layering and scoping so a stylesheet stays workable at size, and so deleting a component deletes its CSS too.', 'CSS craft', 37)
+  on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
+insert into public.skills (slug, name, description, category, ordinal) values ('css-debugging', 'Debugging CSS', 'Finding why a rule did not apply: the inspector, computed values, and the small set of causes behind almost every "this is not working".', 'CSS craft', 38)
   on conflict (slug) do update set name = excluded.name, description = excluded.description, category = excluded.category, ordinal = excluded.ordinal;
 insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
   select s.id, p.id from public.skills s, public.skills p
@@ -220,6 +244,62 @@ insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
 insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
   select s.id, p.id from public.skills s, public.skills p
   where s.slug = 'progressive-enhancement' and p.slug = 'accessibility'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'cascade' and p.slug = 'semantic-html'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'selectors' and p.slug = 'cascade'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'box-model' and p.slug = 'cascade'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'layout-flow' and p.slug = 'box-model'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'flexbox' and p.slug = 'layout-flow'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'grid' and p.slug = 'flexbox'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'responsive' and p.slug = 'grid'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'custom-properties' and p.slug = 'cascade'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'typography' and p.slug = 'custom-properties'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'animation' and p.slug = 'layout-flow'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'css-architecture' and p.slug = 'selectors'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'css-architecture' and p.slug = 'custom-properties'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'css-debugging' and p.slug = 'cascade'
+  on conflict do nothing;
+insert into public.skill_prerequisites (skill_id, prerequisite_skill_id)
+  select s.id, p.id from public.skills s, public.skills p
+  where s.slug = 'css-debugging' and p.slug = 'box-model'
   on conflict do nothing;
 -- --------------------------------------------------------------------------
 -- Learning media and attributions
@@ -1518,28 +1598,28 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'unique_element'::public.requirement_kind, 'h1', NULL,
        NULL, NULL, NULL, NULL,
-       'There is exactly one <h1> heading', NULL, 1, true
+       'There is exactly one <h1> heading', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'first-markup-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'text_not_empty'::public.requirement_kind, 'h1', NULL,
        NULL, NULL, NULL, NULL,
-       'The heading has text inside it', NULL, 1, true
+       'The heading has text inside it', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'first-markup-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'element_present'::public.requirement_kind, 'p', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a paragraph', NULL, 1, true
+       'There is a paragraph', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'first-markup-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'text_not_empty'::public.requirement_kind, 'p', NULL,
        NULL, NULL, NULL, NULL,
-       'The paragraph has text inside it', NULL, 1, true
+       'The paragraph has text inside it', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'first-markup-guided';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -1557,22 +1637,22 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'unique_element'::public.requirement_kind, 'h1', NULL,
        NULL, NULL, NULL, NULL,
-       'There is exactly one <h1>, correctly closed', NULL, 1, true
+       'There is exactly one <h1>, correctly closed', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'first-markup-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'element_present'::public.requirement_kind, 'p', NULL,
        NULL, NULL, NULL, NULL,
-       'The paragraph survives outside the heading', NULL, 1, true
+       'The paragraph survives outside the heading', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'first-markup-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'text_content'::public.requirement_kind, 'p', NULL,
        'Bikes', NULL, NULL, NULL,
-       'The paragraph text is still in the paragraph', NULL, 1, true
+       'The paragraph text is still in the paragraph', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'first-markup-debug';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'what-happens-when-you-open-a-page'), NULL, 'q-what-is-html', 1, 'single'::public.question_kind,
@@ -1714,28 +1794,28 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_present'::public.requirement_kind, 'a', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a link element', NULL, 1, true
+       'There is a link element', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'attributes-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_value'::public.requirement_kind, 'a', 'href',
        'opening-hours.html', NULL, NULL, NULL,
-       'The link points to opening-hours.html', NULL, 1, true
+       'The link points to opening-hours.html', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'attributes-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'text_content'::public.requirement_kind, 'a', NULL,
        'opening hours', NULL, NULL, NULL,
-       'The link text is unchanged', NULL, 1, true
+       'The link text is unchanged', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'attributes-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'nesting'::public.requirement_kind, 'a', NULL,
        NULL, 'p', 1, NULL,
-       'The link is still inside the paragraph', NULL, 1, true
+       'The link is still inside the paragraph', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'attributes-guided';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -1753,147 +1833,40 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'unique_element'::public.requirement_kind, 'h1', NULL,
        NULL, NULL, NULL, NULL,
-       'Exactly one <h1> heading', NULL, 1, true
+       'Exactly one <h1> heading', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'attributes-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'text_not_empty'::public.requirement_kind, 'h1', NULL,
        NULL, NULL, NULL, NULL,
-       'The heading is not empty', NULL, 1, true
+       'The heading is not empty', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'attributes-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'element_present'::public.requirement_kind, 'p', NULL,
        NULL, NULL, NULL, NULL,
-       'A paragraph describing the business', NULL, 1, true
+       'A paragraph describing the business', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'attributes-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'text_not_empty'::public.requirement_kind, 'p', NULL,
        NULL, NULL, NULL, NULL,
-       'The paragraph is not empty', NULL, 1, true
+       'The paragraph is not empty', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'attributes-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'attribute_value'::public.requirement_kind, 'a', 'href',
        'menu.html', NULL, NULL, NULL,
-       'A link pointing at menu.html', NULL, 1, true
+       'A link pointing at menu.html', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'attributes-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'text_not_empty'::public.requirement_kind, 'a', NULL,
        NULL, NULL, NULL, NULL,
-       'The link has visible text', NULL, 1, true
+       'The link has visible text', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'attributes-challenge';
-insert into public.exercises
-  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
-select l.id, 'attributes-debug', 3, 'debug'::public.exercise_kind, 'Three broken attributes',
-       'Every line below has one attribute mistake. Fix all three. Read the checker messages if you get stuck — they name the problem.', '<a href=about.html>About</a>
-<img src="/learning-media/images/studio-desk.jpg alt="A tidy desk">
-<a href = "contact.html">Contact</a>', '<a href="about.html">About</a>
-<img src="/learning-media/images/studio-desk.jpg" alt="A tidy desk">
-<a href="contact.html">Contact</a>', ARRAY['Line 1: the value has no quotation marks around it.', 'Line 2: a quotation mark is opened but never closed, so the alt text got swallowed.', 'Line 3: there should be no spaces around the equals sign.']::text[],
-       35, 2,
-       (select id from public.skills where slug = 'validation'), false
-from public.lessons l where l.slug = 'tags-elements-attributes'
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
-  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
-  reference_solution = excluded.reference_solution, hints = excluded.hints,
-  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
-  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 1, 'element_count'::public.requirement_kind, 'a', NULL,
-       NULL, NULL, 2, 2,
-       'Both links survive', NULL, 1, true
-from public.exercises e where e.slug = 'attributes-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 2, 'attribute_value'::public.requirement_kind, 'a[href="about.html"]', 'href',
-       'about.html', NULL, NULL, NULL,
-       'The first link points at about.html', NULL, 1, true
-from public.exercises e where e.slug = 'attributes-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 3, 'attribute_value'::public.requirement_kind, 'a[href="contact.html"]', 'href',
-       'contact.html', NULL, NULL, NULL,
-       'The second link points at contact.html', NULL, 1, true
-from public.exercises e where e.slug = 'attributes-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 4, 'element_present'::public.requirement_kind, 'img', NULL,
-       NULL, NULL, NULL, NULL,
-       'The image element is still there', NULL, 1, true
-from public.exercises e where e.slug = 'attributes-debug';
-insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
-select e.id, 5, 'text_content'::public.requirement_kind, 'a', NULL,
-       'About', NULL, NULL, NULL,
-       'The first link still says About', NULL, 1, true
-from public.exercises e where e.slug = 'attributes-debug';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'tags-elements-attributes'), NULL, 'q-tag-vs-element', 1, 'single'::public.question_kind,
-        'In `<p>Hello</p>`, which part is the element?', 'The element is the whole thing: opening tag, content and closing tag. `<p>` on its own is just a tag.', (select id from public.skills where slug = 'syntax'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Just `</p>`', false, NULL
-from public.quiz_questions where slug = 'q-tag-vs-element';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'The whole of `<p>Hello</p>`', true, NULL
-from public.quiz_questions where slug = 'q-tag-vs-element';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Just `<p>`', false, NULL
-from public.quiz_questions where slug = 'q-tag-vs-element';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Just the word `Hello`', false, NULL
-from public.quiz_questions where slug = 'q-tag-vs-element';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'tags-elements-attributes'), NULL, 'q-attribute-syntax', 2, 'single'::public.question_kind,
-        'Which of these writes an attribute correctly?', 'The name touches the equals sign, the equals sign touches the value, and the value sits in quotation marks.', (select id from public.skills where slug = 'syntax'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, '<a href="shop.html">', true, NULL
-from public.quiz_questions where slug = 'q-attribute-syntax';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, '<a href = shop.html>', false, NULL
-from public.quiz_questions where slug = 'q-attribute-syntax';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, '<a href: "shop.html">', false, NULL
-from public.quiz_questions where slug = 'q-attribute-syntax';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, '<a "href"=shop.html>', false, NULL
-from public.quiz_questions where slug = 'q-attribute-syntax';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'tags-elements-attributes'), NULL, 'q-void-elements', 3, 'single'::public.question_kind,
-        'Why does `<img>` have no closing tag?', 'Void elements do not wrap any content, so there is nothing for a closing tag to close. Everything the element needs is given as attributes.', (select id from public.skills where slug = 'syntax'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'It wraps no content, so there is nothing to close', true, NULL
-from public.quiz_questions where slug = 'q-void-elements';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'Because images load separately from the page', false, NULL
-from public.quiz_questions where slug = 'q-void-elements';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Closing tags are optional on every element', false, NULL
-from public.quiz_questions where slug = 'q-void-elements';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'It is a shorthand that older browsers required', false, NULL
-from public.quiz_questions where slug = 'q-void-elements';
 
 commit;

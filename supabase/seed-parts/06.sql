@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 6 of 10
+-- HTML Hero — course seed, part 6 of 11
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -10,6 +10,188 @@
 -- Run part 5 first.
 
 begin;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'element_count'::public.requirement_kind, 'input[required], textarea[required]', NULL,
+       NULL, NULL, 1, NULL,
+       'At least one field is required', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'form-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 7, 'attribute_value'::public.requirement_kind, 'button', 'type',
+       'submit', NULL, NULL, NULL,
+       'The submit button has an explicit type', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'form-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 8, 'heading_order'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'The heading hierarchy is correct: one <h1>, and no skipped levels', 'Start with a single <h1>, then step down one level at a time — h2 before h3.', 1, true, NULL
+from public.exercises e where e.slug = 'form-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 9, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true, NULL
+from public.exercises e where e.slug = 'form-mission';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'validation-and-form-milestone'), NULL, 'q-client-validation', 1, 'single'::public.question_kind,
+        'Is `required` a security feature?', 'No. It can be removed with developer tools, and a request can be sent without loading your page at all. The server must revalidate everything.', (select id from public.skills where slug = 'security'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Only over HTTPS', false, NULL
+from public.quiz_questions where slug = 'q-client-validation';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'No — the server must revalidate every value', true, NULL
+from public.quiz_questions where slug = 'q-client-validation';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Yes, browsers enforce it before submission', false, NULL
+from public.quiz_questions where slug = 'q-client-validation';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Yes, when combined with pattern', false, NULL
+from public.quiz_questions where slug = 'q-client-validation';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'validation-and-form-milestone'), NULL, 'q-get-vs-post', 2, 'single'::public.question_kind,
+        'Which method should a login form use?', 'POST. GET would put the password in the URL, browser history and server logs.', (select id from public.skills where slug = 'security'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'GET', false, NULL
+from public.quiz_questions where slug = 'q-get-vs-post';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Either works equally well', false, NULL
+from public.quiz_questions where slug = 'q-get-vs-post';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'PUT', false, NULL
+from public.quiz_questions where slug = 'q-get-vs-post';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'POST', true, NULL
+from public.quiz_questions where slug = 'q-get-vs-post';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'validation-and-form-milestone'), NULL, 'q-aria-describedby', 3, 'single'::public.question_kind,
+        'What does `aria-describedby` on an input do?', 'It connects the field to descriptive text elsewhere on the page, so a screen reader reads the hint after the label.', (select id from public.skills where slug = 'aria'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Connects the field to a hint that screen readers announce', true, NULL
+from public.quiz_questions where slug = 'q-aria-describedby';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Replaces the field''s label', false, NULL
+from public.quiz_questions where slug = 'q-aria-describedby';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Sets the validation error message', false, NULL
+from public.quiz_questions where slug = 'q-aria-describedby';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Adds a tooltip on hover', false, NULL
+from public.quiz_questions where slug = 'q-aria-describedby';
+-- Level 6 milestone: Data and Forms Builder questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-6-milestone'), 'a6-q1', 1, 'single'::public.question_kind,
+        'Which element gives a table its title?', '`<caption>`, as the first child of `<table>`.', (select id from public.skills where slug = 'tables'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '<caption>', true, NULL
+from public.quiz_questions where slug = 'a6-q1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '<thead>', false, NULL
+from public.quiz_questions where slug = 'a6-q1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '<legend>', false, NULL
+from public.quiz_questions where slug = 'a6-q1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '<summary>', false, NULL
+from public.quiz_questions where slug = 'a6-q1';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-6-milestone'), 'a6-q2', 2, 'single'::public.question_kind,
+        'A cell contains "£34". A screen reader announces "Road bike, Per day, £34". What made that possible?', 'Header cells with `scope`, telling the screen reader which headings apply to that cell.', (select id from public.skills where slug = 'tables'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The table caption', false, NULL
+from public.quiz_questions where slug = 'a6-q2';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A title attribute on the cell', false, NULL
+from public.quiz_questions where slug = 'a6-q2';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'colspan on the header row', false, NULL
+from public.quiz_questions where slug = 'a6-q2';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '<th> cells with scope attributes', true, NULL
+from public.quiz_questions where slug = 'a6-q2';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-6-milestone'), 'a6-q3', 3, 'single'::public.question_kind,
+        'What connects a label to its input?', 'The label''s `for` value matches the input''s `id`.', (select id from public.skills where slug = 'forms'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Being adjacent in the source', false, NULL
+from public.quiz_questions where slug = 'a6-q3';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A shared class', false, NULL
+from public.quiz_questions where slug = 'a6-q3';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'for matching id', true, NULL
+from public.quiz_questions where slug = 'a6-q3';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'for matching name', false, NULL
+from public.quiz_questions where slug = 'a6-q3';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-6-milestone'), 'a6-q4', 4, 'single'::public.question_kind,
+        'Which attribute makes two radio buttons mutually exclusive?', 'A shared `name` attribute. The fieldset labels the group for screen readers, but it is the matching name that makes the browser treat them as one choice.', (select id from public.skills where slug = 'forms'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'group', false, NULL
+from public.quiz_questions where slug = 'a6-q4';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'name', true, NULL
+from public.quiz_questions where slug = 'a6-q4';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'id', false, NULL
+from public.quiz_questions where slug = 'a6-q4';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'value', false, NULL
+from public.quiz_questions where slug = 'a6-q4';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'level-6-milestone'), 'a6-q5', 5, 'single'::public.question_kind,
+        'Which input type suits a UK postcode?', 'A postcode contains letters and a space, so `text`. `number` would strip formatting and reject letters.', (select id from public.skills where slug = 'forms'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'text', true, NULL
+from public.quiz_questions where slug = 'a6-q5';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'number', false, NULL
+from public.quiz_questions where slug = 'a6-q5';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'tel', false, NULL
+from public.quiz_questions where slug = 'a6-q5';
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 4, 'search', false, NULL
 from public.quiz_questions where slug = 'a6-q5';
@@ -259,40 +441,40 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_count'::public.requirement_kind, 'details', NULL,
        NULL, NULL, 3, 3,
-       'There are three disclosure widgets', NULL, 1, true
+       'There are three disclosure widgets', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'details-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'element_count'::public.requirement_kind, 'details > summary', NULL,
        NULL, NULL, 3, 3,
-       'Each has a summary as its first child', NULL, 1, true
+       'Each has a summary as its first child', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'details-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'attribute_value'::public.requirement_kind, 'details', 'name',
        'faq', NULL, NULL, NULL,
-       'They share the name "faq" so only one opens at a time', NULL, 1, true
+       'They share the name "faq" so only one opens at a time', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'details-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'element_count'::public.requirement_kind, 'details[open]', NULL,
        NULL, NULL, 1, 1,
-       'Exactly one starts open', NULL, 1, true
+       'Exactly one starts open', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'details-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'text_not_empty'::public.requirement_kind, 'summary', NULL,
        NULL, NULL, NULL, NULL,
-       'Every summary has text', NULL, 1, true
+       'Every summary has text', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'details-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'valid_nesting'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
-       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
+       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true, NULL
 from public.exercises e where e.slug = 'details-guided';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'details-and-summary'), NULL, 'q-summary-position', 1, 'single'::public.question_kind,
@@ -440,40 +622,40 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'attribute_present'::public.requirement_kind, 'div', 'popover',
        NULL, NULL, NULL, NULL,
-       'The panel is marked as a popover', NULL, 1, true
+       'The panel is marked as a popover', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'popover-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_value'::public.requirement_kind, 'button', 'popovertarget',
        'sizes', NULL, NULL, NULL,
-       'A button targets the popover', NULL, 1, true
+       'A button targets the popover', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'popover-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'element_count'::public.requirement_kind, 'button[popovertarget]', NULL,
        NULL, NULL, 2, 2,
-       'There is a trigger button and a close button', NULL, 1, true
+       'There is a trigger button and a close button', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'popover-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'attribute_value'::public.requirement_kind, 'button[popovertargetaction="hide"]', 'popovertargetaction',
        'hide', NULL, NULL, NULL,
-       'The close button hides the popover', NULL, 1, true
+       'The close button hides the popover', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'popover-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
-       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true
+       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true, NULL
 from public.exercises e where e.slug = 'popover-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'accessible_name'::public.requirement_kind, 'button', NULL,
        NULL, NULL, NULL, NULL,
-       'Both buttons have visible text', NULL, 1, true
+       'Both buttons have visible text', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'popover-guided';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -497,28 +679,28 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'nesting'::public.requirement_kind, 'h2, h3', NULL,
        NULL, 'dialog', 1, NULL,
-       'The dialog has a heading', NULL, 1, true
+       'The dialog has a heading', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'dialog-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_value'::public.requirement_kind, 'dialog form', 'method',
        'dialog', NULL, NULL, NULL,
-       'A form with method="dialog" is present', NULL, 1, true
+       'A form with method="dialog" is present', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'dialog-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'nesting'::public.requirement_kind, 'button', NULL,
        NULL, 'dialog form', 1, NULL,
-       'There is a close button inside that form', NULL, 1, true
+       'There is a close button inside that form', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'dialog-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'accessible_name'::public.requirement_kind, 'button', NULL,
        NULL, NULL, NULL, NULL,
-       'The button has visible text', NULL, 1, true
+       'The button has visible text', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'dialog-debug';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'dialog-and-popover'), NULL, 'q-dialog-close', 1, 'single'::public.question_kind,
@@ -663,46 +845,46 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'attribute_value'::public.requirement_kind, 'input', 'list',
        'routes', NULL, NULL, NULL,
-       'The input is connected to the datalist', NULL, 1, true
+       'The input is connected to the datalist', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'datalist-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'element_present'::public.requirement_kind, 'datalist#routes', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a datalist with that id', NULL, 1, true
+       'There is a datalist with that id', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'datalist-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'element_count'::public.requirement_kind, 'datalist option', NULL,
        NULL, NULL, 3, NULL,
-       'The datalist offers at least three options', NULL, 1, true
+       'The datalist offers at least three options', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'datalist-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'element_present'::public.requirement_kind, 'meter', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a meter', NULL, 1, true
+       'There is a meter', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'datalist-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'attribute_value'::public.requirement_kind, 'meter', 'value',
        '6', NULL, NULL, NULL,
-       'The meter shows the current value', NULL, 1, true
+       'The meter shows the current value', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'datalist-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'attribute_value'::public.requirement_kind, 'meter', 'max',
        '24', NULL, NULL, NULL,
-       'The meter declares its maximum', NULL, 1, true
+       'The meter declares its maximum', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'datalist-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 7, 'label_association'::public.requirement_kind, 'input, meter', NULL,
        NULL, NULL, NULL, NULL,
-       'Both controls are labelled', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+       'Both controls are labelled', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true, NULL
 from public.exercises e where e.slug = 'datalist-guided';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -768,100 +950,100 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_count'::public.requirement_kind, 'details', NULL,
        NULL, NULL, 3, NULL,
-       'At least three details elements', NULL, 1, true
+       'At least three details elements', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_present'::public.requirement_kind, 'details', 'name',
        NULL, NULL, NULL, NULL,
-       'The details elements share a name', NULL, 1, true
+       'The details elements share a name', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'element_count'::public.requirement_kind, 'details > summary', NULL,
        NULL, NULL, 3, NULL,
-       'Each details has a summary', NULL, 1, true
+       'Each details has a summary', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'element_present'::public.requirement_kind, 'dialog', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a dialog', NULL, 1, true
+       'There is a dialog', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'attribute_value'::public.requirement_kind, 'dialog form', 'method',
        'dialog', NULL, NULL, NULL,
-       'The dialog can be closed without JavaScript', NULL, 1, true
+       'The dialog can be closed without JavaScript', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'element_present'::public.requirement_kind, '[popover]', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a popover', NULL, 1, true
+       'There is a popover', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 7, 'element_present'::public.requirement_kind, 'button[popovertarget]', NULL,
        NULL, NULL, NULL, NULL,
-       'A button controls the popover', NULL, 1, true
+       'A button controls the popover', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 8, 'element_present'::public.requirement_kind, 'progress', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a progress element', NULL, 1, true
+       'There is a progress element', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 9, 'element_present'::public.requirement_kind, 'meter', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a meter element', NULL, 1, true
+       'There is a meter element', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 10, 'element_present'::public.requirement_kind, 'datalist', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a datalist', NULL, 1, true
+       'There is a datalist', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 11, 'attribute_present'::public.requirement_kind, 'input', 'list',
        NULL, NULL, NULL, NULL,
-       'An input is connected to the datalist', NULL, 1, true
+       'An input is connected to the datalist', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 12, 'label_association'::public.requirement_kind, 'progress, meter, input', NULL,
        NULL, NULL, NULL, NULL,
-       'Every control is labelled', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+       'Every control is labelled', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 13, 'element_count'::public.requirement_kind, 'script', NULL,
        NULL, NULL, 0, 0,
-       'The page contains no JavaScript', NULL, 1, true
+       'The page contains no JavaScript', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 14, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
-       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true
+       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 15, 'heading_order'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
-       'The heading hierarchy is correct: one <h1>, and no skipped levels', 'Start with a single <h1>, then step down one level at a time — h2 before h3.', 1, true
+       'The heading hierarchy is correct: one <h1>, and no skipped levels', 'Start with a single <h1>, then step down one level at a time — h2 before h3.', 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 16, 'valid_nesting'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
-       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true
+       'Elements are nested legally', 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.', 1, true, NULL
 from public.exercises e where e.slug = 'native-milestone';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -901,40 +1083,40 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_count'::public.requirement_kind, 'details', NULL,
        NULL, NULL, 3, NULL,
-       'At least three FAQ entries', NULL, 1, true
+       'At least three FAQ entries', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-mission';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'element_count'::public.requirement_kind, 'details > summary', NULL,
        NULL, NULL, 3, NULL,
-       'Each has a summary as its first child', NULL, 1, true
+       'Each has a summary as its first child', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-mission';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'text_not_empty'::public.requirement_kind, 'summary', NULL,
        NULL, NULL, NULL, NULL,
-       'Every question has text', NULL, 1, true
+       'Every question has text', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-mission';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'element_present'::public.requirement_kind, 'progress, meter', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a progress or meter display', NULL, 1, true
+       'There is a progress or meter display', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-mission';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'label_association'::public.requirement_kind, 'progress, meter', NULL,
        NULL, NULL, NULL, NULL,
-       'The display is labelled', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+       'The display is labelled', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true, NULL
 from public.exercises e where e.slug = 'native-mission';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'element_count'::public.requirement_kind, 'script', NULL,
        NULL, NULL, 0, 0,
-       'No JavaScript is used', NULL, 1, true
+       'No JavaScript is used', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'native-mission';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'progress-meter-datalist-milestone'), NULL, 'q-progress-vs-meter', 1, 'single'::public.question_kind,
@@ -1253,40 +1435,40 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_present'::public.requirement_kind, 'button', NULL,
        NULL, NULL, NULL, NULL,
-       'The action uses a real button element', NULL, 1, true
+       'The action uses a real button element', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_present'::public.requirement_kind, 'button', 'type',
        NULL, NULL, NULL, NULL,
-       'The button has an explicit type', NULL, 1, true
+       'The button has an explicit type', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'attribute_present'::public.requirement_kind, 'a', 'href',
        NULL, NULL, NULL, NULL,
-       'Every link has an href', NULL, 1, true
+       'Every link has an href', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'accessible_name'::public.requirement_kind, 'a', NULL,
        NULL, NULL, NULL, NULL,
-       'Every link has an accessible name', NULL, 1, true
+       'Every link has an accessible name', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'element_count'::public.requirement_kind, 'div[onclick], [onclick]', NULL,
        NULL, NULL, 0, 0,
-       'No inline click handlers on non-interactive elements', NULL, 1, true
+       'No inline click handlers on non-interactive elements', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'accessible_name'::public.requirement_kind, 'button', NULL,
        NULL, NULL, NULL, NULL,
-       'The button has visible text', NULL, 1, true
+       'The button has visible text', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-debug';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'how-assistive-tech-reads-a-page'), NULL, 'q-a11y-tree', 1, 'single'::public.question_kind,
@@ -1473,40 +1655,40 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'unique_element'::public.requirement_kind, 'main', NULL,
        NULL, NULL, NULL, NULL,
-       'There is exactly one <main>', NULL, 1, true
+       'There is exactly one <main>', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-skip-link-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'attribute_present'::public.requirement_kind, 'main', 'id',
        NULL, NULL, NULL, NULL,
-       'The <main> has an id so it can be targeted', NULL, 1, true
+       'The <main> has an id so it can be targeted', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-skip-link-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'attribute_value'::public.requirement_kind, 'main', 'tabindex',
        '-1', NULL, NULL, NULL,
-       'The <main> has tabindex="-1" so focus can land on it', NULL, 1, true
+       'The <main> has tabindex="-1" so focus can land on it', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-skip-link-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'attribute_matches'::public.requirement_kind, 'a', 'href',
        '^#', NULL, NULL, NULL,
-       'A fragment link points somewhere within the page', NULL, 1, true
+       'A fragment link points somewhere within the page', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-skip-link-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'text_not_empty'::public.requirement_kind, 'a', NULL,
        NULL, NULL, NULL, NULL,
-       'The skip link has visible text', NULL, 1, true
+       'The skip link has visible text', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-skip-link-guided';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
-       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true
+       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-skip-link-guided';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -1536,34 +1718,34 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_count'::public.requirement_kind, 'a:not([href])', NULL,
        NULL, NULL, 0, 0,
-       'Every anchor has an href', NULL, 1, true
+       'Every anchor has an href', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-operability-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'element_present'::public.requirement_kind, 'button', NULL,
        NULL, NULL, NULL, NULL,
-       'The action uses a real <button>', NULL, 1, true
+       'The action uses a real <button>', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-operability-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'element_count'::public.requirement_kind, 'div.button', NULL,
        NULL, NULL, 0, 0,
-       'No <div> is pretending to be a button', NULL, 1, true
+       'No <div> is pretending to be a button', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-operability-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'element_count'::public.requirement_kind, '[tabindex="1"], [tabindex="2"], [tabindex="3"]', NULL,
        NULL, NULL, 0, 0,
-       'No positive tabindex values remain', NULL, 1, true
+       'No positive tabindex values remain', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-operability-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'unique_element'::public.requirement_kind, 'main', NULL,
        NULL, NULL, NULL, NULL,
-       'The page still has exactly one <main>', NULL, 1, true
+       'The page still has exactly one <main>', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'keyboard-operability-debug';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'keyboard-and-focus-management'), NULL, 'q-focusable-defaults', 1, 'single'::public.question_kind,
@@ -1750,58 +1932,58 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'element_present'::public.requirement_kind, 'button', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a button', NULL, 1, true
+       'There is a button', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'accessible_name'::public.requirement_kind, 'button', NULL,
        NULL, NULL, NULL, NULL,
-       'The button has an accessible name', NULL, 1, true
+       'The button has an accessible name', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'element_present'::public.requirement_kind, 'a[href="team.html"]', NULL,
        NULL, NULL, NULL, NULL,
-       'There is a link to team.html', NULL, 1, true
+       'There is a link to team.html', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'accessible_name'::public.requirement_kind, 'a', NULL,
        NULL, NULL, NULL, NULL,
-       'The link text makes sense on its own', NULL, 1, true
+       'The link text makes sense on its own', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'element_count'::public.requirement_kind, 'img', NULL,
        NULL, NULL, 2, NULL,
-       'Both images are present', NULL, 1, true
+       'Both images are present', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'alt_quality'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'Every image has an appropriate alt attribute', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+       'Every image has an appropriate alt attribute', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 7, 'label_association'::public.requirement_kind, 'input', NULL,
        NULL, NULL, NULL, NULL,
-       'The email field has an associated label', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+       'The email field has an associated label', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 8, 'attribute_value'::public.requirement_kind, 'input', 'type',
        'email', NULL, NULL, NULL,
-       'The email field uses type="email"', NULL, 1, true
+       'The email field uses type="email"', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-challenge';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 9, 'local_media_path'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-challenge';
 insert into public.exercises
   (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
@@ -1835,52 +2017,52 @@ on conflict (slug) do update set
   xp_award = excluded.xp_award, difficulty = excluded.difficulty,
   skill_id = excluded.skill_id, is_optional = excluded.is_optional;
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 1, 'accessible_name'::public.requirement_kind, 'a', NULL,
        NULL, NULL, NULL, NULL,
-       'The link has meaningful text of its own', NULL, 1, true
+       'The link has meaningful text of its own', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 2, 'element_absent'::public.requirement_kind, 'a:has(> :only-child)', NULL,
        NULL, NULL, NULL, NULL,
-       'The link is not empty', 'The link needs visible text.', 1, true
+       'The link is not empty', 'The link needs visible text.', 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 3, 'accessible_name'::public.requirement_kind, 'button', NULL,
        NULL, NULL, NULL, NULL,
-       'The icon button has an accessible name', NULL, 1, true
+       'The icon button has an accessible name', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 4, 'alt_quality'::public.requirement_kind, 'img', NULL,
        NULL, NULL, NULL, NULL,
-       'The alt text describes the image, not the file', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true
+       'The alt text describes the image, not the file', 'Describe what the image shows, as if reading the page aloud to someone who cannot see it. Use alt="" only for purely decorative images.', 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 5, 'label_association'::public.requirement_kind, 'input', NULL,
        NULL, NULL, NULL, NULL,
-       'The email field has a real label', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true
+       'The email field has a real label', 'Give the control an id, then point a <label for="that-id"> at it.', 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 6, 'attribute_present'::public.requirement_kind, 'label', 'for',
        NULL, NULL, NULL, NULL,
-       'The label points at the field with for', NULL, 1, true
+       'The label points at the field with for', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 7, 'no_duplicate_ids'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
-       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true
+       'Every id on the page is unique', 'Two elements can never share an id. Use a class or a different id.', 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-debug';
 insert into public.exercise_requirements
-  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical)
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
 select e.id, 8, 'local_media_path'::public.requirement_kind, NULL, NULL,
        NULL, NULL, NULL, NULL,
-       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true
+       'Every media path points at a file that exists', 'Use the media library button in the editor toolbar to insert a correct path.', 1, true, NULL
 from public.exercises e where e.slug = 'accessible-names-debug';
 insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
 values ((select id from public.lessons where slug = 'accessible-names-in-depth'), NULL, 'q-name-order', 1, 'single'::public.question_kind,
@@ -1922,149 +2104,5 @@ from public.quiz_questions where slug = 'q-alt-empty-vs-missing';
 insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
 select id, 4, 'They behave identically', false, NULL
 from public.quiz_questions where slug = 'q-alt-empty-vs-missing';
-insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
-values ((select id from public.lessons where slug = 'accessible-names-in-depth'), NULL, 'q-link-text-alone', 3, 'single'::public.question_kind,
-        'Why does link text have to make sense without its surrounding paragraph?', 'Screen-reader users frequently pull up a list of every link on the page, and that list contains the link text alone.', (select id from public.skills where slug = 'accessibility'), 10)
-on conflict (slug) do update set
-  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
-  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
-  explanation = excluded.explanation, skill_id = excluded.skill_id,
-  xp_award = excluded.xp_award;
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 1, 'Browsers truncate long link text', false, NULL
-from public.quiz_questions where slug = 'q-link-text-alone';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 2, 'It is only a style preference', false, NULL
-from public.quiz_questions where slug = 'q-link-text-alone';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 3, 'Links are often listed on their own, with the surrounding text removed', true, NULL
-from public.quiz_questions where slug = 'q-link-text-alone';
-insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
-select id, 4, 'Search engines cannot read paragraphs', false, NULL
-from public.quiz_questions where slug = 'q-link-text-alone';
--- module: ARIA and accessible forms
-insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
-select l.id, 'aria-and-accessible-forms', 2, 'ARIA and accessible forms', 'The small set of ARIA worth knowing, the states that have to be announced when they change, and the forms most people get wrong.',
-       75, false
-from public.levels l where l.slug = 'accessibility-champion'
-on conflict (slug) do update set
-  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
-  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
-  is_milestone = excluded.is_milestone;
-insert into public.module_prerequisites (module_id, prerequisite_module_id)
-select m.id, p.id from public.modules m, public.modules p
-where m.slug = 'aria-and-accessible-forms' and p.slug = 'accessibility-foundations';
-insert into public.module_skills (module_id, skill_id, mastery_required)
-select m.id, s.id, 0
-from public.modules m, public.skills s
-where m.slug = 'aria-and-accessible-forms' and s.slug = 'aria';
-insert into public.module_skills (module_id, skill_id, mastery_required)
-select m.id, s.id, 0.5
-from public.modules m, public.skills s
-where m.slug = 'aria-and-accessible-forms' and s.slug = 'accessibility';
--- lesson: ARIA fundamentals
-insert into public.lessons
-  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
-select m.id, 'aria-fundamentals', 1, 'ARIA fundamentals', 'A small, useful set — and the rule that matters most', 'ARIA can make a page more accessible or considerably less. The first rule of ARIA is not to use it.',
-       ARRAY['State the first rule of ARIA', 'Use aria-label, aria-labelledby, aria-describedby and aria-current correctly', 'Explain what a live region is and when to use one']::text[], 15, 40, (select id from public.skills where slug = 'aria'), 0.7
-from public.modules m where m.slug = 'aria-and-accessible-forms'
-on conflict (slug) do update set
-  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
-  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
-  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
-  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A developer wants a clickable "Menu" control and writes `<div role="button">Menu</div>`. A screen reader announces it as a button. What happens when someone presses Enter on it?',
-       NULL, NULL, NULL, '{"options":["Nothing — it is announced as a button but does not behave like one","It activates, because the role tells the browser how to treat it","It activates, but only in browsers that support ARIA","The page reports an error"],"answer":"Nothing happens. This is the single most important thing to understand about ARIA, and it is why the first rule of ARIA is not to use it. A role changes what assistive technology *announces* and nothing else — not focus, not keyboard behaviour, not anything. So this control is now announced as a button to exactly the users who cannot operate it, which is worse than leaving it unannounced."}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
-       NULL, NULL, NULL, '{"items":["Explain why native HTML beats ARIA","Apply the handful of ARIA attributes worth knowing","Recognise ARIA that makes a page worse"]}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 3, 'callout'::public.block_type, 'The first rule of ARIA', 'If a native HTML element will do the job, use it instead. ARIA changes what assistive technology *announces*; it changes nothing about how an element actually behaves. `<div role="button">` is announced as a button but is still not focusable, still ignores Enter and Space, and still does nothing on a keyboard. You would have to add all of that yourself — or use `<button>`, which has it already.',
-       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 4, 'comparison'::public.block_type, 'The same control, two ways', NULL,
-       NULL, NULL, NULL, '{"good":{"label":"Native","code":"<button type=\"button\">Menu</button>","why":"Focusable, announced as a button, responds to Enter and Space, works with voice control. Zero extra work."},"bad":{"label":"ARIA rebuild","code":"<div role=\"button\" tabindex=\"0\" aria-pressed=\"false\">Menu</div>","why":"Announced as a button, but Enter and Space do nothing without JavaScript, and voice-control software may not find it. More code, less function."}}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 5, 'prose'::public.block_type, NULL, 'These are the ARIA attributes genuinely worth knowing at this stage.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 6, 'code_example'::public.block_type, 'The ARIA worth learning first', NULL,
-       'aria-label="Main"          Names an element that has no visible label.
-                           Use on <nav>, <section>, <iframe>, icon-only buttons.
-
-aria-labelledby="id"       Names an element using text that is already on the page.
-                           Prefer this over aria-label when such text exists.
-
-aria-describedby="id"      Attaches extra description, read after the name.
-                           Use for format hints and error messages on form fields.
-
-aria-current="page"        Marks the current item in a set — the link to the page
-                           you are already on, or the current step in a process.
-
-aria-expanded="true"       States whether a control''s target is open. Native
-                           <details> manages this for you; custom widgets do not.
-
-aria-live="polite"         Marks a region whose changes should be announced when
-                           the user is idle. Use very sparingly.
-
-aria-hidden="true"         Removes an element from the accessibility tree entirely.
-                           Only for genuinely decorative things.', 'text', NULL, '{}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 7, 'annotated_code'::public.block_type, 'Line by line', NULL,
-       '<section aria-labelledby="hours-heading">
-  <h2 id="hours-heading">Opening hours</h2>
-  <p>Tuesday to Sunday, 8am to 6pm.</p>
-</section>
-
-<button type="button" aria-label="Search">
-  <img src="/learning-media/icons/search.svg" alt="" width="24" height="24">
-</button>', 'html', NULL, '{"annotations":[{"line":"1","text":"`aria-labelledby` names the section using its own heading. Better than `aria-label`, because the name and the visible text can never drift apart."},{"line":"6","text":"An icon-only button has no text, so it has no accessible name. `aria-label=\"Search\"` supplies one."},{"line":"7","text":"The icon itself takes `alt=\"\"`: the button already has a name, and describing the icon too would announce it twice."}]}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 8, 'callout'::public.block_type, '`aria-label` on the wrong element', '`aria-label` is ignored on most non-interactive elements — a `<span>`, a `<div>` with no role, a plain `<p>`. It works on interactive elements and on landmarks. Putting it on a `<div>` and assuming it will be read is one of the most common ARIA mistakes.',
-       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 9, 'term'::public.block_type, 'Live region', 'An area whose changes should be announced without moving focus — a form error summary, a "message sent" confirmation, a live score. `aria-live="polite"` waits for a pause; `assertive` interrupts immediately and should be reserved for genuine emergencies.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 10, 'code_example'::public.block_type, 'An accessible error message', NULL,
-       '<p id="email-error" role="alert">
-  Enter an email address in the format name@example.com
-</p>
-
-<input type="email" id="email" name="email"
-       aria-describedby="email-error" aria-invalid="true">', 'html', NULL, '{}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 11, 'callout'::public.block_type, 'What makes an error message accessible', 'Four things. It says what is wrong in plain words. It says how to fix it. It is connected to the field with `aria-describedby`, so it is read when the user reaches the field. And it is announced when it appears, via `role="alert"` — because a message the user has to go looking for is a message they will miss.',
-       NULL, NULL, NULL, '{"tone":"accessibility"}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 12, 'predict_check'::public.block_type, 'Predict, then check', 'Two elements, each given an `aria-label`. Before you check: what does a screen reader announce for each — and is either of them what the author intended?',
-       '<button type="button" aria-label="Search">Search our recipes</button>
-
-<span aria-label="Closed today">Closed</span>', 'html', NULL, '{"outcome":"Neither is. The button is announced as just \"Search\", because `aria-label` *replaces* the visible text rather than adding to it — so a voice-control user saying \"click Search our recipes\" now finds nothing. The `<span>` is announced as plain \"Closed\", because `aria-label` is ignored on a non-interactive element with no role; the label is simply dropped. Both are quiet failures: the markup looks careful, the page looks fine, and the accessibility is worse than if neither attribute had been written."}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 13, 'progressive_detail'::public.block_type, 'When ARIA is genuinely the right answer', 'ARIA earns its place where HTML has no equivalent: naming a landmark that has no visible heading; announcing a change that happens without a page load; marking the current item in a set; describing a relationship between elements that are not nested. Those are real gaps, and ARIA fills them well. What it cannot do is turn a `<div>` into a working control.',
-       NULL, NULL, NULL, '{}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 14, 'interactive_demo'::public.block_type, 'Native element versus ARIA rebuild', 'Tab to each one and press Space.',
-       NULL, NULL, NULL, '{"variants":[{"label":"A real button","code":"<button type=\"button\">Menu</button>","note":"Focusable, announced as a button, responds to Enter and Space, findable by voice control. No attributes required."},{"label":"The ARIA rebuild","code":"<div role=\"button\" tabindex=\"0\">Menu</div>","note":"Announced as a button and focusable — but Enter and Space do nothing without a script, so it is announced as operable to precisely the people who cannot operate it."},{"label":"A role and nothing else","code":"<div role=\"button\">Menu</div>","note":"Announced as a button and not even reachable by Tab. The role changed what is said about it and nothing about what it does."}]}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
-insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
-select id, 15, 'summary'::public.block_type, 'Lesson summary', NULL,
-       NULL, NULL, NULL, '{"points":["First rule of ARIA: use native HTML instead, whenever you can.","ARIA changes announcements, never behaviour.","`aria-labelledby` is better than `aria-label` when visible text already exists.","Error messages need plain words, a fix, `aria-describedby`, and an announcement."],"nextUp":"Next: the accessibility audit milestone."}'::jsonb
-from public.lessons where slug = 'aria-fundamentals';
 
 commit;

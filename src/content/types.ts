@@ -420,6 +420,8 @@ export interface RequirementSpec {
   hint?: string;
   weight?: number;
   critical?: boolean;
+  /** Media or container query treated as active while checking this. */
+  condition?: string;
 }
 
 export const doctype = (): RequirementSpec => ({
@@ -633,6 +635,173 @@ export const legalNesting = (
   message,
   hint: 'For example: <li> must be inside <ul> or <ol>, and a block element cannot sit inside a <p>.',
 });
+
+// ---------------------------------------------------------------------------
+// CSS requirements
+//
+// Every one of these asks about the *resolved* value — what the cascade
+// actually produced for an element — never about the text the learner typed.
+// That is what lets two genuinely different stylesheets both pass: a colour set
+// by a type selector, a class or a custom property resolves the same way, and
+// all three are correct answers.
+//
+// `condition` evaluates the requirement with a media or container query treated
+// as active, which is the only honest way to grade a layout that is meant to
+// change at a breakpoint.
+// ---------------------------------------------------------------------------
+
+/** The property resolves to something on this element, whatever the value. */
+export const cssSet = (
+  selector: string,
+  property: string,
+  message: string,
+  hint?: string,
+): RequirementSpec => ({
+  kind: 'css_declared',
+  selector,
+  attribute: property,
+  message,
+  ...(hint ? { hint } : {}),
+});
+
+/** The property resolves to exactly this value. */
+export const cssIs = (
+  selector: string,
+  property: string,
+  value: string,
+  message: string,
+  options: { hint?: string; condition?: string } = {},
+): RequirementSpec => ({
+  kind: 'css_value',
+  selector,
+  attribute: property,
+  expectedValue: value,
+  message,
+  ...(options.hint ? { hint: options.hint } : {}),
+  ...(options.condition ? { condition: options.condition } : {}),
+});
+
+/** The resolved value matches a pattern — for values with a shape, not one form. */
+export const cssMatches = (
+  selector: string,
+  property: string,
+  pattern: string,
+  message: string,
+  options: { hint?: string; condition?: string } = {},
+): RequirementSpec => ({
+  kind: 'css_value_matches',
+  selector,
+  attribute: property,
+  expectedValue: pattern,
+  message,
+  ...(options.hint ? { hint: options.hint } : {}),
+  ...(options.condition ? { condition: options.condition } : {}),
+});
+
+/** The value reaches this element by inheritance rather than a direct rule. */
+export const cssInherited = (
+  selector: string,
+  property: string,
+  message: string,
+  hint?: string,
+): RequirementSpec => ({
+  kind: 'css_inherited',
+  selector,
+  attribute: property,
+  message,
+  ...(hint ? { hint } : {}),
+});
+
+/** Nothing sets this property on this element. */
+export const cssNotSet = (
+  selector: string,
+  property: string,
+  message: string,
+  hint?: string,
+): RequirementSpec => ({
+  kind: 'css_property_absent',
+  selector,
+  attribute: property,
+  message,
+  ...(hint ? { hint } : {}),
+});
+
+/** A custom property resolves for this element. */
+export const cssVariable = (
+  selector: string,
+  name: string,
+  message: string,
+  hint?: string,
+): RequirementSpec => ({
+  kind: 'css_custom_property',
+  selector,
+  attribute: name,
+  message,
+  ...(hint ? { hint } : {}),
+});
+
+/**
+ * A rule with this exact selector exists.
+ *
+ * Used sparingly, and only where the *selector itself* is the lesson — teaching
+ * `:is()`, attribute selectors or the descendant combinator. Anywhere else,
+ * asking about the selector rather than the result is the string-matching trap
+ * this whole module exists to avoid.
+ */
+export const cssRule = (
+  selector: string,
+  message: string,
+  hint?: string,
+): RequirementSpec => ({
+  kind: 'css_rule_exists',
+  expectedValue: selector,
+  message,
+  ...(hint ? { hint } : {}),
+});
+
+/** Rules exist inside this media or container query. */
+export const cssMediaRule = (
+  query: string,
+  message: string,
+  hint?: string,
+): RequirementSpec => ({
+  kind: 'css_media_rule',
+  expectedValue: query,
+  message,
+  ...(hint ? { hint } : {}),
+});
+
+/** No declaration anywhere uses `!important`. */
+export const cssNoImportant = (
+  message = 'No declaration uses !important',
+): RequirementSpec => ({
+  kind: 'css_no_important',
+  message,
+  hint: 'Raising specificity with !important wins this argument and loses the next one — the only way to override it later is another !important.',
+});
+
+/**
+ * No selector exceeds a specificity budget.
+ *
+ * The budget is the packed value `specificity()` produces: one class is 256,
+ * one id is 65536. A budget of one id catches the escalation that makes a
+ * stylesheet impossible to work in.
+ */
+export const cssSpecificityBudget = (
+  limit: number,
+  message: string,
+  hint?: string,
+): RequirementSpec => ({
+  kind: 'css_max_specificity',
+  maxCount: limit,
+  message,
+  ...(hint ? { hint } : {}),
+});
+
+/** One class's worth of specificity, the usual budget for a component rule. */
+export const SPECIFICITY_ONE_CLASS = 256;
+/** One id's worth — the point at which a stylesheet starts fighting itself. */
+export const SPECIFICITY_ONE_ID = 256 * 256;
 
 // ---------------------------------------------------------------------------
 // Exercises

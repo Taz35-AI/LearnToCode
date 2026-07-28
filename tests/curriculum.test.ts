@@ -1,7 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { COURSE, LEVELS, allLessons, allModules, courseStats, totalCourseMinutes } from '@/content/course';
+import {
+  COURSE,
+  COURSES,
+  LEVELS,
+  allLessons,
+  allModules,
+  allProgrammeLessons,
+  courseStats,
+  programmeStats,
+  totalCourseMinutes,
+} from '@/content/course';
 import { SKILLS } from '@/content/skills';
 import { ACHIEVEMENTS } from '@/content/achievements';
 import { PROJECT_TEMPLATES } from '@/content/projects';
@@ -50,6 +60,7 @@ function toRequirement(spec: RequirementSpec, index: number): Requirement {
     hint: spec.hint ?? null,
     weight: spec.weight ?? 1,
     isCritical: spec.critical !== false,
+    condition: spec.condition ?? null,
   };
 }
 
@@ -310,13 +321,46 @@ describe('skills and gating', () => {
     expect(first?.skills.every((s) => (s.masteryRequired ?? 0) === 0)).toBe(true);
   });
 
-  it('covers every declared skill somewhere in the course', () => {
-    const taught = new Set(allLessons().map((l) => l.skill));
-    for (const mod of allModules()) {
-      for (const skill of mod.skills) taught.add(skill.slug);
+  it('teaches every skill a published course declares', () => {
+    // Scoped to published courses on purpose. A course still being written
+    // declares its skills before it teaches them — that is the normal state of
+    // authoring, not a defect. When CSS is published this assertion starts
+    // demanding full coverage of its skills too, which is exactly when it
+    // should.
+    const published = COURSES.filter((course) => course.isPublished);
+
+    const taught = new Set(published.flatMap((course) => allLessons(course)).map((l) => l.skill));
+    for (const course of published) {
+      for (const mod of allModules(course)) {
+        for (const skill of mod.skills) taught.add(skill.slug);
+      }
     }
-    for (const skill of SKILLS) {
-      expect(taught.has(skill.slug), `${skill.slug} is never taught`).toBe(true);
+
+    const declaredByPublished = new Set(
+      published.flatMap((course) =>
+        allModules(course).flatMap((mod) => mod.skills.map((skill) => skill.slug)),
+      ),
+    );
+
+    for (const slug of declaredByPublished) {
+      expect(taught.has(slug), `${slug} is declared but never taught`).toBe(true);
+    }
+  });
+
+  it('leaves no skill referenced by unpublished content undeclared', () => {
+    // The CSS course is unpublished and still growing. What must hold *now* is
+    // that everything it already references resolves — an unknown skill slug
+    // would fail the seed, and finding it here is cheaper.
+    const known = new Set(SKILLS.map((skill) => skill.slug));
+    for (const course of COURSES.filter((c) => !c.isPublished)) {
+      for (const lesson of allLessons(course)) {
+        expect(known.has(lesson.skill), `${lesson.slug} → ${lesson.skill}`).toBe(true);
+      }
+      for (const mod of allModules(course)) {
+        for (const skill of mod.skills) {
+          expect(known.has(skill.slug), `${mod.slug} → ${skill.slug}`).toBe(true);
+        }
+      }
     }
   });
 });
@@ -435,8 +479,10 @@ describe('the database health check matches the curriculum', () => {
     return Number(match?.[1]);
   };
 
-  const stats = courseStats();
-  const lessons = allLessons();
+  // Programme totals: the database holds every course the seed emits, including
+  // unpublished ones, which are seeded so they can be verified while written.
+  const stats = programmeStats();
+  const lessons = allProgrammeLessons();
 
   it('expects the right number of lessons, questions and blocks', () => {
     expect(expected(/\(select count\(\*\) from lessons\) = (\d+)/)).toBe(lessons.length);
