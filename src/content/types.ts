@@ -800,6 +800,13 @@ export const cssSpecificityBudget = (
 
 /** One class's worth of specificity, the usual budget for a component rule. */
 export const SPECIFICITY_ONE_CLASS = 256;
+/**
+ * One class plus one element — the budget a stylesheet needs once it styles
+ * states, because a pseudo-class counts as a class and `a:focus-visible` is
+ * therefore one class and one element. Use this wherever an exercise expects
+ * focus or hover styles; use the stricter budget where it does not.
+ */
+export const SPECIFICITY_ONE_CLASS_ONE_ELEMENT = SPECIFICITY_ONE_CLASS + 1;
 /** One id's worth — the point at which a stylesheet starts fighting itself. */
 export const SPECIFICITY_ONE_ID = 256 * 256;
 

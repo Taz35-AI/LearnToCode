@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 1 of 11
+-- HTML Hero — course seed, part 1 of 16
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -1470,7 +1470,7 @@ insert into public.courses
   (slug, title, subtitle, description, outcome, ordinal, accent, is_published,
    recommended_days, recommended_minutes_per_day, version)
 values ('css-architect', 'CSS Architect', 'From "why is this not working" to layouts you can reason about', 'A mastery-based journey through modern CSS. It starts with the cascade rather than ending with it, because almost every hour lost to CSS is really a cascade misunderstanding. You style the site you built in the HTML course, and finish able to build responsive, maintainable layouts and explain exactly why each rule applies.',
-        'You can style a complete multi-page site with modern CSS, and explain why every rule in it wins or loses.', 2, 'violet', false,
+        'You can style a complete multi-page site with modern CSS, and explain why every rule in it wins or loses.', 2, 'violet', true,
         30, 60, '0.1.0')
 on conflict (slug) do update set
   title = excluded.title, subtitle = excluded.subtitle, description = excluded.description,

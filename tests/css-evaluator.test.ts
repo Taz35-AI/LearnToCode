@@ -471,4 +471,127 @@ describe('CSS requirements through the evaluator', () => {
     expect(grade(page('p { color: teal }'), check).passed).toBe(true);
     expect(grade(page('p { float: left }'), check).passed).toBe(false);
   });
+
+  /**
+   * Cascade layers. The one mechanism that lets a weak selector beat a strong
+   * one on purpose, which makes it the honest alternative to `!important` —
+   * and therefore something the grader has to model rather than ignore.
+   */
+  describe('cascade layers', () => {
+    const check = {
+      kind: 'css_value' as const,
+      selector: '.card',
+      attribute: 'padding',
+      expectedValue: '0',
+    };
+    const body = '<div class="card p-0">Text</div>';
+
+    it('lets a later layer win over an earlier one whatever the source order', () => {
+      const style = `@layer components, utilities;
+        @layer utilities { .p-0 { padding: 0 } }
+        @layer components { .card { padding: 2rem } }`;
+      expect(grade(page(style, body), check).passed).toBe(true);
+    });
+
+    it('lets a later layer win over higher specificity', () => {
+      const style = `@layer components, utilities;
+        @layer utilities { .p-0 { padding: 0 } }
+        @layer components { #main .card { padding: 2rem } }`;
+      const html = page(style, `<div id="main">${body}</div>`);
+      expect(grade(html, check).passed).toBe(true);
+    });
+
+    it('lets an unlayered rule beat every layer', () => {
+      const style = `@layer utilities;
+        @layer utilities { .p-0 { padding: 0 } }
+        .card { padding: 2rem }`;
+      expect(grade(page(style, body), check).passed).toBe(false);
+    });
+
+    it('takes the order from the @layer statement, not from where blocks appear', () => {
+      // Declared utilities-then-components, so components now wins — the
+      // opposite of the first case, with the blocks in the same order.
+      const style = `@layer utilities, components;
+        @layer utilities { .p-0 { padding: 0 } }
+        @layer components { .card { padding: 2rem } }`;
+      expect(grade(page(style, body), check).passed).toBe(false);
+    });
+
+    it('reverses layer order for !important declarations', () => {
+      // An early layer's important declaration beats a later layer's, which is
+      // the specification's rule and the reason `!important` is worse than it
+      // looks: it does not simply "win", it inverts the ordering.
+      const style = `@layer components, utilities;
+        @layer utilities { .p-0 { padding: 0 !important } }
+        @layer components { .card { padding: 2rem !important } }`;
+      expect(grade(page(style, body), check).passed).toBe(false);
+    });
+  });
+
+  /**
+   * State pseudo-classes. A static document cannot be hovered, so the
+   * requirement names the state and the resolver answers for it. Getting this
+   * wrong in either direction is silent: strip the state and a hover colour
+   * leaks onto the resting element; refuse to match it and no exercise can
+   * grade a hover at all.
+   */
+  describe('state pseudo-classes', () => {
+    const styled = 'a { color: teal } a:hover { color: crimson }';
+    const body = '<a href="#">Link</a>';
+
+    it('reads the hovered value when the requirement asks for the state', () => {
+      const check = {
+        kind: 'css_value' as const,
+        selector: 'a:hover',
+        attribute: 'color',
+        expectedValue: 'crimson',
+      };
+      expect(grade(page(styled, body), check).passed).toBe(true);
+    });
+
+    it('does not let a hover rule leak onto the resting element', () => {
+      const check = {
+        kind: 'css_value' as const,
+        selector: 'a',
+        attribute: 'color',
+        expectedValue: 'teal',
+      };
+      expect(grade(page(styled, body), check).passed).toBe(true);
+    });
+
+    it('fails when the state is asked for and no rule provides it', () => {
+      const check = {
+        kind: 'css_declared' as const,
+        selector: 'a:hover',
+        attribute: 'text-decoration',
+      };
+      expect(grade(page('a { color: teal }', body), check).passed).toBe(false);
+      expect(grade(page('a:hover { text-decoration: underline }', body), check).passed).toBe(true);
+    });
+
+    it('matches :focus-visible without mistaking it for :focus', () => {
+      const check = {
+        kind: 'css_declared' as const,
+        selector: 'a:focus-visible',
+        attribute: 'outline',
+      };
+      expect(grade(page('a:focus-visible { outline: 2px solid teal }', body), check).passed).toBe(
+        true,
+      );
+      // `:focus` alone must not satisfy a requirement asking about
+      // `:focus-visible` — they are different states with different triggers.
+      expect(grade(page('a:focus { outline: 2px solid teal }', body), check).passed).toBe(false);
+    });
+
+    it('still resolves inherited values while a state is active', () => {
+      const check = {
+        kind: 'css_value' as const,
+        selector: 'a:hover',
+        attribute: 'font-size',
+        expectedValue: '2rem',
+      };
+      const html = page('body { font-size: 2rem } a:hover { color: crimson }', body);
+      expect(grade(html, check).passed).toBe(true);
+    });
+  });
 });

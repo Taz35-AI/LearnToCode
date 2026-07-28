@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 7 of 11
+-- HTML Hero — course seed, part 7 of 16
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split

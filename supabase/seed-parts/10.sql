@@ -1,4 +1,4 @@
--- HTML Hero — course seed, part 10 of 11
+-- HTML Hero — course seed, part 10 of 16
 --
 -- GENERATED FILE. Do not edit by hand.
 -- Source: supabase/seed.sql  ·  Regenerate: npm run seed:split
@@ -2117,9 +2117,9 @@ select e.id, 1, 'css_value'::public.requirement_kind, '.card > p', 'color',
 from public.exercises e where e.slug = 'css-selectors-guided';
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
-select e.id, 2, 'css_value'::public.requirement_kind, 'blockquote p', 'color',
-       'teal', NULL, NULL, NULL,
-       'The nested paragraph is not targeted directly', NULL, 1, true, NULL
+select e.id, 2, 'css_property_absent'::public.requirement_kind, 'blockquote p', 'color',
+       NULL, NULL, NULL, NULL,
+       'The nested paragraph is not targeted — the child combinator does not reach it', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'css-selectors-guided';
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)

@@ -9,6 +9,7 @@ import {
   allModules,
   allProgrammeLessons,
   courseStats,
+  levelsOf,
   programmeStats,
   totalCourseMinutes,
 } from '@/content/course';
@@ -128,12 +129,16 @@ describe('course shape', () => {
     expect(firstLevelMissions?.length).toBeGreaterThan(0);
   });
 
-  it('keeps every slug unique across the whole course', () => {
-    const lessonSlugs = allLessons().map((l) => l.slug);
-    const exerciseSlugs = allLessons().flatMap((l) => l.exercises.map((e) => e.slug));
+  it('keeps every slug unique across the whole programme', () => {
+    // Across every course, not just the published one: these slugs share a
+    // namespace in the database, so a collision between courses is a seed
+    // failure waiting to happen.
+    const allCourseLevels = COURSES.flatMap((course) => levelsOf(course));
+    const lessonSlugs = allProgrammeLessons().map((l) => l.slug);
+    const exerciseSlugs = allProgrammeLessons().flatMap((l) => l.exercises.map((e) => e.slug));
     const questionSlugs = [
-      ...allLessons().flatMap((l) => l.quiz.map((q) => q.slug)),
-      ...LEVELS.flatMap((l) => l.assessment?.questions.map((q) => q.slug) ?? []),
+      ...allProgrammeLessons().flatMap((l) => l.quiz.map((q) => q.slug)),
+      ...allCourseLevels.flatMap((l) => l.assessment?.questions.map((q) => q.slug) ?? []),
     ];
 
     expect(new Set(lessonSlugs).size).toBe(lessonSlugs.length);
@@ -143,7 +148,10 @@ describe('course shape', () => {
 });
 
 describe('reference solutions pass their own requirements', () => {
-  const exercises = allLessons().flatMap((lesson) =>
+  // Programme-wide on purpose: an unpublished course is still authored against
+  // the real evaluator, and a reference solution that does not pass its own
+  // requirements is a bug whether or not a learner can reach it yet.
+  const exercises = allProgrammeLessons().flatMap((lesson) =>
     lesson.exercises.map((exercise) => ({ lesson: lesson.slug, exercise })),
   );
 
@@ -171,7 +179,7 @@ describe('reference solutions pass their own requirements', () => {
 });
 
 describe('starter code does not accidentally already pass', () => {
-  const withStarters = allLessons()
+  const withStarters = allProgrammeLessons()
     .flatMap((lesson) => lesson.exercises)
     .filter((exercise) => (exercise.starterCode ?? '').trim().length > 0);
 

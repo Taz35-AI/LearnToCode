@@ -235,6 +235,46 @@ export function parseStylesheet(css: string): ParsedStylesheet {
   return { rules, statements, problems };
 }
 
+/**
+ * The layer a rule sits in — dot-joined when layers are nested, and empty for
+ * an unlayered rule.
+ */
+export function layerNameOf(rule: StyleRule): string {
+  return rule.conditions
+    .filter((condition) => condition.name === 'layer')
+    .map((condition) => condition.query.trim() || 'anonymous')
+    .join('.');
+}
+
+/**
+ * The order cascade layers were declared in.
+ *
+ * `@layer reset, base, components;` establishes the order up front, which is
+ * the whole point of the statement form — a layer's position must not depend on
+ * where its rules happen to appear. Any layer met only as a block is appended
+ * in first-appearance order, which is what a browser does with it.
+ */
+export function layerOrder(sheets: ParsedStylesheet[]): string[] {
+  const order: string[] = [];
+  const add = (name: string) => {
+    const trimmed = name.trim();
+    if (trimmed && !order.includes(trimmed)) order.push(trimmed);
+  };
+
+  for (const sheet of sheets) {
+    for (const statement of sheet.statements) {
+      if (statement.name !== 'layer') continue;
+      for (const part of statement.prelude.split(',')) add(part);
+    }
+  }
+
+  for (const sheet of sheets) {
+    for (const rule of sheet.rules) add(layerNameOf(rule));
+  }
+
+  return order;
+}
+
 /** Index of the `}` matching the `{` at `open`, or -1. */
 function matchBrace(source: string, open: number): number {
   let depth = 0;

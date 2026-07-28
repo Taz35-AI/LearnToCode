@@ -44,25 +44,32 @@ learner has actually completed.
 
 ## What is in the box
 
+The platform now teaches **two courses**. HTML Hero comes first; CSS Architect
+depends on it and styles the site the learner built there.
+
+| | HTML Hero | CSS Architect | Programme |
+|---|---|---|---|
+| Mastery levels | 12 | 12 | 24 |
+| Modules | 21 | 12 | 33 |
+| Interactive lessons | 55 | 37 | 92 |
+| Lesson content blocks | 664 | 342 | 1,006 |
+| Coding exercises | 105 | 50 | 155 |
+| Debugging challenges | 32 | 20 | 52 |
+| Capstone project missions | 12 | 1 | 13 |
+| Knowledge-check and assessment questions | 241 | 175 | 416 |
+| Milestone assessments | 12 (with the final) | 12 (with the final) | 24 |
+
 | | |
 |---|---|
-| Mastery levels | 12 |
-| Modules | 21 |
-| Interactive lessons | 55 |
-| Lesson content blocks | 664 |
-| Coding exercises | 105 |
-| Debugging challenges | 25 |
-| Capstone project missions | 12 |
-| Knowledge-check and assessment questions | 241 |
-| Milestone assessments | 12 (including the final) |
 | Tracked skills | 26 |
+| Spaced-repetition items | 376 |
 | Achievements | 22 |
 | Capstone project types | 10 |
 | Learning-media assets | 38 (136 files) |
-| Estimated learner time | ~2,250 minutes (~37 hours, ≈64 min/day over 30 days) |
-| Automated tests | 594 |
+| Estimated learner time | ~2,163 minutes (~36 hours) |
+| Automated tests | 704 |
 
-### The twelve levels
+### HTML Hero — the twelve levels
 
 1. **HTML Explorer** — how the web works, tags, elements, attributes, nesting, the document skeleton
 2. **Content Builder** — headings, paragraphs, text semantics, quotations, dates, entities, lists
@@ -79,6 +86,26 @@ learner has actually completed.
 
 Every level ends with a milestone project and an assessment the learner must
 pass to progress.
+
+### CSS Architect — the twelve levels
+
+1. **The Cascade** — what a rule is, specificity, inheritance, diagnosis
+2. **Boxes and Selectors** — the four layers, `box-sizing`, combinators, attribute selectors
+3. **Flow, Position and Stacking** — normal flow, positioning, z-index and stacking contexts
+4. **Flexbox** — main and cross axes, growing, shrinking, distributing space
+5. **Grid** — tracks, areas, implicit rows, and responsive grids with no media queries
+6. **Responsive Design** — fluid values, content-derived breakpoints, container queries
+7. **Custom Properties** — design tokens that live in the cascade, and theming
+8. **Typography and Colour** — measure, leading, scale, and the contrast requirements
+9. **Transitions and Motion** — what is cheap to animate, and `prefers-reduced-motion`
+10. **Architecture and Scale** — naming, flat specificity, `@layer`, deletable CSS
+11. **Debugging CSS** — the inspector, computed values, and the six usual causes
+12. **Capstone: Styling Your Site** — styling the site built in the HTML course
+
+The cascade is taught **first** rather than last, because nearly every hour lost
+to CSS is a cascade misunderstanding rather than a missing property. Exercises
+are graded on the **resolved** value the cascade produced, never on source text,
+so any correct route passes.
 
 ---
 

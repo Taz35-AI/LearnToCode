@@ -1,5 +1,15 @@
 import { CSS_LEVEL_01 } from '../levels/css-level-01';
 import { CSS_LEVEL_02 } from '../levels/css-level-02';
+import { CSS_LEVEL_03 } from '../levels/css-level-03';
+import { CSS_LEVEL_04 } from '../levels/css-level-04';
+import { CSS_LEVEL_05 } from '../levels/css-level-05';
+import { CSS_LEVEL_06 } from '../levels/css-level-06';
+import { CSS_LEVEL_07 } from '../levels/css-level-07';
+import { CSS_LEVEL_08 } from '../levels/css-level-08';
+import { CSS_LEVEL_09 } from '../levels/css-level-09';
+import { CSS_LEVEL_10 } from '../levels/css-level-10';
+import { CSS_LEVEL_11 } from '../levels/css-level-11';
+import { CSS_LEVEL_12 } from '../levels/css-level-12';
 import type { CourseSpec } from '../types';
 
 /**
@@ -55,6 +65,19 @@ export const CSS_COURSE: CourseSpec = {
   recommendedMinutesPerDay: 60,
   version: '0.1.0',
   prerequisites: ['html-hero'],
-  isPublished: false,
-  levels: [CSS_LEVEL_01, CSS_LEVEL_02],
+  isPublished: true,
+  levels: [
+    CSS_LEVEL_01,
+    CSS_LEVEL_02,
+    CSS_LEVEL_03,
+    CSS_LEVEL_04,
+    CSS_LEVEL_05,
+    CSS_LEVEL_06,
+    CSS_LEVEL_07,
+    CSS_LEVEL_08,
+    CSS_LEVEL_09,
+    CSS_LEVEL_10,
+    CSS_LEVEL_11,
+    CSS_LEVEL_12,
+  ],
 };

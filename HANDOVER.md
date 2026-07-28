@@ -30,7 +30,7 @@ more here than usual: they will discover any gap by walking into it.
 |---|---|---|
 | **A** | Rebuild the learning engine on evidence | **Done and verified against the live database** |
 | **B** | Fix the HTML course's known gaps | **Done** |
-| **C** | Complete CSS course | Foundation done; **2 of 12 levels** authored |
+| **C** | Complete CSS course | **Done** — 12 of 12 levels authored, published and verified |
 | **D** | Complete JavaScript course | Not started |
 
 Order matters and was agreed: the engine changes how every later lesson is
@@ -349,27 +349,57 @@ HTML parser has no such selector, so every `var()` resolved empty), media
 queries compared with significant whitespace, and a stray `}` silently discarded
 the rest of a stylesheet — which would have let broken CSS pass.
 
-### Content — 2 of 12 levels
+### Content — 12 of 12 levels, published
 
-Authored, seeded and passing every check:
+The whole course is authored, seeded, published and passing every check.
+`CSS_COURSE.isPublished` is `true`, which means `tests/curriculum.test.ts`
+enforces full CSS skill coverage — publishing an incomplete course would fail
+the build rather than ship quietly.
 
-- **Level 1, The Cascade** — 4 lessons: what a rule is, specificity,
-  inheritance, and a diagnostic milestone. Teaches the cascade *first*, which is
-  the course's central pedagogical bet.
-- **Level 2, Boxes and Selectors** — 3 lessons: the four layers and
-  `box-sizing`, combinators and attribute selectors, and a sizing milestone.
+| Level | Title | Lessons |
+|---|---|---|
+| 1 | The Cascade | 4 |
+| 2 | Boxes and Selectors | 3 |
+| 3 | Flow, Position and Stacking | 3 |
+| 4 | Flexbox | 3 |
+| 5 | Grid | 3 |
+| 6 | Responsive Design | 3 |
+| 7 | Custom Properties | 3 |
+| 8 | Typography and Colour | 3 |
+| 9 | Transitions and Motion | 3 |
+| 10 | Architecture and Scale | 3 |
+| 11 | Debugging CSS | 3 |
+| 12 | Capstone: Styling Your Site | 3 |
 
-Both levels use the retrieval blocks throughout and their exercises are graded
-by resolved CSS values, not source text.
+Totals: 12 levels, 12 modules, 37 lessons, 50 exercises, 175 questions. Every
+lesson opens with a `pretest` and closes with `recap` + `activeRecap`; every
+exercise is graded on resolved CSS values rather than on source text.
 
-**Ten levels remain**: flow and positioning, flexbox, grid, responsive and
-container queries, custom properties, typography and colour, transitions and
-animation, architecture, developer tools, and the capstone. The planned order is
-documented in `src/content/courses/css.ts`.
+The capstone styles the site built in the HTML course rather than a fresh
+mock-up, which makes the dependency between the two courses concrete: the markup
+is already valid, semantic and accessible, so every styling decision is made
+against real structure.
 
-`tests/curriculum.test.ts` will start demanding full skill coverage for CSS the
-moment `isPublished` is flipped to true — so publishing an incomplete course
-fails the build rather than shipping quietly.
+### Evaluator work the content forced
+
+Three defects were found by widening `tests/curriculum.test.ts` to grade the
+whole programme rather than only the published course — which is itself the
+most important fix here, because the CSS exercises had never been graded at all:
+
+- **State pseudo-classes were stripped**, so a `.button:hover` rule was applied
+  to the resting button and no requirement could ask about a hover at all. The
+  cascade now takes `activeStates` the way it already took `activeConditions`,
+  and a requirement selector names the state it is asking about. `:focus-visible`
+  was also being matched as `:focus` followed by a stray `-visible`.
+- **Cascade layers were ignored entirely** — `@layer` was treated as always
+  applying, so a utility in a later layer lost to a component in an earlier one.
+  Layer order is now resolved from the `@layer` statement, compared before
+  specificity, and reversed for `!important` declarations as the specification
+  requires. Level 10 teaches layers, so grading them wrongly was not an option.
+- **Two authored requirements were simply wrong** and had never run: a Level 2
+  check asserted a paragraph *was* teal when the lesson's point was that it is
+  not, and two Level 7 checks used a `.card` selector matching both the light and
+  the themed card.
 
 ### The original Part C assessment, for reference
 

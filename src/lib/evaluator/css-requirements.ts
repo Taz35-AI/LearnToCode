@@ -2,6 +2,7 @@ import type { HTMLElement } from 'node-html-parser';
 import { safeQueryAll, type ParsedDocument } from './parse';
 import {
   extractStyleSheets,
+  layerOrder,
   parseStylesheet,
   specificity,
   type StyleRule,
@@ -10,6 +11,7 @@ import {
   ancestorsOf,
   normaliseValue,
   resolveStyles,
+  splitStates,
   substituteVariables,
 } from './css-cascade';
 import type { Requirement, RequirementResult } from './types';
@@ -40,6 +42,8 @@ export interface CssContext {
   problems: string[];
   /** The raw stylesheet text, for the few checks that are genuinely textual. */
   source: string;
+  /** Cascade layers in declared order, earliest first. */
+  layers: string[];
 }
 
 export function buildCssContext(doc: ParsedDocument): CssContext {
@@ -50,6 +54,7 @@ export function buildCssContext(doc: ParsedDocument): CssContext {
     rules: parsed.flatMap((sheet) => sheet.rules),
     problems: parsed.flatMap((sheet) => sheet.problems),
     source: sheets.join('\n'),
+    layers: layerOrder(parsed),
   };
 }
 
@@ -79,9 +84,12 @@ function resolvedValue(
   context: CssContext,
   property: string,
   condition: string | null,
+  states: string[] = [],
 ): { value: string; source: string; selector: string | null } | null {
   const resolved = resolveStyles(element, context.rules, ancestorsOf(root, element), {
     activeConditions: condition ? [condition] : [],
+    activeStates: states,
+    layerOrder: context.layers,
   });
   const declaration = resolved.get(property.toLowerCase());
   if (!declaration) return null;
@@ -93,10 +101,17 @@ function resolvedValue(
   };
 }
 
-/** Elements a requirement's selector picks out, described for the message. */
+/**
+ * Elements a requirement's selector picks out.
+ *
+ * A requirement may name a state — `.button:hover` — which no static document
+ * can be queried for. The elements are found by the rest of the selector, and
+ * the state is handed to the cascade separately so that the hover rules are the
+ * ones that apply.
+ */
 function targets(doc: ParsedDocument, selector: string | null): HTMLElement[] {
   if (!selector) return [];
-  return safeQueryAll(doc.root, selector);
+  return safeQueryAll(doc.root, splitStates(selector).base);
 }
 
 const underCondition = (condition: string | null) =>
@@ -174,6 +189,7 @@ export function checkCssRequirement(
   }
 
   // Everything below needs elements to ask about.
+  const states = selector ? splitStates(selector).states : [];
   const elements = targets(doc, selector);
   if (elements.length === 0) {
     return {
@@ -185,7 +201,7 @@ export function checkCssRequirement(
   if (requirement.kind === 'css_custom_property') {
     const name = property.startsWith('--') ? property : `--${property}`;
     const failures = elements.filter(
-      (element) => resolvedValue(element, doc.root, context, name, condition) === null,
+      (element) => resolvedValue(element, doc.root, context, name, condition, states) === null,
     );
     return {
       passed: failures.length === 0,
@@ -198,7 +214,7 @@ export function checkCssRequirement(
 
   const readings = elements.map((element) => ({
     element,
-    reading: resolvedValue(element, doc.root, context, property, condition),
+    reading: resolvedValue(element, doc.root, context, property, condition, states),
   }));
 
   if (requirement.kind === 'css_property_absent') {

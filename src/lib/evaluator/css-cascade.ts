@@ -1,6 +1,6 @@
 import type { HTMLElement } from 'node-html-parser';
 import { safeQueryAll } from './parse';
-import { parseDeclarations, specificity, type StyleRule } from './css-parse';
+import { layerNameOf, parseDeclarations, specificity, type StyleRule } from './css-parse';
 
 /**
  * Resolving the cascade: which declaration actually wins for a given element.
@@ -31,6 +31,8 @@ import { parseDeclarations, specificity, type StyleRule } from './css-parse';
 export interface ResolvedDeclaration {
   value: string;
   important: boolean;
+  /** Rank of the cascade layer this came from; see `layerRank`. */
+  layer: number;
   specificity: number;
   order: number;
   /** How the value reached this element. */
@@ -87,6 +89,66 @@ export interface CascadeOptions {
    * is it a single column" — and both are answered by the same resolver.
    */
   activeConditions?: string[];
+  /**
+   * State pseudo-classes treated as active, without the colon — `['hover']`.
+   *
+   * A rule written for a state applies only when that state is listed. This is
+   * the same idea as `activeConditions`: the requirement says which state it is
+   * asking about, and the resolver answers for that state. Without it a
+   * `.button:hover` rule would colour the resting button, and every exercise
+   * that styles a hover would silently corrupt the checks around it.
+   */
+  activeStates?: string[];
+  /**
+   * Cascade layers in declared order, earliest first.
+   *
+   * Layer order is consulted *before* specificity, which is what lets a
+   * one-class utility beat an id selector without `!important`. A grader that
+   * ignored layers would quietly mark the correct answer wrong in exactly the
+   * lesson that teaches them.
+   */
+  layerOrder?: string[];
+}
+
+/**
+ * Where a rule's layer sits in the order.
+ *
+ * Unlayered author rules beat every layer — the specification treats them as an
+ * implicit final layer — so they rank above the highest declared one. A layer
+ * that was never declared in a `@layer` statement ranks after those that were,
+ * matching first-appearance ordering.
+ */
+function layerRank(rule: StyleRule, order: string[]): number {
+  const name = layerNameOf(rule);
+  if (!name) return Number.MAX_SAFE_INTEGER;
+  const index = order.indexOf(name);
+  return index === -1 ? order.length : index;
+}
+
+/**
+ * State pseudo-classes the grader models, longest alternative first.
+ *
+ * The ordering matters: with `focus` before `focus-visible`, `:focus-visible`
+ * matches as `:focus` — the word boundary holds before the hyphen — and leaves
+ * a stray `-visible` behind, producing a selector that matches nothing.
+ */
+const STATE_PSEUDO_CLASSES =
+  /:(focus-visible|focus-within|hover|focus|active|visited|target|disabled|checked)\b/g;
+
+/**
+ * Separates a selector into the part a static document can match and the states
+ * it asks for. `a:hover` becomes `{ base: 'a', states: ['hover'] }`.
+ */
+export function splitStates(selector: string): { base: string; states: string[] } {
+  const states: string[] = [];
+  const base = selector
+    .replace(STATE_PSEUDO_CLASSES, (_match, name: string) => {
+      states.push(name.toLowerCase());
+      return '';
+    })
+    .trim();
+
+  return { base: base || '*', states };
 }
 
 /** A query with all whitespace removed and lowercased, for comparison only. */
@@ -131,6 +193,8 @@ export function resolveStyles(
   options: CascadeOptions = {},
 ): Map<string, ResolvedDeclaration> {
   const active = options.activeConditions ?? [];
+  const states = options.activeStates ?? [];
+  const layers = options.layerOrder ?? [];
   const resolved = new Map<string, ResolvedDeclaration>();
 
   const consider = (candidate: ResolvedDeclaration, property: string) => {
@@ -141,8 +205,9 @@ export function resolveStyles(
   for (const rule of rules) {
     if (!conditionsHold(rule, active)) continue;
 
+    const layer = layerRank(rule, layers);
     for (const selector of rule.selectors) {
-      if (!matches(element, selector, ancestors)) continue;
+      if (!matches(element, selector, ancestors, states)) continue;
 
       const weight = specificity(selector);
       for (const declaration of rule.declarations) {
@@ -150,6 +215,7 @@ export function resolveStyles(
           {
             value: declaration.value,
             important: declaration.important,
+            layer,
             specificity: weight,
             order: rule.order,
             source: 'rule',
@@ -166,6 +232,9 @@ export function resolveStyles(
       {
         value: declaration.value,
         important: declaration.important,
+        // A style attribute belongs to no layer, which puts it with the
+        // unlayered rules — above every declared layer.
+        layer: Number.MAX_SAFE_INTEGER,
         // Inline beats every selector, so it is given a weight nothing can reach.
         specificity: Number.MAX_SAFE_INTEGER,
         order: Number.MAX_SAFE_INTEGER,
@@ -181,7 +250,10 @@ export function resolveStyles(
     const ancestor = ancestors[depth];
     if (!ancestor) continue;
 
-    const inheritedFrom = resolveOwn(ancestor, rules, ancestors.slice(0, depth), active);
+    // Ancestors are resolved in their resting state: a requirement asking about
+    // `.button:hover` is asking about that button, not about every element
+    // above it in the tree.
+    const inheritedFrom = resolveOwn(ancestor, rules, ancestors.slice(0, depth), active, layers);
     for (const [property, declaration] of inheritedFrom) {
       if (!inherits(property)) continue;
       if (resolved.has(property)) continue;
@@ -198,6 +270,7 @@ function resolveOwn(
   rules: StyleRule[],
   ancestors: HTMLElement[],
   active: string[],
+  layers: string[] = [],
 ): Map<string, ResolvedDeclaration> {
   const resolved = new Map<string, ResolvedDeclaration>();
 
@@ -208,6 +281,7 @@ function resolveOwn(
 
   for (const rule of rules) {
     if (!conditionsHold(rule, active)) continue;
+    const layer = layerRank(rule, layers);
     for (const selector of rule.selectors) {
       if (!matches(element, selector, ancestors)) continue;
       const weight = specificity(selector);
@@ -216,6 +290,7 @@ function resolveOwn(
           {
             value: declaration.value,
             important: declaration.important,
+            layer,
             specificity: weight,
             order: rule.order,
             source: 'rule',
@@ -232,6 +307,7 @@ function resolveOwn(
       {
         value: declaration.value,
         important: declaration.important,
+        layer: Number.MAX_SAFE_INTEGER,
         specificity: Number.MAX_SAFE_INTEGER,
         order: Number.MAX_SAFE_INTEGER,
         source: 'inline',
@@ -247,6 +323,16 @@ function resolveOwn(
 /** The cascade comparison, in the specification's order. */
 function outranks(candidate: ResolvedDeclaration, current: ResolvedDeclaration): boolean {
   if (candidate.important !== current.important) return candidate.important;
+
+  if (candidate.layer !== current.layer) {
+    // Layer order is compared before specificity — that is the whole reason
+    // layers exist. For `!important` declarations the order reverses, so an
+    // early layer's important rule beats a later layer's important rule.
+    return candidate.important
+      ? candidate.layer < current.layer
+      : candidate.layer > current.layer;
+  }
+
   if (candidate.specificity !== current.specificity) {
     return candidate.specificity > current.specificity;
   }
@@ -261,14 +347,24 @@ function outranks(candidate: ResolvedDeclaration, current: ResolvedDeclaration):
  * than a direct match and far more trustworthy — combinators, attribute
  * operators and `:not()` all behave as the parser already implements them.
  */
-function matches(element: HTMLElement, selector: string, ancestors: HTMLElement[]): boolean {
+function matches(
+  element: HTMLElement,
+  selector: string,
+  ancestors: HTMLElement[],
+  activeStates: string[] = [],
+): boolean {
   const root = ancestors[0] ?? element;
-  // Pseudo-elements and state pseudo-classes cannot be evaluated against a
-  // static document. The rule is matched on the rest of the selector, which is
-  // what lets a requirement ask about `a:hover` at all.
-  const staticSelector = selector
+
+  // A rule written for a state applies only when the caller said that state is
+  // active. Nothing in a static document can tell us whether a button is being
+  // hovered, so the requirement has to say which state it is asking about.
+  const { base, states } = splitStates(selector);
+  if (states.some((state) => !activeStates.includes(state))) return false;
+
+  // Pseudo-elements cannot be evaluated against a static document either, so
+  // the rule is matched on the rest of the selector.
+  const staticSelector = base
     .replace(/::[a-zA-Z-]+/g, '')
-    .replace(/:(hover|focus|focus-visible|focus-within|active|visited|target)\b/g, '')
     // `:root` is the document element. The HTML parser's selector engine does
     // not implement it, and it is how every design-token stylesheet in this
     // course declares its custom properties — so it is rewritten rather than

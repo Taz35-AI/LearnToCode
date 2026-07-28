@@ -1503,7 +1503,7 @@ insert into public.courses
   (slug, title, subtitle, description, outcome, ordinal, accent, is_published,
    recommended_days, recommended_minutes_per_day, version)
 values ('css-architect', 'CSS Architect', 'From "why is this not working" to layouts you can reason about', 'A mastery-based journey through modern CSS. It starts with the cascade rather than ending with it, because almost every hour lost to CSS is really a cascade misunderstanding. You style the site you built in the HTML course, and finish able to build responsive, maintainable layouts and explain exactly why each rule applies.',
-        'You can style a complete multi-page site with modern CSS, and explain why every rule in it wins or loses.', 2, 'violet', false,
+        'You can style a complete multi-page site with modern CSS, and explain why every rule in it wins or loses.', 2, 'violet', true,
         30, 60, '0.1.0')
 on conflict (slug) do update set
   title = excluded.title, subtitle = excluded.subtitle, description = excluded.description,
@@ -21484,9 +21484,9 @@ select e.id, 1, 'css_value'::public.requirement_kind, '.card > p', 'color',
 from public.exercises e where e.slug = 'css-selectors-guided';
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
-select e.id, 2, 'css_value'::public.requirement_kind, 'blockquote p', 'color',
-       'teal', NULL, NULL, NULL,
-       'The nested paragraph is not targeted directly', NULL, 1, true, NULL
+select e.id, 2, 'css_property_absent'::public.requirement_kind, 'blockquote p', 'color',
+       NULL, NULL, NULL, NULL,
+       'The nested paragraph is not targeted — the child combinator does not reach it', NULL, 1, true, NULL
 from public.exercises e where e.slug = 'css-selectors-guided';
 insert into public.exercise_requirements
   (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
@@ -21914,15 +21914,8375 @@ select id, 4, 'It is invalid CSS', false, NULL
 from public.quiz_questions where slug = 'a-css-2-specificity-cost';
 
 -- --------------------------------------------------------------------------
+-- CSS Architect — Level 3: Flow, Position and Stacking
+-- --------------------------------------------------------------------------
+
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'css-flow-and-position', 3, 'Flow, Position and Stacking', 'The layout you get for free, and the four ways of leaving it',
+       'Before any layout system, there is normal flow. Understanding it — and what `position` and stacking contexts really do — is what stops later layouts feeling like guesswork.', 'You can predict where an element will sit, and say which of two overlapping elements appears in front and why.', 'violet'
+from public.courses c where c.slug = 'css-architect'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, NULL, 'css-level-3-milestone', 'milestone'::public.assessment_kind, 'Level 3 milestone: Flow, Position and Stacking', 'Six questions on normal flow, positioning and stacking. Pass mark 75%.',
+       0.75, 180, 3
+from public.levels l where l.slug = 'css-flow-and-position'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+
+-- module: Normal flow and positioning
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'css-flow', 1, 'Normal flow and positioning', 'Block and inline, the display property, the four positioning schemes, and the stacking rules that decide what covers what.',
+       55, false
+from public.levels l where l.slug = 'css-flow-and-position'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'css-flow' and p.slug = 'css-boxes';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'css-flow' and s.slug = 'layout-flow';
+
+-- lesson: Normal flow
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-normal-flow', 1, 'Normal flow', 'Block, inline, and the layout you already have', 'Every page starts with a layout you did not write. Knowing its rules explains most of what looks like strange behaviour later.',
+       ARRAY['Explain the difference between block and inline layout', 'Predict which properties an inline element ignores', 'Choose a display value deliberately']::text[], 15, 40, (select id from public.skills where slug = 'layout-flow'), 0.7
+from public.modules m where m.slug = 'css-flow'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'You give a `<span>` a `width` of 300px and 40px of top padding. What actually happens?',
+       NULL, NULL, NULL, '{"options":["The width is ignored, and the padding overlaps the lines above and below","Both apply exactly as written","Both are ignored entirely","The width applies but the padding does not"],"answer":"The width is ignored and the vertical padding is drawn but does not push anything away — so it overlaps neighbouring lines. Inline elements are sized by their content, and vertical margins and padding on them do not affect line height. This is the commonest reason a `<span>` \"refuses\" to be sized, and the fix is almost always `display: inline-block` or using a block element in the first place."}'::jsonb
+from public.lessons where slug = 'css-normal-flow';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Describe how block and inline boxes are laid out","Name what inline elements ignore","Pick between `block`, `inline`, `inline-block` and `none`"]}'::jsonb
+from public.lessons where slug = 'css-normal-flow';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, NULL, 'Normal flow is the layout a browser gives you before you write a single layout rule. Blocks stack down the page; inline content runs along a line and wraps. Almost everything else in CSS layout is a deliberate departure from this.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-normal-flow';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'term'::public.block_type, 'Block box', 'Takes the full width available and starts on a new line. `<div>`, `<p>`, `<h1>`, `<section>` are block by default.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-normal-flow';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'term'::public.block_type, 'Inline box', 'Sits within a line of text and is only as wide as its content. `<span>`, `<a>`, `<strong>`, `<em>` are inline by default.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-normal-flow';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'code_example'::public.block_type, 'The display values worth knowing first', NULL,
+       'display: block          full width, new line, all box properties apply
+display: inline         flows in a line, width/height ignored,
+                        vertical margin and padding do not push
+display: inline-block   flows in a line, but sized like a block
+display: none           removed entirely — no box, not in the
+                        accessibility tree, not focusable
+display: flow-root      a block that contains its own floats', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-normal-flow';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'interactive_demo'::public.block_type, 'The same span, three display values', 'Identical markup and identical width declaration.',
+       NULL, NULL, NULL, '{"variants":[{"label":"inline (the default)","code":"<style>\n  .tag { display: inline; width: 300px; background: #cde; padding: 1rem; }\n</style>\n<p>Baked <span class=\"tag\">this morning</span> in Hexford.</p>","note":"The width is ignored. The horizontal padding pushes the text along; the vertical padding is drawn but overlaps the lines above and below."},{"label":"inline-block","code":"<style>\n  .tag { display: inline-block; width: 300px; background: #cde; padding: 1rem; }\n</style>\n<p>Baked <span class=\"tag\">this morning</span> in Hexford.</p>","note":"Still on the line, now genuinely 300px wide, and the vertical padding pushes the line apart properly."},{"label":"block","code":"<style>\n  .tag { display: block; width: 300px; background: #cde; padding: 1rem; }\n</style>\n<p>Baked <span class=\"tag\">this morning</span> in Hexford.</p>","note":"Breaks out onto its own line. Correct if it really is a block — but it has now interrupted the sentence."}]}'::jsonb
+from public.lessons where slug = 'css-normal-flow';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'callout'::public.block_type, '`display: none` removes it from everyone', 'A `display: none` element has no box, is not announced by a screen reader, and cannot be focused. That is exactly right for content that is genuinely not there yet — and exactly wrong for something meant to be available to assistive technology but not visually, which needs a visually-hidden pattern instead. Hiding a skip link with `display: none` breaks it completely, which is the mistake Level 8 of the HTML course warns about.',
+       NULL, NULL, NULL, '{"tone":"accessibility"}'::jsonb
+from public.lessons where slug = 'css-normal-flow';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'predict_check'::public.block_type, 'Predict, then check', 'A `<div>` — normally a block — is forced to `display: inline` and given a width and height. Before you check: how big is the box?',
+       '<style>
+  .box { display: inline; width: 200px; height: 200px; background: #cde; }
+</style>
+<div class="box">A div set to inline.</div>', 'html', NULL, '{"outcome":"Exactly as big as its text, and no bigger. `width` and `height` do not apply to non-replaced inline boxes, whatever element they started as. This is worth seeing once because it proves the point: block and inline are not properties of the *element*, they are properties of the box the element generates — and `display` changes that box completely. The element being a `<div>` buys you nothing here."}'::jsonb
+from public.lessons where slug = 'css-normal-flow';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'progressive_detail'::public.block_type, 'Replaced elements are the exception', 'An `<img>`, `<video>`, `<input>` or `<iframe>` is a *replaced* element — its content comes from outside the document. Replaced elements are inline by default and yet `width` and `height` do apply to them, which is why an image can be sized without touching `display`. It is the single most useful exception to remember.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-normal-flow';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Normal flow stacks blocks down the page and runs inline content along a line.","Inline boxes ignore `width` and `height`, and their vertical margin and padding do not push anything.","`inline-block` keeps an element in the line while sizing it like a block.","`display: none` removes an element from layout, from the accessibility tree and from the tab order."],"nextUp":"Next: leaving normal flow deliberately."}'::jsonb
+from public.lessons where slug = 'css-normal-flow';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What does an inline box ignore?","What is `inline-block` for?","Why is `display: none` more than a visual change?"],"points":["`width` and `height`, and vertical margin and padding do not push neighbouring content away — they are drawn but overlap.","Keeping an element in the flow of a line while letting it be sized like a block, with working vertical padding.","Because it removes the element entirely: no box, not announced by screen readers, not focusable. Anything that should be available to assistive technology but not shown needs a visually-hidden pattern instead."]}'::jsonb
+from public.lessons where slug = 'css-normal-flow';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-flow-guided', 1, 'guided'::public.exercise_kind, 'Size a badge that stays in the line',
+       'The `.badge` span should stay inside the sentence but be exactly 8rem wide with 0.5rem of padding all round. Choose the display value that allows both.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Flow</title>
+    <style>
+      .badge { width: 8rem; padding: 0.5rem; background: #cde; }
+    </style>
+  </head>
+  <body>
+    <p>Baked <span class="badge">this morning</span> in Hexford.</p>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Flow</title>
+    <style>
+      .badge {
+        display: inline-block;
+        width: 8rem;
+        padding: 0.5rem;
+        background: #cde;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Baked <span class="badge">this morning</span> in Hexford.</p>
+  </body>
+</html>', ARRAY['A plain inline box ignores width entirely.', 'display: block would break the badge onto its own line.', 'inline-block keeps it in the sentence and lets it be sized.']::text[],
+       40, 2,
+       (select id from public.skills where slug = 'layout-flow'), false
+from public.lessons l where l.slug = 'css-normal-flow'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.badge', 'display',
+       'inline-block', NULL, NULL, NULL,
+       'The badge is inline-block', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flow-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.badge', 'width',
+       '8rem', NULL, NULL, NULL,
+       'The badge is 8rem wide', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flow-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.badge', 'padding',
+       '0.5rem', NULL, NULL, NULL,
+       'The badge has 0.5rem of padding', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flow-guided';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-normal-flow'), NULL, 'q-css-inline-ignores', 1, 'single'::public.question_kind,
+        'Which does a non-replaced inline box ignore?', '`width` and `height` do not apply to inline boxes.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`background`', false, NULL
+from public.quiz_questions where slug = 'q-css-inline-ignores';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`width`', true, NULL
+from public.quiz_questions where slug = 'q-css-inline-ignores';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`color`', false, NULL
+from public.quiz_questions where slug = 'q-css-inline-ignores';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`font-size`', false, NULL
+from public.quiz_questions where slug = 'q-css-inline-ignores';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-normal-flow'), NULL, 'q-css-display-none-cost', 2, 'single'::public.question_kind,
+        'What else does `display: none` do besides hiding an element visually?', 'It removes it from the accessibility tree and from the tab order — it is gone for everyone.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Only hides it visually', false, NULL
+from public.quiz_questions where slug = 'q-css-display-none-cost';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Keeps it focusable for keyboard users', false, NULL
+from public.quiz_questions where slug = 'q-css-display-none-cost';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Makes it transparent but still clickable', false, NULL
+from public.quiz_questions where slug = 'q-css-display-none-cost';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Removes it from the accessibility tree and the tab order', true, NULL
+from public.quiz_questions where slug = 'q-css-display-none-cost';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-normal-flow'), NULL, 'q-css-replaced-elements', 3, 'single'::public.question_kind,
+        'Why can an `<img>` be given a width even though it is inline?', 'It is a replaced element — its content comes from outside the document, and sizing applies.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Width always applies to every element', false, NULL
+from public.quiz_questions where slug = 'q-css-replaced-elements';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Because it has a src attribute', false, NULL
+from public.quiz_questions where slug = 'q-css-replaced-elements';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It is a replaced element', true, NULL
+from public.quiz_questions where slug = 'q-css-replaced-elements';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Images are block by default', false, NULL
+from public.quiz_questions where slug = 'q-css-replaced-elements';
+
+-- lesson: Position and stacking
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-position-and-stacking', 2, 'Position and stacking', 'The four schemes, and why `z-index` sometimes does nothing', 'Positioning takes an element partly or wholly out of flow. Stacking decides what covers what — and it is not simply "the biggest number wins".',
+       ARRAY['Choose between static, relative, absolute, fixed and sticky', 'Explain what an absolutely positioned element is positioned against', 'Say why a `z-index` of 9999 can still lose']::text[], 18, 40, (select id from public.skills where slug = 'layout-flow'), 0.7
+from public.modules m where m.slug = 'css-flow'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'An element has `z-index: 9999` and is still hidden behind another element with `z-index: 1`. What is the most likely reason?',
+       NULL, NULL, NULL, '{"options":["They are in different stacking contexts, and the parent of the first one sits lower","z-index has a maximum of 999","The element is not positioned, so z-index does nothing","The other element is later in the source"],"answer":"Both the first and third are real causes, and the first is the one that baffles people. `z-index` only orders elements *within the same stacking context*. If an ancestor created its own context — with `opacity` below 1, a `transform`, `position: fixed`, or a `z-index` of its own — then everything inside it is trapped in that context, and no number can lift a child above a sibling of its parent. The third option is also worth knowing: `z-index` has no effect at all on a `position: static` element."}'::jsonb
+from public.lessons where slug = 'css-position-and-stacking';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Apply each positioning scheme deliberately","Identify the containing block for an absolute element","Recognise when a stacking context has been created"]}'::jsonb
+from public.lessons where slug = 'css-position-and-stacking';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'code_example'::public.block_type, 'The five values of `position`', NULL,
+       'static     the default. In flow. top/left/z-index do nothing.
+relative   in flow, and offset visually from where it would be.
+           Its original space is kept. Creates a positioning
+           context for absolutely positioned descendants.
+absolute   out of flow. Positioned against the nearest
+           positioned ancestor, or the page if there is none.
+fixed      out of flow. Positioned against the viewport.
+sticky     in flow until it reaches a threshold, then fixed
+           within its scrolling ancestor.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-position-and-stacking';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'worked_example'::public.block_type, 'Placing a badge in the corner of a card', 'The classic case, and the one line everybody forgets.',
+       NULL, NULL, NULL, '{"steps":[{"title":"Take the badge out of flow","code":".badge { position: absolute; top: 0.5rem; right: 0.5rem; }","reasoning":"Absolute positioning removes it from normal flow, so it no longer pushes the card content around. The offsets say where to put it."},{"title":"Ask: positioned against what?","code":"/* Nothing yet — so the page. */","reasoning":"An absolutely positioned element is placed against its nearest *positioned* ancestor. If none of its ancestors has a `position` other than `static`, it goes all the way up to the page — which is why the badge lands in the corner of the browser window rather than the card."},{"title":"Give the card a positioning context","code":".card { position: relative; }","reasoning":"This is the line people forget. `position: relative` with no offsets changes nothing visually and makes the card the reference point for any absolutely positioned descendant. The badge now lands in the card corner."},{"title":"Check it did not cover anything important","code":".card { position: relative; padding-right: 5rem; }","reasoning":"Out-of-flow elements do not reserve space, so the badge sits on top of whatever is underneath. If the card text can reach that corner, it needs room made for it — the layout will not do it for you."}]}'::jsonb
+from public.lessons where slug = 'css-position-and-stacking';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'interactive_demo'::public.block_type, 'The same badge, with and without a positioning context', 'One declaration different.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Card is positioned","code":"<style>\n  .card { position: relative; border: 1px solid teal; padding: 1rem; padding-right: 5rem; }\n  .badge { position: absolute; top: 0.5rem; right: 0.5rem; background: #cde; padding: 0.25rem 0.5rem; }\n</style>\n<div class=\"card\">Sourdough workshop <span class=\"badge\">New</span></div>","note":"The badge is placed against the card, because the card is the nearest positioned ancestor."},{"label":"Card is static","code":"<style>\n  .card { border: 1px solid crimson; padding: 1rem; }\n  .badge { position: absolute; top: 0.5rem; right: 0.5rem; background: #fee; padding: 0.25rem 0.5rem; }\n</style>\n<div class=\"card\">Sourdough workshop <span class=\"badge\">New</span></div>","note":"No positioned ancestor, so the badge is placed against the page and flies to the top-right of the whole document."}]}'::jsonb
+from public.lessons where slug = 'css-position-and-stacking';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'term'::public.block_type, 'Stacking context', 'A self-contained layer. Elements inside it are ordered among themselves, and the whole context is then ordered as one unit within its parent context.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-position-and-stacking';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'callout'::public.block_type, 'The things that quietly create a stacking context', '`position` with a `z-index` other than `auto`. `position: fixed` or `sticky`. `opacity` less than 1. Any `transform`, `filter`, `perspective`, `clip-path` or `mask`. `will-change` naming one of those. `isolation: isolate`. That `opacity: 0.99` someone added for a fade is enough — and it is why a dropdown suddenly disappears behind the next section after an unrelated change.',
+       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
+from public.lessons where slug = 'css-position-and-stacking';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'self_explain'::public.block_type, 'Explain it in your own words', 'A colleague fixes an overlap by changing a `z-index` from 10 to 9999, and it works. Write your reply: what have they actually learned about the page, and what happens the next time?',
+       NULL, NULL, NULL, '{"modelAnswer":"They have learned that the two elements are in the same stacking context — because if they were not, no number would have helped. So the fix worked by accident of that fact rather than by understanding it. The next time this happens the number goes higher, and eventually someone hits a case where the elements are *not* in the same context and no number works at all, at which point 9999 has taught them nothing useful and the real question — which ancestor created a context, and why — has never been asked. The better fix is almost always to find the ancestor that made a context, or to give the two elements an explicit, small ordering within one shared context."}'::jsonb
+from public.lessons where slug = 'css-position-and-stacking';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'checklist'::public.block_type, 'When something is in the wrong place or the wrong layer', NULL,
+       NULL, NULL, NULL, '{"items":["Is it `position: static`? Then `top`/`left`/`z-index` do nothing.","For `absolute`: which ancestor is positioned? That is what it is placed against.","Does the out-of-flow element cover content that needed the space?","For `z-index`: are the two elements in the same stacking context?","Did an ancestor create a context with `opacity`, `transform` or `filter`?"]}'::jsonb
+from public.lessons where slug = 'css-position-and-stacking';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["`static` is the default and ignores offsets and `z-index` entirely.","`relative` keeps its space and creates a positioning context for descendants.","`absolute` is placed against the nearest positioned ancestor, or the page.","`z-index` orders elements only within one stacking context, and many properties create one."],"nextUp":"Next: the Level 3 milestone."}'::jsonb
+from public.lessons where slug = 'css-position-and-stacking';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What is an absolutely positioned element placed against?","Name four things that create a stacking context.","Why does `z-index` do nothing on a `static` element?"],"points":["Its nearest ancestor with a `position` other than `static`. If there is none, the page itself.","`position` with a numeric `z-index`; `position: fixed` or `sticky`; `opacity` below 1; a `transform`, `filter` or `clip-path`; `isolation: isolate`.","Because `z-index` only applies to positioned elements. On a static element it is simply ignored, which is one of the two commonest reasons it \"does not work\"."]}'::jsonb
+from public.lessons where slug = 'css-position-and-stacking';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-position-guided', 1, 'guided'::public.exercise_kind, 'Pin a badge to a card',
+       'Place the badge in the top-right corner **of the card**, not of the page. Give the card the positioning context it needs, and enough right padding that the text never runs under the badge.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Position</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .card { border: 1px solid teal; padding: 1rem; }
+      .badge { background: #cde; padding: 0.25rem 0.5rem; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      Sourdough workshop, six hours
+      <span class="badge">New</span>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Position</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .card {
+        position: relative;
+        border: 1px solid teal;
+        padding: 1rem;
+        padding-right: 5rem;
+      }
+      .badge {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: #cde;
+        padding: 0.25rem 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      Sourdough workshop, six hours
+      <span class="badge">New</span>
+    </div>
+  </body>
+</html>', ARRAY['The badge needs position: absolute with top and right offsets.', 'Without position: relative on the card, the badge is placed against the page.', 'Out-of-flow elements reserve no space — add right padding so the text clears it.']::text[],
+       50, 3,
+       (select id from public.skills where slug = 'layout-flow'), false
+from public.lessons l where l.slug = 'css-position-and-stacking'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.card', 'position',
+       'relative', NULL, NULL, NULL,
+       'The card creates a positioning context', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-position-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.badge', 'position',
+       'absolute', NULL, NULL, NULL,
+       'The badge is taken out of flow', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-position-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_declared'::public.requirement_kind, '.badge', 'top',
+       NULL, NULL, NULL, NULL,
+       'The badge is offset from the top', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-position-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_declared'::public.requirement_kind, '.badge', 'right',
+       NULL, NULL, NULL, NULL,
+       'The badge is offset from the right', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-position-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_declared'::public.requirement_kind, '.card', 'padding-right',
+       NULL, NULL, NULL, NULL,
+       'The card makes room for the badge', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-position-guided';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-stacking-debug', 2, 'debug'::public.exercise_kind, 'A z-index that cannot win',
+       'The dropdown has `z-index: 9999` and still hides behind the banner. The cause is the `opacity` on `.header`, which creates a stacking context trapping everything inside it. Remove that cause, and give the dropdown a small, honest `z-index` of `10`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Stacking</title>
+    <style>
+      .header { position: relative; opacity: 0.99; }
+      .dropdown { position: absolute; z-index: 9999; background: #fff; }
+      .banner { position: relative; z-index: 1; background: #cde; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="dropdown">Menu contents</div>
+    </div>
+    <div class="banner">Promotional banner</div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Stacking</title>
+    <style>
+      .header { position: relative; }
+      .dropdown { position: absolute; z-index: 10; background: #fff; }
+      .banner { position: relative; z-index: 1; background: #cde; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="dropdown">Menu contents</div>
+    </div>
+    <div class="banner">Promotional banner</div>
+  </body>
+</html>', ARRAY['An opacity below 1 creates a stacking context, trapping every descendant inside it.', 'Remove the opacity declaration from .header entirely.', 'Then a z-index of 10 comfortably beats the banner''s 1 — the huge number was never the answer.']::text[],
+       55, 4,
+       (select id from public.skills where slug = 'layout-flow'), false
+from public.lessons l where l.slug = 'css-position-and-stacking'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_property_absent'::public.requirement_kind, '.header', 'opacity',
+       NULL, NULL, NULL, NULL,
+       'The header no longer creates a stacking context', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-stacking-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.dropdown', 'z-index',
+       '10', NULL, NULL, NULL,
+       'The dropdown uses a small, honest z-index', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-stacking-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.dropdown', 'position',
+       'absolute', NULL, NULL, NULL,
+       'The dropdown is still positioned', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-stacking-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-position-and-stacking'), NULL, 'q-css-absolute-against', 1, 'single'::public.question_kind,
+        'An absolutely positioned element is placed against what?', 'Its nearest positioned ancestor — or the page, if none of its ancestors is positioned.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Its immediate parent, always', false, NULL
+from public.quiz_questions where slug = 'q-css-absolute-against';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The viewport, always', false, NULL
+from public.quiz_questions where slug = 'q-css-absolute-against';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The nearest block element', false, NULL
+from public.quiz_questions where slug = 'q-css-absolute-against';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The nearest ancestor whose position is not static', true, NULL
+from public.quiz_questions where slug = 'q-css-absolute-against';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-position-and-stacking'), NULL, 'q-css-stacking-context-cause', 2, 'single'::public.question_kind,
+        'Which of these creates a new stacking context?', 'An `opacity` below 1 does, which is why an unrelated fade can bury a dropdown.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`padding: 1rem`', false, NULL
+from public.quiz_questions where slug = 'q-css-stacking-context-cause';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`font-weight: bold`', false, NULL
+from public.quiz_questions where slug = 'q-css-stacking-context-cause';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`opacity: 0.99`', true, NULL
+from public.quiz_questions where slug = 'q-css-stacking-context-cause';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`color: red`', false, NULL
+from public.quiz_questions where slug = 'q-css-stacking-context-cause';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-position-and-stacking'), NULL, 'q-css-zindex-static', 3, 'single'::public.question_kind,
+        'Why does `z-index: 50` do nothing on an element with no `position`?', '`z-index` applies only to positioned elements; on a static element it is ignored.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '50 is too small a value', false, NULL
+from public.quiz_questions where slug = 'q-css-zindex-static';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It only works inside a flex container', false, NULL
+from public.quiz_questions where slug = 'q-css-zindex-static';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It needs an `!important`', false, NULL
+from public.quiz_questions where slug = 'q-css-zindex-static';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`z-index` only applies to positioned elements', true, NULL
+from public.quiz_questions where slug = 'q-css-zindex-static';
+
+-- lesson: Milestone: place things deliberately
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-flow-milestone', 3, 'Milestone: place things deliberately', 'A layout where nothing is where its author meant it', 'Four faults, all of them flow or stacking. None needs a layout system — they need the defaults understood.',
+       ARRAY['Diagnose a misplaced element', 'Repair positioning without introducing a layout framework', 'Keep out-of-flow elements from covering content']::text[], 18, 40, (select id from public.skills where slug = 'layout-flow'), 0.8
+from public.modules m where m.slug = 'css-flow'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Work through positioning faults methodically","Fix stacking without escalating numbers","Explain each repair"]}'::jsonb
+from public.lessons where slug = 'css-flow-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'code_example'::public.block_type, 'Symptom to cause', NULL,
+       'Symptom                        Look at
+element ignores width          is it inline?
+element flew to the page edge  which ancestor is positioned?
+content sits under something   out-of-flow element covering it
+z-index does nothing           is the element positioned?
+z-index still does nothing     which ancestor made a context?', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-flow-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'interactive_demo'::public.block_type, 'Two ways a badge goes wrong', 'The same absolute badge in two cards.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Correct","code":"<style>\n  .card { position: relative; border: 1px solid teal; padding: 1rem 5rem 1rem 1rem; }\n  .badge { position: absolute; top: 0.5rem; right: 0.5rem; background: #cde; padding: 0.25rem 0.5rem; }\n</style>\n<div class=\"card\">Sourdough workshop, six hours, small groups <span class=\"badge\">New</span></div>","note":"Positioned against the card, with padding making room so the text never runs underneath."},{"label":"No room made","code":"<style>\n  .card { position: relative; border: 1px solid crimson; padding: 1rem; }\n  .badge { position: absolute; top: 0.5rem; right: 0.5rem; background: #fee; padding: 0.25rem 0.5rem; }\n</style>\n<div class=\"card\">Sourdough workshop, six hours, small groups and everything provided <span class=\"badge\">New</span></div>","note":"Placed correctly and covering the text, because an out-of-flow element reserves no space for itself."}]}'::jsonb
+from public.lessons where slug = 'css-flow-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'recall'::public.block_type, 'From memory', 'From memory: name the five values of `position` and say, in one line each, what each does to flow.',
+       NULL, NULL, NULL, '{"points":["`static` — the default; fully in flow, and offsets and `z-index` are ignored.","`relative` — in flow and keeps its space, offset visually, and becomes a positioning context for descendants.","`absolute` — out of flow, reserves no space, placed against the nearest positioned ancestor.","`fixed` — out of flow, placed against the viewport.","`sticky` — in flow until a threshold is reached, then fixed within its scrolling ancestor."]}'::jsonb
+from public.lessons where slug = 'css-flow-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Most \"wrong place\" bugs are a missing `position: relative` on the intended reference.","Out-of-flow elements reserve no space — make room for them yourself.","A `z-index` that does nothing means either no `position`, or a different stacking context."],"nextUp":"Next: Flexbox."}'::jsonb
+from public.lessons where slug = 'css-flow-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What is the first thing to check when an absolutely positioned element lands in the wrong place?"],"points":["Which ancestor is positioned. An absolute element is placed against its nearest ancestor whose `position` is not `static`, so if nobody has one it goes all the way up to the page. Adding `position: relative` to the intended reference — which changes nothing visually on its own — is the fix nine times out of ten."]}'::jsonb
+from public.lessons where slug = 'css-flow-milestone';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-flow-milestone-debug', 1, 'debug'::public.exercise_kind, 'Four things in the wrong place',
+       'Repair four faults. The `.tag` span must be sized (make it inline-block). The `.badge` must sit in the corner of `.card`, not the page. The card must make room so its text does not run under the badge. And the `.dropdown` must appear above `.banner` using a `z-index` of `10`, which means removing whatever is trapping it.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Flow milestone</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .tag { width: 6rem; padding: 0.25rem; background: #cde; }
+      .card { border: 1px solid teal; padding: 1rem; }
+      .badge { position: absolute; top: 0.5rem; right: 0.5rem; background: #cde; }
+      .header { position: relative; opacity: 0.99; }
+      .dropdown { position: absolute; z-index: 9999; background: #fff; }
+      .banner { position: relative; z-index: 1; background: #cde; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="dropdown">Menu contents</div>
+    </div>
+    <div class="banner">Promotional banner</div>
+    <div class="card">
+      Sourdough workshop <span class="tag">6 hours</span>
+      <span class="badge">New</span>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Flow milestone</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .tag { display: inline-block; width: 6rem; padding: 0.25rem; background: #cde; }
+      .card { position: relative; border: 1px solid teal; padding: 1rem; padding-right: 5rem; }
+      .badge { position: absolute; top: 0.5rem; right: 0.5rem; background: #cde; }
+      .header { position: relative; }
+      .dropdown { position: absolute; z-index: 10; background: #fff; }
+      .banner { position: relative; z-index: 1; background: #cde; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="dropdown">Menu contents</div>
+    </div>
+    <div class="banner">Promotional banner</div>
+    <div class="card">
+      Sourdough workshop <span class="tag">6 hours</span>
+      <span class="badge">New</span>
+    </div>
+  </body>
+</html>', ARRAY['A span is inline, so its width is ignored — inline-block fixes that.', 'The badge needs the card to be position: relative.', 'Add right padding to the card so the text clears the badge.', 'The opacity on .header traps the dropdown in its own stacking context.']::text[],
+       70, 4,
+       (select id from public.skills where slug = 'layout-flow'), false
+from public.lessons l where l.slug = 'css-flow-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.tag', 'display',
+       'inline-block', NULL, NULL, NULL,
+       'The tag can be sized', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flow-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.card', 'position',
+       'relative', NULL, NULL, NULL,
+       'The card is the badge''s reference', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flow-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_declared'::public.requirement_kind, '.card', 'padding-right',
+       NULL, NULL, NULL, NULL,
+       'The card makes room for the badge', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flow-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_property_absent'::public.requirement_kind, '.header', 'opacity',
+       NULL, NULL, NULL, NULL,
+       'The header no longer traps its children', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flow-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value'::public.requirement_kind, '.dropdown', 'z-index',
+       '10', NULL, NULL, NULL,
+       'The dropdown uses a small z-index', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flow-milestone-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-flow-milestone'), NULL, 'q-css-out-of-flow-space', 1, 'single'::public.question_kind,
+        'How much space does an absolutely positioned element reserve in the flow?', 'None. It is out of flow entirely, so surrounding content behaves as though it were not there.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'None at all', true, NULL
+from public.quiz_questions where slug = 'q-css-out-of-flow-space';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Its full width and height', false, NULL
+from public.quiz_questions where slug = 'q-css-out-of-flow-space';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Its height only', false, NULL
+from public.quiz_questions where slug = 'q-css-out-of-flow-space';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Its margin only', false, NULL
+from public.quiz_questions where slug = 'q-css-out-of-flow-space';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-flow-milestone'), NULL, 'q-css-relative-no-offsets', 2, 'single'::public.question_kind,
+        'What does `position: relative` with no offsets do?', 'Nothing visually — but it makes the element a positioning context for absolutely positioned descendants.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Nothing at all; it is a no-op', false, NULL
+from public.quiz_questions where slug = 'q-css-relative-no-offsets';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Nothing visible, but it becomes a reference for absolute descendants', true, NULL
+from public.quiz_questions where slug = 'q-css-relative-no-offsets';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Removes it from flow', false, NULL
+from public.quiz_questions where slug = 'q-css-relative-no-offsets';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Centres it', false, NULL
+from public.quiz_questions where slug = 'q-css-relative-no-offsets';
+
+-- Level 3 milestone: Flow, Position and Stacking questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-3-milestone'), 'a-css-3-inline-width', 1, 'single'::public.question_kind,
+        'Why is `width` ignored on a `<span>`?', 'It generates an inline box, and `width` does not apply to non-replaced inline boxes.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The width needs a unit', false, NULL
+from public.quiz_questions where slug = 'a-css-3-inline-width';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It needs an id selector', false, NULL
+from public.quiz_questions where slug = 'a-css-3-inline-width';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It generates an inline box', true, NULL
+from public.quiz_questions where slug = 'a-css-3-inline-width';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Spans cannot be styled', false, NULL
+from public.quiz_questions where slug = 'a-css-3-inline-width';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-3-milestone'), 'a-css-3-inline-block', 2, 'single'::public.question_kind,
+        'What does `inline-block` give you?', 'A box that stays in the line but can be sized like a block.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Breaks onto its own line', false, NULL
+from public.quiz_questions where slug = 'a-css-3-inline-block';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Removes it from the document', false, NULL
+from public.quiz_questions where slug = 'a-css-3-inline-block';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Makes it position: absolute', false, NULL
+from public.quiz_questions where slug = 'a-css-3-inline-block';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Stays in the line, sizes like a block', true, NULL
+from public.quiz_questions where slug = 'a-css-3-inline-block';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-3-milestone'), 'a-css-3-abs-reference', 3, 'single'::public.question_kind,
+        'A badge with `position: absolute` lands in the corner of the page instead of its card. Why?', 'No ancestor is positioned, so it falls back to the page.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'No ancestor has a position other than static', true, NULL
+from public.quiz_questions where slug = 'a-css-3-abs-reference';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The offsets are the wrong way round', false, NULL
+from public.quiz_questions where slug = 'a-css-3-abs-reference';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Absolute always means the page', false, NULL
+from public.quiz_questions where slug = 'a-css-3-abs-reference';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The card needs a z-index', false, NULL
+from public.quiz_questions where slug = 'a-css-3-abs-reference';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-3-milestone'), 'a-css-3-sticky', 4, 'single'::public.question_kind,
+        'What does `position: sticky` do?', 'Stays in flow until a threshold, then behaves as fixed within its scrolling ancestor.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Always fixed to the viewport', false, NULL
+from public.quiz_questions where slug = 'a-css-3-sticky';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Always out of flow', false, NULL
+from public.quiz_questions where slug = 'a-css-3-sticky';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The same as relative', false, NULL
+from public.quiz_questions where slug = 'a-css-3-sticky';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'In flow until a threshold, then fixed within its scroller', true, NULL
+from public.quiz_questions where slug = 'a-css-3-sticky';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-3-milestone'), 'a-css-3-context-trap', 5, 'single'::public.question_kind,
+        'A child with `z-index: 9999` is behind a sibling of its parent. What is happening?', 'The parent created a stacking context, so the child is ordered inside it and cannot escape.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'z-index cannot be used on children', false, NULL
+from public.quiz_questions where slug = 'a-css-3-context-trap';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The parent created a stacking context', true, NULL
+from public.quiz_questions where slug = 'a-css-3-context-trap';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'z-index is capped at 999', false, NULL
+from public.quiz_questions where slug = 'a-css-3-context-trap';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The sibling has `!important`', false, NULL
+from public.quiz_questions where slug = 'a-css-3-context-trap';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-3-milestone'), 'a-css-3-display-none-a11y', 6, 'single'::public.question_kind,
+        'Which is true of `display: none`?', 'It removes the element for everyone — visually, from the accessibility tree, and from focus order.', (select id from public.skills where slug = 'layout-flow'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Screen readers still announce it', false, NULL
+from public.quiz_questions where slug = 'a-css-3-display-none-a11y';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It only affects printing', false, NULL
+from public.quiz_questions where slug = 'a-css-3-display-none-a11y';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It removes the element from the accessibility tree too', true, NULL
+from public.quiz_questions where slug = 'a-css-3-display-none-a11y';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It hides it visually but keeps it focusable', false, NULL
+from public.quiz_questions where slug = 'a-css-3-display-none-a11y';
+
+-- --------------------------------------------------------------------------
+-- CSS Architect — Level 4: Flexbox
+-- --------------------------------------------------------------------------
+
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'css-flexbox', 4, 'Flexbox', 'One dimension, two axes, and the properties that follow from them',
+       'Flexbox is small: a container, a direction, and rules for distributing space. Almost every difficulty with it is really a question of which axis you are talking about.', 'You can build any one-dimensional layout and explain which axis each property acts on.', 'violet'
+from public.courses c where c.slug = 'css-architect'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, NULL, 'css-level-4-milestone', 'milestone'::public.assessment_kind, 'Level 4 milestone: Flexbox', 'Six questions on axes, alignment and flexible sizing. Pass mark 75%.',
+       0.75, 180, 4
+from public.levels l where l.slug = 'css-flexbox'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+
+-- module: Flexbox
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'css-flex', 1, 'Flexbox', 'Axes, alignment, and the flex shorthand that decides how space is shared.',
+       60, false
+from public.levels l where l.slug = 'css-flexbox'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'css-flex' and p.slug = 'css-flow';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'css-flex' and s.slug = 'flexbox';
+
+-- lesson: The two axes
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-flex-axes', 1, 'The two axes', 'Why `justify-content` sometimes moves things vertically', 'One property decides what every other flexbox property means. Get it clear once and the rest stops being guesswork.',
+       ARRAY['Identify the main and cross axis for any flex container', 'Choose between `justify-content` and `align-items` correctly', 'Explain why the axes swap with `flex-direction`']::text[], 16, 40, (select id from public.skills where slug = 'flexbox'), 0.7
+from public.modules m where m.slug = 'css-flex'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A flex container has `flex-direction: column`. Which property now centres its children **vertically**?',
+       NULL, NULL, NULL, '{"options":["`justify-content`","`align-items`","`text-align`","`vertical-align`"],"answer":"`justify-content`. This is the single most useful fact in flexbox and the one that trips up nearly everyone. `justify-content` always works along the **main** axis and `align-items` always works along the **cross** axis — and `flex-direction: column` makes the main axis vertical. The properties did not change meaning; the axes rotated underneath them."}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Name the main and cross axis given a `flex-direction`","Apply `justify-content` and `align-items` to the correct axis","Predict what happens when the direction changes"]}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, NULL, 'Flexbox lays out children along one axis. Everything follows from which axis that is — which is why the first thing to establish about any flex container is its direction.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'term'::public.block_type, 'Main axis', 'The direction children are laid out in, set by `flex-direction`. `row` (the default) means horizontal; `column` means vertical.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'term'::public.block_type, 'Cross axis', 'The axis at right angles to the main axis. It is whatever the main axis is not.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'code_example'::public.block_type, 'The whole model on one screen', NULL,
+       'flex-direction: row      main = horizontal, cross = vertical
+flex-direction: column   main = vertical,   cross = horizontal
+
+justify-content   always the MAIN axis
+align-items       always the CROSS axis
+align-content     the cross axis, when lines have wrapped
+gap               space between items, both axes
+
+So: to centre a box in the middle of its container,
+  display: flex;
+  justify-content: center;   /* main  */
+  align-items: center;       /* cross */
+and it works whichever direction you chose.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'interactive_demo'::public.block_type, 'The same two properties, two directions', 'Identical CSS apart from `flex-direction`.',
+       NULL, NULL, NULL, '{"variants":[{"label":"row","code":"<style>\n  .box { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 0.5rem; height: 8rem; border: 1px solid teal; }\n  .box > div { background: #cde; padding: 0.5rem; }\n</style>\n<div class=\"box\"><div>A</div><div>B</div><div>C</div></div>","note":"Main axis is horizontal, so `justify-content: center` groups them across the middle. `align-items: flex-start` pins them to the top."},{"label":"column","code":"<style>\n  .box { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 0.5rem; height: 8rem; border: 1px solid teal; }\n  .box > div { background: #cde; padding: 0.5rem; }\n</style>\n<div class=\"box\"><div>A</div><div>B</div><div>C</div></div>","note":"Identical declarations. The axes rotated, so `justify-content` now centres vertically and `align-items` pins them left."},{"label":"Centred both ways","code":"<style>\n  .box { display: flex; justify-content: center; align-items: center; height: 8rem; border: 1px solid teal; }\n  .box > div { background: #cde; padding: 0.5rem; }\n</style>\n<div class=\"box\"><div>Centred</div></div>","note":"The two-line answer to a problem that took the whole industry a decade to solve properly."}]}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'callout'::public.block_type, 'Use `gap`, not margins', '`gap` puts space *between* items and none on the outside, so you never need the `:last-child { margin-right: 0 }` that margin-based spacing always ends up needing. It works in flexbox and grid alike, and margins do not collapse inside a flex container anyway.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'predict_check'::public.block_type, 'Predict, then check', 'Two children with very different amounts of content, in a plain flex row with no other properties. Before you check: are the two boxes the same height, or does each fit its own content?',
+       '<style>
+  .row { display: flex; }
+  .row > div { background: #cde; padding: 0.5rem; }
+</style>
+<div class="row">
+  <div>Short</div>
+  <div>A much longer piece of content here</div>
+</div>', 'html', NULL, '{"outcome":"They are the **same height** — both stretch to match the taller one. `align-items` defaults to `stretch`, so children fill the cross axis unless told otherwise. This is why flexbox gives equal-height columns for free, which was genuinely hard before it existed. If you want each box to fit its own content instead, that is `align-items: flex-start`."}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'self_explain'::public.block_type, 'Explain it in your own words', 'A colleague says they can never remember whether to use `justify-content` or `align-items`, so they try one and then the other. Write them a rule they can actually hold in their head.',
+       NULL, NULL, NULL, '{"modelAnswer":"The rule is: `justify-content` is always the main axis, `align-items` is always the cross axis — and the main axis is whichever way `flex-direction` points. So the question is never \"which property centres vertically\", because that has no fixed answer; it is \"which axis am I talking about, and which way is my main axis pointing\". Once the direction is established the property follows without a guess. Trying one and then the other works often enough to feel fine and stops working the moment the direction changes, which is why it never becomes fluent."}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'checklist'::public.block_type, 'For any flex container, establish in this order', NULL,
+       NULL, NULL, NULL, '{"items":["What is the `flex-direction`? That fixes the main axis.","The cross axis is the other one.","`justify-content` distributes along the main axis.","`align-items` aligns along the cross axis.","`gap` spaces between items on both."]}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["`flex-direction` decides the main axis; the cross axis is the other one.","`justify-content` always acts on the main axis, `align-items` on the cross axis.","Children stretch on the cross axis by default, giving equal heights for free.","`gap` spaces items without the last-child margin problem."],"nextUp":"Next: how space is shared out."}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 13, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["With `flex-direction: column`, which property centres children vertically?","Why do two flex children end up the same height by default?","Why prefer `gap` over margins between flex items?"],"points":["`justify-content`, because column makes the main axis vertical and `justify-content` always acts on the main axis.","Because `align-items` defaults to `stretch`, so children fill the cross axis. Setting `align-items: flex-start` makes each fit its own content instead.","`gap` puts space only *between* items, so there is no trailing space to undo with a `:last-child` rule — and margins do not collapse inside a flex container anyway."]}'::jsonb
+from public.lessons where slug = 'css-flex-axes';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-flex-centre-guided', 1, 'guided'::public.exercise_kind, 'Centre a box, both ways',
+       'Make `.frame` a flex container 12rem tall and centre its single child both horizontally and vertically.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Flexbox</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .frame { height: 12rem; border: 1px solid teal; }
+      .frame > div { background: #cde; padding: 0.5rem; }
+    </style>
+  </head>
+  <body>
+    <div class="frame"><div>Centred</div></div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Flexbox</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .frame {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 12rem;
+        border: 1px solid teal;
+      }
+      .frame > div { background: #cde; padding: 0.5rem; }
+    </style>
+  </head>
+  <body>
+    <div class="frame"><div>Centred</div></div>
+  </body>
+</html>', ARRAY['The container needs display: flex before anything else applies.', 'justify-content works on the main axis, which is horizontal by default.', 'align-items works on the cross axis, which is vertical by default.']::text[],
+       40, 2,
+       (select id from public.skills where slug = 'flexbox'), false
+from public.lessons l where l.slug = 'css-flex-axes'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.frame', 'display',
+       'flex', NULL, NULL, NULL,
+       'The frame is a flex container', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-centre-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.frame', 'justify-content',
+       'center', NULL, NULL, NULL,
+       'Children are centred on the main axis', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-centre-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.frame', 'align-items',
+       'center', NULL, NULL, NULL,
+       'Children are centred on the cross axis', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-centre-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, '.frame', 'height',
+       '12rem', NULL, NULL, NULL,
+       'The frame is still 12rem tall', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-centre-guided';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-flex-axis-debug', 2, 'debug'::public.exercise_kind, 'The axes are the wrong way round',
+       'This column of cards should be centred horizontally and start at the top. The author swapped the two alignment properties. Fix it, keeping `flex-direction: column`, and use `gap` of `1rem` rather than margins.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Flexbox</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        height: 20rem;
+        border: 1px solid teal;
+      }
+      .stack > div { background: #cde; padding: 0.5rem; margin-bottom: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="stack">
+      <div>Sourdough</div>
+      <div>Rye</div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Flexbox</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 1rem;
+        height: 20rem;
+        border: 1px solid teal;
+      }
+      .stack > div { background: #cde; padding: 0.5rem; }
+    </style>
+  </head>
+  <body>
+    <div class="stack">
+      <div>Sourdough</div>
+      <div>Rye</div>
+    </div>
+  </body>
+</html>', ARRAY['With column, the main axis is vertical — so justify-content controls top-to-bottom.', '"Start at the top" is justify-content: flex-start.', '"Centred horizontally" on a column is align-items: center.', 'Replace the child margin-bottom with gap on the container.']::text[],
+       50, 3,
+       (select id from public.skills where slug = 'flexbox'), false
+from public.lessons l where l.slug = 'css-flex-axes'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.stack', 'flex-direction',
+       'column', NULL, NULL, NULL,
+       'The direction is unchanged', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-axis-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.stack', 'justify-content',
+       'flex-start', NULL, NULL, NULL,
+       'Items start at the top of the main axis', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-axis-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.stack', 'align-items',
+       'center', NULL, NULL, NULL,
+       'Items are centred on the cross axis', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-axis-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, '.stack', 'gap',
+       '1rem', NULL, NULL, NULL,
+       'Spacing uses gap', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-axis-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-flex-axes'), NULL, 'q-css-justify-axis', 1, 'single'::public.question_kind,
+        'Which axis does `justify-content` act on?', 'Always the main axis, whichever way `flex-direction` points it.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The main axis, always', true, NULL
+from public.quiz_questions where slug = 'q-css-justify-axis';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The horizontal axis, always', false, NULL
+from public.quiz_questions where slug = 'q-css-justify-axis';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The cross axis', false, NULL
+from public.quiz_questions where slug = 'q-css-justify-axis';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Whichever axis is longer', false, NULL
+from public.quiz_questions where slug = 'q-css-justify-axis';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-flex-axes'), NULL, 'q-css-align-items-default', 2, 'single'::public.question_kind,
+        'What is the default value of `align-items`?', '`stretch`, which is why flex children end up the same height by default.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`flex-start`', false, NULL
+from public.quiz_questions where slug = 'q-css-align-items-default';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`baseline`', false, NULL
+from public.quiz_questions where slug = 'q-css-align-items-default';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`stretch`', true, NULL
+from public.quiz_questions where slug = 'q-css-align-items-default';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`center`', false, NULL
+from public.quiz_questions where slug = 'q-css-align-items-default';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-flex-axes'), NULL, 'q-css-gap-benefit', 3, 'single'::public.question_kind,
+        'What does `gap` do that margins between items do not?', 'It puts space only between items, with none on the outside — so no last-child correction is needed.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Collapses like vertical margins', false, NULL
+from public.quiz_questions where slug = 'q-css-gap-benefit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Applies to the container padding', false, NULL
+from public.quiz_questions where slug = 'q-css-gap-benefit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Adds space only between items, never on the outside', true, NULL
+from public.quiz_questions where slug = 'q-css-gap-benefit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Works only in grid', false, NULL
+from public.quiz_questions where slug = 'q-css-gap-benefit';
+
+-- lesson: Sharing out space
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-flex-sizing', 2, 'Sharing out space', '`flex-grow`, `flex-shrink`, `flex-basis` — and the shorthand you should actually write', 'Three properties decide how leftover space is divided and how overflow is absorbed. One shorthand covers almost every real case.',
+       ARRAY['Explain what `flex: 1` expands to', 'Choose a `flex-basis` deliberately', 'Use `flex-wrap` to build a responsive row with no media query']::text[], 17, 40, (select id from public.skills where slug = 'flexbox'), 0.7
+from public.modules m where m.slug = 'css-flex'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'Three flex children all have `flex: 1`, but one contains far more text than the others. Are they the same width?',
+       NULL, NULL, NULL, '{"options":["Yes — `flex: 1` sets `flex-basis: 0`, so content size is ignored","No — the one with more content is wider","Only if you also set `width`","Only in a row, not a column"],"answer":"Yes, they are equal. `flex: 1` is shorthand for `flex: 1 1 0%` — and that `0%` basis is the important part: it tells flexbox to start from zero rather than from the content size, so all the space is distributed equally. The near-identical `flex: auto` means `flex: 1 1 auto`, which *does* start from content size and gives unequal widths. That one character is the difference between \"equal columns\" and \"proportional columns\", and it explains most surprises here."}'::jsonb
+from public.lessons where slug = 'css-flex-sizing';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Expand the `flex` shorthand correctly","Choose between `flex: 1` and `flex: auto`","Build a wrapping row that needs no breakpoint"]}'::jsonb
+from public.lessons where slug = 'css-flex-sizing';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'code_example'::public.block_type, 'The flex shorthand', NULL,
+       'flex: <grow> <shrink> <basis>
+
+flex: 1        =  1 1 0%     equal shares, ignore content size
+flex: auto     =  1 1 auto   share space, but start from content
+flex: none     =  0 0 auto   do not grow, do not shrink
+flex: 0 1 auto              the default: shrink if needed, never grow
+
+grow    how much of the LEFTOVER space this item takes
+shrink  how much this item gives up when there is not enough
+basis   the size to start from before growing or shrinking', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-flex-sizing';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'worked_example'::public.block_type, 'A sidebar that stays put and a main column that fills', 'The most common two-column layout in existence, and why each value is what it is.',
+       NULL, NULL, NULL, '{"steps":[{"title":"Make the container a row","code":".layout { display: flex; gap: 1rem; }","reasoning":"Row is the default direction, so the main axis is horizontal and space will be shared left to right. `gap` handles the space between without touching either child."},{"title":"Fix the sidebar","code":".sidebar { flex: 0 0 16rem; }","reasoning":"Grow 0 so it never takes leftover space; shrink 0 so it never gives any up; basis 16rem so that is its size. This is the honest way to say \"exactly this wide, always\" — more reliable than `width` alone, because `width` would still allow shrinking."},{"title":"Let the main column take the rest","code":".main { flex: 1; }","reasoning":"Grow 1 from a basis of 0 means \"take all the leftover space\". It does not need to know how wide the sidebar is, which is what makes the layout survive the sidebar changing."},{"title":"Guard against the content that will not fit","code":".main { flex: 1; min-width: 0; }","reasoning":"The line nobody expects. A flex item will not shrink below its content''s minimum size by default, so one long unbroken string — a URL, a code sample — pushes the whole layout wider than its container. `min-width: 0` allows it to shrink properly. This is the single most common flexbox overflow bug."}]}'::jsonb
+from public.lessons where slug = 'css-flex-sizing';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'interactive_demo'::public.block_type, 'The same row, three flex values', 'Three children, different amounts of text.',
+       NULL, NULL, NULL, '{"variants":[{"label":"flex: 1 — equal","code":"<style>\n  .row { display: flex; gap: 0.5rem; }\n  .row > div { flex: 1; background: #cde; padding: 0.5rem; }\n</style>\n<div class=\"row\"><div>A</div><div>Rather more content here</div><div>B</div></div>","note":"Basis of 0 means content size is ignored entirely. Three equal columns."},{"label":"flex: auto — proportional","code":"<style>\n  .row { display: flex; gap: 0.5rem; }\n  .row > div { flex: auto; background: #cde; padding: 0.5rem; }\n</style>\n<div class=\"row\"><div>A</div><div>Rather more content here</div><div>B</div></div>","note":"Basis of auto starts from content size, so the wordy one keeps its head start and stays wider."},{"label":"Fixed plus fill","code":"<style>\n  .row { display: flex; gap: 0.5rem; }\n  .side { flex: 0 0 8rem; background: #dcd; padding: 0.5rem; }\n  .main { flex: 1; min-width: 0; background: #cde; padding: 0.5rem; }\n</style>\n<div class=\"row\"><div class=\"side\">Sidebar</div><div class=\"main\">Main content takes whatever is left.</div></div>","note":"The sidebar is exactly 8rem and refuses to shrink; the main column absorbs everything else."}]}'::jsonb
+from public.lessons where slug = 'css-flex-sizing';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'term'::public.block_type, '`flex-wrap`', 'Whether items may move onto a new line when they do not fit. `nowrap` is the default and is why a flex row can overflow.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-flex-sizing';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'callout'::public.block_type, 'A responsive card row with no media query', 'Give the container `flex-wrap: wrap` and each card `flex: 1 1 16rem`. Each card wants to be 16rem, will grow to fill leftover space, and will wrap to a new line when there is not room for another. The number of columns changes with the available width, and you have not written a single breakpoint — which means it also works inside a narrow sidebar, where a viewport-based media query would be wrong.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-flex-sizing';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'progressive_detail'::public.block_type, 'Why `min-width: 0` keeps appearing', 'A flex item''s default minimum size is `auto`, which means "at least as big as my content needs". For most content that is sensible. For a long URL, a `<pre>` block, or a table, it means the item refuses to shrink and pushes the layout wider than the screen. `min-width: 0` on a row item — or `min-height: 0` on a column item — opts out of that floor. If a flex layout overflows and you cannot see why, this is the first thing to try.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-flex-sizing';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["`flex: 1` is `1 1 0%` — equal shares, ignoring content size.","`flex: auto` is `1 1 auto` — proportional, starting from content size.","`flex: 0 0 <size>` is how you say \"exactly this wide, always\".","`flex-wrap: wrap` with a basis gives responsive columns without a media query."],"nextUp":"Next: the Level 4 milestone."}'::jsonb
+from public.lessons where slug = 'css-flex-sizing';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What does `flex: 1` expand to, and why does the basis matter?","How do you make an item exactly 16rem and refuse to shrink?","What does `min-width: 0` fix, and why is it needed?"],"points":["`flex: 1 1 0%`. The `0%` basis means the item starts from zero rather than its content size, so leftover space is shared equally and all items end up the same width.","`flex: 0 0 16rem` — never grow, never shrink, start at 16rem.","A flex item will not shrink below its content''s minimum size by default, so one long unbroken string pushes the layout wider than its container. `min-width: 0` removes that floor."]}'::jsonb
+from public.lessons where slug = 'css-flex-sizing';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-flex-sidebar-guided', 1, 'guided'::public.exercise_kind, 'A fixed sidebar and a filling main column',
+       'Make `.layout` a flex row with a `1rem` gap. The `.sidebar` must be exactly `16rem` and never grow or shrink. The `.main` column takes all remaining space and can shrink below its content when it has to.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Flex layout</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .layout { border: 1px solid teal; }
+      .sidebar { background: #dcd; padding: 1rem; }
+      .main { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="sidebar">Routes</div>
+      <div class="main">Hire a bike by the hour, the day or the week.</div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Flex layout</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .layout { display: flex; gap: 1rem; border: 1px solid teal; }
+      .sidebar { flex: 0 0 16rem; background: #dcd; padding: 1rem; }
+      .main { flex: 1; min-width: 0; background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="sidebar">Routes</div>
+      <div class="main">Hire a bike by the hour, the day or the week.</div>
+    </div>
+  </body>
+</html>', ARRAY['The container needs display: flex and gap: 1rem.', '"Exactly this wide, never changes" is flex: 0 0 16rem.', '"Take everything else" is flex: 1.', 'Add min-width: 0 so long content cannot push the layout wider.']::text[],
+       50, 3,
+       (select id from public.skills where slug = 'flexbox'), false
+from public.lessons l where l.slug = 'css-flex-sizing'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.layout', 'display',
+       'flex', NULL, NULL, NULL,
+       'The layout is a flex row', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-sidebar-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.layout', 'gap',
+       '1rem', NULL, NULL, NULL,
+       'There is a 1rem gap', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-sidebar-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value_matches'::public.requirement_kind, '.sidebar', 'flex',
+       '0\s+0\s+16rem', NULL, NULL, NULL,
+       'The sidebar is fixed at 16rem', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-sidebar-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value_matches'::public.requirement_kind, '.main', 'flex',
+       '^1$|1\s+1\s+0', NULL, NULL, NULL,
+       'The main column fills the rest', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-sidebar-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value'::public.requirement_kind, '.main', 'min-width',
+       '0', NULL, NULL, NULL,
+       'The main column can shrink below its content', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-sidebar-guided';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-flex-wrap-debug', 2, 'debug'::public.exercise_kind, 'A card row that overflows',
+       'These cards run off the side of the page instead of wrapping. Add wrapping, give each card a `flex` of `1 1 16rem` so it has a sensible target width, and use a `1rem` gap instead of the child margins.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Cards</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .cards { display: flex; border: 1px solid teal; }
+      .cards > div {
+        width: 16rem;
+        margin-right: 1rem;
+        background: #cde;
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cards">
+      <div>Sourdough</div>
+      <div>Rye</div>
+      <div>Seeded</div>
+      <div>Focaccia</div>
+      <div>Brioche</div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Cards</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .cards { display: flex; flex-wrap: wrap; gap: 1rem; border: 1px solid teal; }
+      .cards > div {
+        flex: 1 1 16rem;
+        background: #cde;
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cards">
+      <div>Sourdough</div>
+      <div>Rye</div>
+      <div>Seeded</div>
+      <div>Focaccia</div>
+      <div>Brioche</div>
+    </div>
+  </body>
+</html>', ARRAY['flex-wrap defaults to nowrap, which is why the row overflows.', 'Replace the fixed width with flex: 1 1 16rem — a target size that can flex.', 'Swap the child margin-right for gap on the container.']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'flexbox'), false
+from public.lessons l where l.slug = 'css-flex-sizing'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.cards', 'flex-wrap',
+       'wrap', NULL, NULL, NULL,
+       'The row wraps', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-wrap-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.cards', 'gap',
+       '1rem', NULL, NULL, NULL,
+       'Spacing uses gap', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-wrap-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value_matches'::public.requirement_kind, '.cards > div', 'flex',
+       '1\s+1\s+16rem', NULL, NULL, NULL,
+       'Cards have a flexible 16rem basis', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-wrap-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-flex-sizing'), NULL, 'q-css-flex-1-expands', 1, 'single'::public.question_kind,
+        'What does `flex: 1` expand to?', '`flex: 1 1 0%` — grow, shrink, and start from a basis of zero.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`0 1 auto`', false, NULL
+from public.quiz_questions where slug = 'q-css-flex-1-expands';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`1 1 0%`', true, NULL
+from public.quiz_questions where slug = 'q-css-flex-1-expands';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`1 1 auto`', false, NULL
+from public.quiz_questions where slug = 'q-css-flex-1-expands';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`1 0 auto`', false, NULL
+from public.quiz_questions where slug = 'q-css-flex-1-expands';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-flex-sizing'), NULL, 'q-css-flex-auto-vs-1', 2, 'single'::public.question_kind,
+        'Why do `flex: 1` and `flex: auto` produce different widths?', 'Their bases differ: `1` starts from `0%` so content is ignored; `auto` starts from the content size.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`flex: auto` does not allow growing', false, NULL
+from public.quiz_questions where slug = 'q-css-flex-auto-vs-1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'They are identical', false, NULL
+from public.quiz_questions where slug = 'q-css-flex-auto-vs-1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`flex: 1` only works in a column', false, NULL
+from public.quiz_questions where slug = 'q-css-flex-auto-vs-1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`flex: 1` starts from a 0 basis; `flex: auto` starts from content size', true, NULL
+from public.quiz_questions where slug = 'q-css-flex-auto-vs-1';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-flex-sizing'), NULL, 'q-css-min-width-zero', 3, 'single'::public.question_kind,
+        'A flex row overflows because one item contains a very long URL. What usually fixes it?', 'A flex item will not shrink below its content minimum by default. `min-width: 0` removes that floor.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`min-width: 0` on the flex item', true, NULL
+from public.quiz_questions where slug = 'q-css-min-width-zero';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`flex-wrap: nowrap`', false, NULL
+from public.quiz_questions where slug = 'q-css-min-width-zero';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`align-items: stretch`', false, NULL
+from public.quiz_questions where slug = 'q-css-min-width-zero';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Increasing the gap', false, NULL
+from public.quiz_questions where slug = 'q-css-min-width-zero';
+
+-- lesson: Milestone: build a page header
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-flex-milestone', 3, 'Milestone: build a page header', 'Logo left, navigation right, everything aligned', 'The layout every site needs, built with flexbox and no positioning tricks.',
+       ARRAY['Build a two-part header with flexbox', 'Space and align items on both axes', 'Make a card row wrap without a media query']::text[], 20, 40, (select id from public.skills where slug = 'flexbox'), 0.8
+from public.modules m where m.slug = 'css-flex'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Assemble a real header with flexbox","Use `space-between` and `align-items` correctly","Build a wrapping card row"]}'::jsonb
+from public.lessons where slug = 'css-flex-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'code_example'::public.block_type, 'Distributing along the main axis', NULL,
+       'justify-content values, on the main axis:
+
+flex-start      packed at the start
+flex-end        packed at the end
+center          packed in the middle
+space-between   first at the start, last at the end,
+                equal space between
+space-around    equal space around each item
+space-evenly    equal space everywhere, including the ends', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-flex-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'interactive_demo'::public.block_type, 'A header, three ways of distributing it', 'Same markup, three `justify-content` values.',
+       NULL, NULL, NULL, '{"variants":[{"label":"space-between","code":"<style>\n  .header { display: flex; justify-content: space-between; align-items: center; border: 1px solid teal; padding: 1rem; }\n  nav { display: flex; gap: 1rem; }\n</style>\n<div class=\"header\"><strong>Riverside</strong><nav><a href=\"#\">Home</a><a href=\"#\">Menu</a></nav></div>","note":"Logo pinned left, navigation pinned right. This is the header layout almost every site uses."},{"label":"center","code":"<style>\n  .header { display: flex; justify-content: center; align-items: center; gap: 2rem; border: 1px solid teal; padding: 1rem; }\n  nav { display: flex; gap: 1rem; }\n</style>\n<div class=\"header\"><strong>Riverside</strong><nav><a href=\"#\">Home</a><a href=\"#\">Menu</a></nav></div>","note":"Both groups together in the middle. Correct for a centred brand, wrong if you wanted them apart."},{"label":"No alignment","code":"<style>\n  .header { display: flex; justify-content: space-between; align-items: flex-start; border: 1px solid crimson; padding: 1rem; }\n  nav { display: flex; gap: 1rem; }\n  strong { font-size: 2rem; }\n</style>\n<div class=\"header\"><strong>Riverside</strong><nav><a href=\"#\">Home</a><a href=\"#\">Menu</a></nav></div>","note":"With items of different heights and no cross-axis alignment, the links sit at the top rather than on the logo''s centre line."}]}'::jsonb
+from public.lessons where slug = 'css-flex-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'recall'::public.block_type, 'From memory', 'From memory: which axis does each of these act on, and what does each `flex` shorthand mean?',
+       NULL, NULL, NULL, '{"points":["`justify-content` — the main axis, whichever way `flex-direction` points it.","`align-items` — the cross axis, at right angles to the main axis.","`flex: 1` — `1 1 0%`: equal shares, content size ignored.","`flex: auto` — `1 1 auto`: proportional, starting from content size.","`flex: 0 0 16rem` — exactly 16rem, never grows, never shrinks.","`min-width: 0` — lets an item shrink below its content minimum, fixing most overflow."]}'::jsonb
+from public.lessons where slug = 'css-flex-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["`space-between` with `align-items: center` is the standard header.","`flex: 1 1 <basis>` with `flex-wrap: wrap` gives responsive columns with no breakpoint.","Nested flex containers are normal — a header is usually a flex row containing a flex nav."],"nextUp":"Next: Grid."}'::jsonb
+from public.lessons where slug = 'css-flex-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why is `flex-wrap: wrap` with a basis better than a media query for a card row?"],"points":["Because it responds to the space actually available rather than to the viewport width. The same component then works in a full-width page, in a narrow sidebar, and inside another layout — where a viewport-based breakpoint would give the wrong answer in at least two of those. It is also less code and has no numbers to keep in sync."]}'::jsonb
+from public.lessons where slug = 'css-flex-milestone';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-flex-milestone-challenge', 1, 'challenge'::public.exercise_kind, 'Build the header and a wrapping card row',
+       'Two jobs. Make `.header` a flex row with the logo pinned left, the nav pinned right, and both vertically centred. Make `.nav` itself a flex row with a `1rem` gap. Then make `.cards` a wrapping flex row with a `1rem` gap where each card is `flex: 1 1 16rem`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Header</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .header { border: 1px solid teal; padding: 1rem; }
+      .cards { border: 1px solid teal; padding: 1rem; }
+      .cards > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <strong>Riverside</strong>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="menu.html">Menu</a>
+      </nav>
+    </header>
+    <div class="cards">
+      <div>Sourdough</div>
+      <div>Rye</div>
+      <div>Seeded</div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Header</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid teal;
+        padding: 1rem;
+      }
+      .nav { display: flex; gap: 1rem; }
+
+      .cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        border: 1px solid teal;
+        padding: 1rem;
+      }
+      .cards > div { flex: 1 1 16rem; background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <strong>Riverside</strong>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="menu.html">Menu</a>
+      </nav>
+    </header>
+    <div class="cards">
+      <div>Sourdough</div>
+      <div>Rye</div>
+      <div>Seeded</div>
+    </div>
+  </body>
+</html>', ARRAY['Pinning one item left and one right is justify-content: space-between.', 'Vertically centring on a row is align-items: center.', 'The nav is itself a flex container, with gap for the link spacing.', 'The card row needs flex-wrap: wrap and each card flex: 1 1 16rem.']::text[],
+       70, 4,
+       (select id from public.skills where slug = 'flexbox'), false
+from public.lessons l where l.slug = 'css-flex-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.header', 'display',
+       'flex', NULL, NULL, NULL,
+       'The header is a flex row', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.header', 'justify-content',
+       'space-between', NULL, NULL, NULL,
+       'Logo and nav are pushed apart', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.header', 'align-items',
+       'center', NULL, NULL, NULL,
+       'They are vertically centred', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, '.nav', 'display',
+       'flex', NULL, NULL, NULL,
+       'The nav is a flex row', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value'::public.requirement_kind, '.nav', 'gap',
+       '1rem', NULL, NULL, NULL,
+       'The nav links are spaced with gap', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'css_value'::public.requirement_kind, '.cards', 'flex-wrap',
+       'wrap', NULL, NULL, NULL,
+       'The card row wraps', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 7, 'css_value_matches'::public.requirement_kind, '.cards > div', 'flex',
+       '1\s+1\s+16rem', NULL, NULL, NULL,
+       'Cards use a flexible 16rem basis', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-flex-milestone-challenge';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-flex-milestone'), NULL, 'q-css-space-between', 1, 'single'::public.question_kind,
+        'What does `justify-content: space-between` do with two items?', 'Pins the first to the start and the last to the end, with all the space between them.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Adds equal space including at the ends', false, NULL
+from public.quiz_questions where slug = 'q-css-space-between';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Pins one to each end', true, NULL
+from public.quiz_questions where slug = 'q-css-space-between';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Centres both with equal space around', false, NULL
+from public.quiz_questions where slug = 'q-css-space-between';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Stacks them vertically', false, NULL
+from public.quiz_questions where slug = 'q-css-space-between';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-flex-milestone'), NULL, 'q-css-nested-flex', 2, 'single'::public.question_kind,
+        'Can a flex item itself be a flex container?', 'Yes, and it is normal — a header is usually a flex row whose nav child is another flex row.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'No, flex containers cannot nest', false, NULL
+from public.quiz_questions where slug = 'q-css-nested-flex';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Only if the directions differ', false, NULL
+from public.quiz_questions where slug = 'q-css-nested-flex';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Only with `display: inline-flex`', false, NULL
+from public.quiz_questions where slug = 'q-css-nested-flex';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Yes, and it is a common pattern', true, NULL
+from public.quiz_questions where slug = 'q-css-nested-flex';
+
+-- Level 4 milestone: Flexbox questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-4-milestone'), 'a-css-4-axes-swap', 1, 'single'::public.question_kind,
+        'With `flex-direction: column`, `align-items: center` aligns items how?', 'On the cross axis, which is now horizontal — so it centres them left to right.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Horizontally', true, NULL
+from public.quiz_questions where slug = 'a-css-4-axes-swap';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Vertically', false, NULL
+from public.quiz_questions where slug = 'a-css-4-axes-swap';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Both ways', false, NULL
+from public.quiz_questions where slug = 'a-css-4-axes-swap';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Not at all', false, NULL
+from public.quiz_questions where slug = 'a-css-4-axes-swap';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-4-milestone'), 'a-css-4-equal-columns', 2, 'single'::public.question_kind,
+        'Which makes three flex children exactly equal in width regardless of content?', '`flex: 1` uses a basis of 0, so content size is ignored.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`flex: auto`', false, NULL
+from public.quiz_questions where slug = 'a-css-4-equal-columns';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`flex: none`', false, NULL
+from public.quiz_questions where slug = 'a-css-4-equal-columns';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`align-items: stretch`', false, NULL
+from public.quiz_questions where slug = 'a-css-4-equal-columns';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`flex: 1`', true, NULL
+from public.quiz_questions where slug = 'a-css-4-equal-columns';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-4-milestone'), 'a-css-4-fixed-item', 3, 'single'::public.question_kind,
+        'How do you make a sidebar exactly 16rem and stop it shrinking?', 'Grow 0, shrink 0, basis 16rem.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`flex-basis: 16rem`', false, NULL
+from public.quiz_questions where slug = 'a-css-4-fixed-item';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`flex: 0 0 16rem`', true, NULL
+from public.quiz_questions where slug = 'a-css-4-fixed-item';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`flex: 1 1 16rem`', false, NULL
+from public.quiz_questions where slug = 'a-css-4-fixed-item';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`width: 16rem`', false, NULL
+from public.quiz_questions where slug = 'a-css-4-fixed-item';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-4-milestone'), 'a-css-4-wrap-default', 4, 'single'::public.question_kind,
+        'What is the default value of `flex-wrap`?', '`nowrap`, which is why a flex row can overflow its container.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`wrap`', false, NULL
+from public.quiz_questions where slug = 'a-css-4-wrap-default';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`wrap-reverse`', false, NULL
+from public.quiz_questions where slug = 'a-css-4-wrap-default';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It depends on the direction', false, NULL
+from public.quiz_questions where slug = 'a-css-4-wrap-default';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`nowrap`', true, NULL
+from public.quiz_questions where slug = 'a-css-4-wrap-default';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-4-milestone'), 'a-css-4-equal-heights', 5, 'single'::public.question_kind,
+        'Why do flex children end up the same height without any extra CSS?', '`align-items` defaults to `stretch`, filling the cross axis.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`align-items` defaults to `stretch`', true, NULL
+from public.quiz_questions where slug = 'a-css-4-equal-heights';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Because of `justify-content`', false, NULL
+from public.quiz_questions where slug = 'a-css-4-equal-heights';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Flexbox forces equal heights always', false, NULL
+from public.quiz_questions where slug = 'a-css-4-equal-heights';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Because of `gap`', false, NULL
+from public.quiz_questions where slug = 'a-css-4-equal-heights';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-4-milestone'), 'a-css-4-overflow-cause', 6, 'single'::public.question_kind,
+        'What is the usual cause of a flex layout overflowing horizontally?', 'A flex item will not shrink below its content minimum size unless `min-width: 0` allows it.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'A gap that is too large', false, NULL
+from public.quiz_questions where slug = 'a-css-4-overflow-cause';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`align-items: center`', false, NULL
+from public.quiz_questions where slug = 'a-css-4-overflow-cause';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Too many children', false, NULL
+from public.quiz_questions where slug = 'a-css-4-overflow-cause';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'An item refusing to shrink below its content minimum', true, NULL
+from public.quiz_questions where slug = 'a-css-4-overflow-cause';
+
+-- --------------------------------------------------------------------------
+-- CSS Architect — Level 5: Grid
+-- --------------------------------------------------------------------------
+
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'css-grid', 5, 'Grid', 'Two dimensions, named areas, and layouts that need no breakpoints',
+       'Grid lays out rows and columns at once. It also contains the single most useful line in modern CSS — a responsive layout in one declaration, with no media query at all.', 'You can build any two-dimensional layout and make it responsive without a breakpoint.', 'violet'
+from public.courses c where c.slug = 'css-architect'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, NULL, 'css-level-5-milestone', 'milestone'::public.assessment_kind, 'Level 5 milestone: Grid', 'Six questions on tracks, areas and responsive grids. Pass mark 75%.',
+       0.75, 180, 5
+from public.levels l where l.slug = 'css-grid'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+
+-- module: Grid
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'css-grid-module', 1, 'Grid', 'Tracks, the fr unit, named areas, and intrinsically responsive layouts.',
+       60, false
+from public.levels l where l.slug = 'css-grid'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'css-grid-module' and p.slug = 'css-flex';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'css-grid-module' and s.slug = 'grid';
+
+-- lesson: Tracks and the `fr` unit
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-grid-tracks', 1, 'Tracks and the `fr` unit', 'Defining columns, and the unit that only exists in grid', 'A grid is columns and rows you declare up front. One new unit does most of the work.',
+       ARRAY['Define explicit columns and rows', 'Explain what `fr` measures', 'Use `gap` and `repeat()`']::text[], 16, 40, (select id from public.skills where slug = 'grid'), 0.7
+from public.modules m where m.slug = 'css-grid-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A grid has `grid-template-columns: 200px 1fr 1fr` and a `2rem` gap. The container is 1000px wide. How wide is each `1fr` column?',
+       NULL, NULL, NULL, '{"options":["About 368px — the gap is subtracted first, then the rest is split","400px — half of the remaining 800px","333px — a third of 1000px","266px — a third of the remaining 800px"],"answer":"About 368px. `fr` distributes what is *left over* after fixed tracks and every gap have been taken out: 1000 − 200 (the fixed column) − 64 (two 2rem gaps) = 736, split in two. This is why `fr` behaves so well in practice — it never causes the overflow that percentages do, because percentages are computed before gaps are subtracted and then push the layout wider."}'::jsonb
+from public.lessons where slug = 'css-grid-tracks';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Declare explicit column and row tracks","Use `fr` to distribute leftover space","Shorten repeated tracks with `repeat()`"]}'::jsonb
+from public.lessons where slug = 'css-grid-tracks';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'term'::public.block_type, 'Track', 'A column or a row. `grid-template-columns` declares the column tracks; `grid-template-rows` declares the row tracks.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-grid-tracks';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'term'::public.block_type, '`fr`', 'A fraction of the *leftover* space, after fixed tracks and gaps are accounted for. It exists only in grid, and it is why grid layouts rarely overflow.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-grid-tracks';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'code_example'::public.block_type, 'Declaring a grid', NULL,
+       'display: grid;
+grid-template-columns: 200px 1fr 1fr;   three columns
+grid-template-columns: repeat(3, 1fr);  the same as 1fr 1fr 1fr
+grid-template-rows: auto 1fr auto;      header, filling body, footer
+gap: 1rem;                              between every track
+column-gap / row-gap                    if they differ
+
+Values a track can take:
+  200px, 20%      fixed
+  auto            as big as its content needs
+  1fr             a share of the leftover space
+  minmax(a, b)    at least a, at most b
+  min-content     the smallest it can be without overflowing
+  max-content     as wide as it wants to be', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-grid-tracks';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'interactive_demo'::public.block_type, 'The same six items, three track definitions', 'Only `grid-template-columns` changes.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Three equal columns","code":"<style>\n  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; border: 1px solid teal; padding: 0.5rem; }\n  .grid > div { background: #cde; padding: 0.5rem; }\n</style>\n<div class=\"grid\"><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div></div>","note":"Six items flow into three columns, creating two rows automatically. You never declared the rows."},{"label":"Sidebar and content","code":"<style>\n  .grid { display: grid; grid-template-columns: 12rem 1fr; gap: 0.5rem; border: 1px solid teal; padding: 0.5rem; }\n  .grid > div { background: #cde; padding: 0.5rem; }\n</style>\n<div class=\"grid\"><div>Nav</div><div>Content</div><div>Nav</div><div>Content</div></div>","note":"A fixed track and a filling one. The `1fr` takes whatever is left after the 12rem and the gap."},{"label":"Unequal fractions","code":"<style>\n  .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 0.5rem; border: 1px solid teal; padding: 0.5rem; }\n  .grid > div { background: #cde; padding: 0.5rem; }\n</style>\n<div class=\"grid\"><div>Two thirds</div><div>One third</div></div>","note":"`fr` values are relative to each other — 2fr and 1fr means two thirds and one third of the leftover space."}]}'::jsonb
+from public.lessons where slug = 'css-grid-tracks';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'term'::public.block_type, 'Implicit tracks', 'Rows (or columns) grid creates automatically for items beyond the tracks you declared. `grid-auto-rows` controls their size.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-grid-tracks';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'predict_check'::public.block_type, 'Predict, then check', 'Three columns are declared and five items are supplied. Before you check: what happens to items 4 and 5 — do they overflow, shrink, or something else?',
+       '<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+</style>
+<div class="grid">
+  <div>1</div><div>2</div><div>3</div>
+  <div>4</div><div>5</div>
+</div>', 'html', NULL, '{"outcome":"Grid creates a second row automatically and places them in the first two cells of it, leaving the third empty. These are **implicit** rows: you declared three columns and grid worked out how many rows it needed. This is the everyday behaviour that makes grid so comfortable for card layouts — you say how many columns you want and the number of rows takes care of itself. `grid-auto-rows` controls how tall those automatic rows are if the default of `auto` is not what you want."}'::jsonb
+from public.lessons where slug = 'css-grid-tracks';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'callout'::public.block_type, 'Prefer `fr` to percentages', 'Three columns of `33.33%` plus two `1rem` gaps overflows, because the percentages are computed from the full width and the gaps are then added on top. `repeat(3, 1fr)` cannot overflow, because `fr` is defined as a share of what is *left* after the gaps. The same argument applies to `minmax()` over fixed widths.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-grid-tracks';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["`display: grid` plus `grid-template-columns` defines the columns.","`fr` distributes leftover space after fixed tracks and gaps.","`repeat(n, …)` shortens repeated track definitions.","Items beyond the declared tracks create implicit rows automatically."],"nextUp":"Next: placing items, and responsive grids with no breakpoints."}'::jsonb
+from public.lessons where slug = 'css-grid-tracks';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What does `1fr` actually measure?","Why does `repeat(3, 1fr)` never overflow where `33.33%` does?","What happens to a seventh item in a three-column grid?"],"points":["A share of the space left over after fixed tracks and all gaps have been subtracted.","Because `fr` is defined *after* gaps are taken out, whereas percentages are computed from the full container width and the gaps are then added on top, pushing the total past 100%.","Grid creates an implicit third row and places it in the first cell. You declared columns; the rows follow automatically."]}'::jsonb
+from public.lessons where slug = 'css-grid-tracks';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-grid-tracks-guided', 1, 'guided'::public.exercise_kind, 'Three columns and a gap',
+       'Make `.grid` a three-column grid using `repeat()` and `fr`, with a `1rem` gap. Do not use percentages.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Grid</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .grid { border: 1px solid teal; padding: 1rem; }
+      .grid > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="grid">
+      <div>Sourdough</div>
+      <div>Rye</div>
+      <div>Seeded</div>
+      <div>Focaccia</div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Grid</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        border: 1px solid teal;
+        padding: 1rem;
+      }
+      .grid > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="grid">
+      <div>Sourdough</div>
+      <div>Rye</div>
+      <div>Seeded</div>
+      <div>Focaccia</div>
+    </div>
+  </body>
+</html>', ARRAY['display: grid comes first.', 'repeat(3, 1fr) is the same as writing 1fr 1fr 1fr.', 'gap applies between both rows and columns.']::text[],
+       40, 2,
+       (select id from public.skills where slug = 'grid'), false
+from public.lessons l where l.slug = 'css-grid-tracks'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.grid', 'display',
+       'grid', NULL, NULL, NULL,
+       'The container is a grid', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-tracks-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value_matches'::public.requirement_kind, '.grid', 'grid-template-columns',
+       'repeat\(3,\s*1fr\)', NULL, NULL, NULL,
+       'Three equal columns using repeat and fr', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-tracks-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.grid', 'gap',
+       '1rem', NULL, NULL, NULL,
+       'There is a 1rem gap', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-tracks-guided';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-grid-tracks'), NULL, 'q-css-fr-meaning', 1, 'single'::public.question_kind,
+        'What does `1fr` distribute?', 'The space left over after fixed tracks and all gaps are subtracted.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'A percentage of the container', false, NULL
+from public.quiz_questions where slug = 'q-css-fr-meaning';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The content width of the largest item', false, NULL
+from public.quiz_questions where slug = 'q-css-fr-meaning';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Leftover space, after fixed tracks and gaps', true, NULL
+from public.quiz_questions where slug = 'q-css-fr-meaning';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A fixed fraction of the viewport', false, NULL
+from public.quiz_questions where slug = 'q-css-fr-meaning';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-grid-tracks'), NULL, 'q-css-implicit-rows', 2, 'single'::public.question_kind,
+        'Five items in a grid with three declared columns. What happens?', 'Grid creates an implicit second row and places the remaining items in it.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The last two items are hidden', false, NULL
+from public.quiz_questions where slug = 'q-css-implicit-rows';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A second row is created automatically', true, NULL
+from public.quiz_questions where slug = 'q-css-implicit-rows';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The extra items overflow the container', false, NULL
+from public.quiz_questions where slug = 'q-css-implicit-rows';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The columns shrink to fit five items', false, NULL
+from public.quiz_questions where slug = 'q-css-implicit-rows';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-grid-tracks'), NULL, 'q-css-fr-vs-percent', 3, 'single'::public.question_kind,
+        'Why can three `33.33%` columns with gaps overflow when `repeat(3, 1fr)` cannot?', 'Percentages are computed from the full width and gaps are added on top; `fr` is a share of what remains after gaps.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Percentages ignore the gaps, which are then added on top', true, NULL
+from public.quiz_questions where slug = 'q-css-fr-vs-percent';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Percentages are not valid in grid', false, NULL
+from public.quiz_questions where slug = 'q-css-fr-vs-percent';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`fr` rounds down', false, NULL
+from public.quiz_questions where slug = 'q-css-fr-vs-percent';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Gaps only apply to `fr` tracks', false, NULL
+from public.quiz_questions where slug = 'q-css-fr-vs-percent';
+
+-- lesson: Named areas and responsive grids
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-grid-areas-and-auto-fit', 2, 'Named areas and responsive grids', 'Drawing a layout in the stylesheet, and the one line that replaces a breakpoint', 'Named areas let a layout be readable at a glance. `auto-fit` with `minmax()` makes it responsive without a single media query.',
+       ARRAY['Lay out a page with `grid-template-areas`', 'Explain what `auto-fit` and `minmax()` do together', 'Build a responsive grid with no breakpoints']::text[], 18, 40, (select id from public.skills where slug = 'grid'), 0.7
+from public.modules m where m.slug = 'css-grid-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'What does `grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr))` do?',
+       NULL, NULL, NULL, '{"options":["Fits as many columns of at least 16rem as will fit, and shares the rest between them","Creates exactly 16 columns","Makes every column exactly 16rem wide","Creates one column that is at least 16rem"],"answer":"It fits as many columns as will fit at a minimum of 16rem each, then stretches them to share the leftover space. The number of columns changes with the available width, and you have written **no media query at all** — the layout responds to the space it is actually in rather than to the viewport, so it also works correctly inside a sidebar. This one line is, in practice, the most useful declaration in modern CSS."}'::jsonb
+from public.lessons where slug = 'css-grid-areas-and-auto-fit';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Draw a layout with named grid areas","Combine `auto-fit` with `minmax()`","Explain why this beats a breakpoint"]}'::jsonb
+from public.lessons where slug = 'css-grid-areas-and-auto-fit';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, NULL, 'Grid can place items by name. You draw the layout as text in the stylesheet, and each item says which area it belongs to.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-grid-areas-and-auto-fit';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'code_example'::public.block_type, 'Named areas', NULL,
+       '.page {
+  display: grid;
+  grid-template-areas:
+    "header header"
+    "sidebar main"
+    "footer footer";
+  grid-template-columns: 12rem 1fr;
+  gap: 1rem;
+}
+
+.page > header  { grid-area: header;  }
+.page > .side   { grid-area: sidebar; }
+.page > main    { grid-area: main;    }
+.page > footer  { grid-area: footer;  }
+
+A full stop marks a deliberately empty cell:
+    "header header"
+    "sidebar ."', 'html', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-grid-areas-and-auto-fit';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, 'Named areas document themselves', 'The quoted rows are a picture of the layout. Somebody reading the stylesheet six months later can see the page shape without opening the browser — which is not true of `grid-column: 2 / 4`. Prefer areas for page-level layout, and line numbers for the occasional item that spans.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-grid-areas-and-auto-fit';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'worked_example'::public.block_type, 'A responsive card grid, without a single breakpoint', 'Building up the one declaration that does the whole job.',
+       NULL, NULL, NULL, '{"steps":[{"title":"Start with a fixed count","code":"grid-template-columns: repeat(3, 1fr);","reasoning":"Three equal columns. Correct on a laptop and unusable on a phone, where each column is about 100px wide."},{"title":"Give each column a minimum","code":"grid-template-columns: repeat(3, minmax(16rem, 1fr));","reasoning":"`minmax(16rem, 1fr)` means \"never narrower than 16rem, otherwise take a fair share\". But the count is still fixed at three, so on a narrow screen the grid now overflows instead of squashing. Worse, not better — yet."},{"title":"Let grid choose the count","code":"grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));","reasoning":"`auto-fit` replaces the fixed number with \"as many as will fit\". Grid works out how many 16rem columns the container can hold, creates that many, and the `1fr` stretches them to fill. One column on a phone, four on a wide screen, and nothing in the stylesheet mentions a device."},{"title":"Know the one difference from `auto-fill`","code":"repeat(auto-fill, minmax(16rem, 1fr))","reasoning":"`auto-fill` keeps the empty tracks it created; `auto-fit` collapses them. With three cards in a container wide enough for five, `auto-fill` leaves two empty columns and the cards stay narrow, while `auto-fit` collapses them so the three cards stretch across. For card layouts you almost always want `auto-fit`."}]}'::jsonb
+from public.lessons where slug = 'css-grid-areas-and-auto-fit';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'interactive_demo'::public.block_type, 'auto-fit in action', 'The same declaration, different container widths.',
+       NULL, NULL, NULL, '{"variants":[{"label":"The responsive grid","code":"<style>\n  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; border: 1px solid teal; padding: 1rem; }\n  .grid > div { background: #cde; padding: 1rem; }\n</style>\n<div class=\"grid\"><div>Sourdough</div><div>Rye</div><div>Seeded</div><div>Focaccia</div></div>","note":"Resize the preview. The number of columns changes on its own, and there is no media query anywhere."},{"label":"A named-area page","code":"<style>\n  .page { display: grid; grid-template-areas: \"header header\" \"side main\" \"footer footer\"; grid-template-columns: 8rem 1fr; gap: 0.5rem; border: 1px solid teal; padding: 0.5rem; }\n  .page > * { background: #cde; padding: 0.5rem; }\n  .h { grid-area: header } .s { grid-area: side } .m { grid-area: main } .f { grid-area: footer }\n</style>\n<div class=\"page\"><div class=\"h\">Header</div><div class=\"s\">Side</div><div class=\"m\">Main</div><div class=\"f\">Footer</div></div>","note":"The quoted rows in the CSS are a picture of what you see. Reordering the layout means editing that picture."}]}'::jsonb
+from public.lessons where slug = 'css-grid-areas-and-auto-fit';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'self_explain'::public.block_type, 'Explain it in your own words', 'A colleague says `repeat(auto-fit, minmax(16rem, 1fr))` is "just a shortcut for media queries". Write your reply, and be specific about a case where the two genuinely differ.',
+       NULL, NULL, NULL, '{"modelAnswer":"It is not a shortcut, it answers a different question. A media query asks how wide the *viewport* is; `auto-fit` asks how much room this *container* actually has. Those agree for a full-width grid and diverge the moment the component is reused. Drop the same card grid into a 20rem sidebar on a 1400px monitor and the media query says \"wide screen, four columns\" and produces four 5rem columns of unreadable text, while `auto-fit` correctly gives one. The same is true inside a modal, a split view, or another grid cell. It is also less code, has no magic numbers to keep in sync with the design, and cannot drift out of step with them."}'::jsonb
+from public.lessons where slug = 'css-grid-areas-and-auto-fit';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'progressive_detail'::public.block_type, 'Placing an item across tracks', '`grid-column: 1 / 3` places an item from line 1 to line 3 — remember lines are the edges, so that spans two columns. `grid-column: span 2` says the same thing relative to wherever the item lands. `grid-row` works identically for rows. Lines can be named too, but for page layout `grid-template-areas` is nearly always more readable.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-grid-areas-and-auto-fit';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'checklist'::public.block_type, 'Choosing between flexbox and grid', NULL,
+       NULL, NULL, NULL, '{"items":["One dimension — a row *or* a column — is flexbox","Two dimensions at once — rows *and* columns — is grid","Content decides the sizes: flexbox","The layout decides the sizes: grid","A wrapping card row works well in either; grid keeps the columns aligned"]}'::jsonb
+from public.lessons where slug = 'css-grid-areas-and-auto-fit';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["`grid-template-areas` draws the layout as readable text.","`repeat(auto-fit, minmax(X, 1fr))` is a responsive grid with no media query.","`auto-fit` collapses empty tracks; `auto-fill` keeps them.","Flexbox is one dimension, grid is two."],"nextUp":"Next: the Level 5 milestone."}'::jsonb
+from public.lessons where slug = 'css-grid-areas-and-auto-fit';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What does `repeat(auto-fit, minmax(16rem, 1fr))` do, in one sentence?","What is the difference between `auto-fit` and `auto-fill`?","Why does this beat a media query for a reusable component?"],"points":["Creates as many columns as fit at a minimum of 16rem, then stretches them to share the leftover space.","`auto-fill` keeps the empty tracks it created, so items stay narrow; `auto-fit` collapses them so the items stretch to fill.","Because it responds to the container''s width rather than the viewport''s. The same component then behaves correctly in a full-width page, a sidebar or a modal, where a viewport breakpoint would give the wrong answer."]}'::jsonb
+from public.lessons where slug = 'css-grid-areas-and-auto-fit';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-grid-responsive-guided', 1, 'guided'::public.exercise_kind, 'A responsive grid with no breakpoints',
+       'Make `.cards` a grid whose columns are at least `16rem` and as many as will fit, stretching to fill. Use a `1rem` gap. Do not write a media query.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Responsive grid</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .cards { border: 1px solid teal; padding: 1rem; }
+      .cards > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="cards">
+      <div>Sourdough</div>
+      <div>Rye</div>
+      <div>Seeded</div>
+      <div>Focaccia</div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Responsive grid</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        gap: 1rem;
+        border: 1px solid teal;
+        padding: 1rem;
+      }
+      .cards > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="cards">
+      <div>Sourdough</div>
+      <div>Rye</div>
+      <div>Seeded</div>
+      <div>Focaccia</div>
+    </div>
+  </body>
+</html>', ARRAY['The pattern is repeat(auto-fit, minmax(MIN, 1fr)).', 'auto-fit collapses empty tracks so the cards stretch.', 'No @media rule is needed anywhere.']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'grid'), false
+from public.lessons l where l.slug = 'css-grid-areas-and-auto-fit'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.cards', 'display',
+       'grid', NULL, NULL, NULL,
+       'The container is a grid', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-responsive-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value_matches'::public.requirement_kind, '.cards', 'grid-template-columns',
+       'repeat\(auto-fit,\s*minmax\(16rem,\s*1fr\)\)', NULL, NULL, NULL,
+       'Columns use auto-fit with a 16rem minimum', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-responsive-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.cards', 'gap',
+       '1rem', NULL, NULL, NULL,
+       'There is a 1rem gap', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-responsive-guided';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-grid-areas-debug', 2, 'debug'::public.exercise_kind, 'A page layout that will not assemble',
+       'The named areas are declared but the items do not use them, and the columns are percentages that overflow with the gap. Give each child the right `grid-area`, and replace the percentage columns with `12rem 1fr`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Page layout</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .page {
+        display: grid;
+        grid-template-areas:
+          "header header"
+          "side main"
+          "footer footer";
+        grid-template-columns: 30% 70%;
+        gap: 1rem;
+      }
+      .page > * { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">Riverside</header>
+      <aside class="site-side">Routes</aside>
+      <main class="site-main">Hire a bike by the hour.</main>
+      <footer class="site-footer">© 2026</footer>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Page layout</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .page {
+        display: grid;
+        grid-template-areas:
+          "header header"
+          "side main"
+          "footer footer";
+        grid-template-columns: 12rem 1fr;
+        gap: 1rem;
+      }
+      .page > * { background: #cde; padding: 1rem; }
+
+      .site-header { grid-area: header; }
+      .site-side   { grid-area: side; }
+      .site-main   { grid-area: main; }
+      .site-footer { grid-area: footer; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">Riverside</header>
+      <aside class="site-side">Routes</aside>
+      <main class="site-main">Hire a bike by the hour.</main>
+      <footer class="site-footer">© 2026</footer>
+    </div>
+  </body>
+</html>', ARRAY['Each child needs grid-area naming the area it belongs to.', 'The area names are the words inside the quoted rows.', '30% + 70% + a 1rem gap is more than 100% — use 12rem 1fr instead.']::text[],
+       60, 4,
+       (select id from public.skills where slug = 'grid'), false
+from public.lessons l where l.slug = 'css-grid-areas-and-auto-fit'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.site-header', 'grid-area',
+       'header', NULL, NULL, NULL,
+       'The header is placed in its area', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-areas-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.site-side', 'grid-area',
+       'side', NULL, NULL, NULL,
+       'The sidebar is placed in its area', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-areas-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.site-main', 'grid-area',
+       'main', NULL, NULL, NULL,
+       'The main region is placed in its area', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-areas-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, '.site-footer', 'grid-area',
+       'footer', NULL, NULL, NULL,
+       'The footer is placed in its area', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-areas-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value_matches'::public.requirement_kind, '.page', 'grid-template-columns',
+       '12rem\s+1fr', NULL, NULL, NULL,
+       'Columns are a fixed track and a fr track', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-areas-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-grid-areas-and-auto-fit'), NULL, 'q-css-auto-fit', 1, 'single'::public.question_kind,
+        'What does `auto-fit` do that a fixed column count does not?', 'It creates as many tracks as will fit in the available space, and collapses empty ones.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Makes every column the same fixed width', false, NULL
+from public.quiz_questions where slug = 'q-css-auto-fit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Adds a media query automatically', false, NULL
+from public.quiz_questions where slug = 'q-css-auto-fit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Prevents the grid from wrapping', false, NULL
+from public.quiz_questions where slug = 'q-css-auto-fit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Chooses the number of columns from the space available', true, NULL
+from public.quiz_questions where slug = 'q-css-auto-fit';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-grid-areas-and-auto-fit'), NULL, 'q-css-auto-fit-vs-fill', 2, 'single'::public.question_kind,
+        'Three cards in a container wide enough for five. What differs between `auto-fit` and `auto-fill`?', '`auto-fill` keeps the two empty tracks so the cards stay narrow; `auto-fit` collapses them so the cards stretch.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`auto-fill` only works with fixed widths', false, NULL
+from public.quiz_questions where slug = 'q-css-auto-fit-vs-fill';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`auto-fill` leaves empty tracks; `auto-fit` collapses them', true, NULL
+from public.quiz_questions where slug = 'q-css-auto-fit-vs-fill';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'They behave identically', false, NULL
+from public.quiz_questions where slug = 'q-css-auto-fit-vs-fill';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`auto-fit` creates more columns', false, NULL
+from public.quiz_questions where slug = 'q-css-auto-fit-vs-fill';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-grid-areas-and-auto-fit'), NULL, 'q-css-grid-vs-flex', 3, 'single'::public.question_kind,
+        'When is grid the better choice over flexbox?', 'When you need rows and columns aligned at once — two dimensions rather than one.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'When the layout is two-dimensional', true, NULL
+from public.quiz_questions where slug = 'q-css-grid-vs-flex';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Whenever there is more than one child', false, NULL
+from public.quiz_questions where slug = 'q-css-grid-vs-flex';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Only for full-page layouts', false, NULL
+from public.quiz_questions where slug = 'q-css-grid-vs-flex';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'When you need a gap', false, NULL
+from public.quiz_questions where slug = 'q-css-grid-vs-flex';
+
+-- lesson: Milestone: lay out a whole page
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-grid-milestone', 3, 'Milestone: lay out a whole page', 'Header, sidebar, content, footer — plus a responsive card grid inside it', 'The two grid techniques together, in the shape a real site actually uses.',
+       ARRAY['Build a page shell with named areas', 'Nest a responsive card grid inside it', 'Choose grid or flexbox deliberately']::text[], 20, 40, (select id from public.skills where slug = 'grid'), 0.8
+from public.modules m where m.slug = 'css-grid-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Assemble a page-level grid","Nest an intrinsically responsive grid","Justify each layout choice"]}'::jsonb
+from public.lessons where slug = 'css-grid-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'code_example'::public.block_type, 'Why named areas are worth it', NULL,
+       'A page shell, at full size and narrowed:
+
+  grid-template-areas:            grid-template-areas:
+    "header header"                 "header"
+    "side   main"                   "main"
+    "footer footer";                "side"
+  grid-template-columns:          "footer";
+    12rem 1fr;                    grid-template-columns: 1fr;
+
+Reordering a layout means redrawing the picture,
+not renumbering a set of line references.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-grid-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'interactive_demo'::public.block_type, 'A whole page, assembled', 'A named-area shell containing an auto-fit card grid.',
+       NULL, NULL, NULL, '{"variants":[{"label":"The finished shape","code":"<style>\n  .page { display: grid; grid-template-areas: \"header header\" \"side main\" \"footer footer\"; grid-template-columns: 8rem 1fr; gap: 0.5rem; }\n  .page > * { background: #eef; padding: 0.5rem; }\n  .h { grid-area: header } .s { grid-area: side } .m { grid-area: main } .f { grid-area: footer }\n  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr)); gap: 0.5rem; }\n  .cards > div { background: #cde; padding: 0.5rem; }\n</style>\n<div class=\"page\"><div class=\"h\">Header</div><div class=\"s\">Side</div><div class=\"m\"><div class=\"cards\"><div>A</div><div>B</div><div>C</div></div></div><div class=\"f\">Footer</div></div>","note":"Two grids: the page shell places the regions, and the card grid inside main chooses its own column count from the space main gave it."}]}'::jsonb
+from public.lessons where slug = 'css-grid-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'recall'::public.block_type, 'From memory', 'From memory: what does each of these do?',
+       NULL, NULL, NULL, '{"points":["`grid-template-columns: repeat(3, 1fr)` — three equal columns sharing the leftover space.","`minmax(16rem, 1fr)` — a track at least 16rem and at most a fair share of what is left.","`repeat(auto-fit, …)` — as many tracks as fit, with empty ones collapsed.","`grid-template-areas` — draws the layout as named rows; each item claims one with `grid-area`.","`gap` — space between tracks, and unlike margins it never adds space at the outer edge."]}'::jsonb
+from public.lessons where slug = 'css-grid-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["A page shell in named areas is readable and easy to rearrange.","Grids nest — the outer one places regions, the inner one lays out cards.","One dimension is flexbox; two is grid."],"nextUp":"Next: responsive design and container queries."}'::jsonb
+from public.lessons where slug = 'css-grid-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why nest a grid inside a grid area rather than declaring every card in the page grid?"],"points":["Because they answer different questions. The page grid decides where the regions go; the card grid decides how many columns fit inside whatever width `main` ended up with. Putting the cards in the page grid would couple them to the page''s column definition, so the component could not be moved into a sidebar or a modal without being rewritten."]}'::jsonb
+from public.lessons where slug = 'css-grid-milestone';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-grid-milestone-challenge', 1, 'challenge'::public.exercise_kind, 'Build the page shell and the card grid',
+       'Make `.page` a grid using the three named rows `header` / `side main` / `footer`, with columns `12rem 1fr` and a `1rem` gap. Give each region its `grid-area`. Then make `.cards` inside main a responsive grid of `minmax(12rem, 1fr)` columns with `auto-fit` and a `1rem` gap.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Page</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .page > * { background: #eef; padding: 1rem; }
+      .cards > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">Riverside</header>
+      <aside class="site-side">Routes</aside>
+      <main class="site-main">
+        <div class="cards">
+          <div>Sourdough</div>
+          <div>Rye</div>
+          <div>Seeded</div>
+        </div>
+      </main>
+      <footer class="site-footer">© 2026</footer>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Page</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .page {
+        display: grid;
+        grid-template-areas:
+          "header header"
+          "side main"
+          "footer footer";
+        grid-template-columns: 12rem 1fr;
+        gap: 1rem;
+      }
+      .page > * { background: #eef; padding: 1rem; }
+
+      .site-header { grid-area: header; }
+      .site-side   { grid-area: side; }
+      .site-main   { grid-area: main; }
+      .site-footer { grid-area: footer; }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: 1rem;
+      }
+      .cards > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">Riverside</header>
+      <aside class="site-side">Routes</aside>
+      <main class="site-main">
+        <div class="cards">
+          <div>Sourdough</div>
+          <div>Rye</div>
+          <div>Seeded</div>
+        </div>
+      </main>
+      <footer class="site-footer">© 2026</footer>
+    </div>
+  </body>
+</html>', ARRAY['The area names in the quoted rows must match the grid-area values exactly.', 'The header and footer span both columns, which is why their names repeat.', 'The inner card grid is a separate, independent grid.']::text[],
+       75, 4,
+       (select id from public.skills where slug = 'grid'), false
+from public.lessons l where l.slug = 'css-grid-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.page', 'display',
+       'grid', NULL, NULL, NULL,
+       'The page is a grid', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value_matches'::public.requirement_kind, '.page', 'grid-template-columns',
+       '12rem\s+1fr', NULL, NULL, NULL,
+       'The page columns are 12rem and 1fr', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.site-header', 'grid-area',
+       'header', NULL, NULL, NULL,
+       'The header claims its area', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, '.site-main', 'grid-area',
+       'main', NULL, NULL, NULL,
+       'Main claims its area', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value'::public.requirement_kind, '.site-footer', 'grid-area',
+       'footer', NULL, NULL, NULL,
+       'The footer claims its area', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'css_value'::public.requirement_kind, '.cards', 'display',
+       'grid', NULL, NULL, NULL,
+       'The card row is its own grid', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 7, 'css_value_matches'::public.requirement_kind, '.cards', 'grid-template-columns',
+       'repeat\(auto-fit,\s*minmax\(12rem,\s*1fr\)\)', NULL, NULL, NULL,
+       'The card grid is intrinsically responsive', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-grid-milestone-challenge';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-grid-milestone'), NULL, 'q-css-area-span', 1, 'single'::public.question_kind,
+        'In `"header header"`, why is the name repeated?', 'Repeating a name across cells makes that area span those columns.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'To make the area span both columns', true, NULL
+from public.quiz_questions where slug = 'q-css-area-span';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'To create two separate headers', false, NULL
+from public.quiz_questions where slug = 'q-css-area-span';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It is a syntax requirement of every row', false, NULL
+from public.quiz_questions where slug = 'q-css-area-span';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'To double its width relative to others', false, NULL
+from public.quiz_questions where slug = 'q-css-area-span';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-grid-milestone'), NULL, 'q-css-nested-grid-why', 2, 'single'::public.question_kind,
+        'Why nest a card grid inside a page grid rather than using one grid for everything?', 'The card component then sizes itself from whatever width its container has, so it can be reused anywhere.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Because grids cannot have more than four children', false, NULL
+from public.quiz_questions where slug = 'q-css-nested-grid-why';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Because named areas do not allow more than one row', false, NULL
+from public.quiz_questions where slug = 'q-css-nested-grid-why';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It renders faster', false, NULL
+from public.quiz_questions where slug = 'q-css-nested-grid-why';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'So the cards respond to their container, not the page definition', true, NULL
+from public.quiz_questions where slug = 'q-css-nested-grid-why';
+
+-- Level 5 milestone: Grid questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-5-milestone'), 'a-css-5-fr-leftover', 1, 'single'::public.question_kind,
+        '`grid-template-columns: 200px 1fr` in a 1000px container with no gap. How wide is the `1fr`?', '800px — `fr` takes what is left after fixed tracks and gaps.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '500px', false, NULL
+from public.quiz_questions where slug = 'a-css-5-fr-leftover';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '200px', false, NULL
+from public.quiz_questions where slug = 'a-css-5-fr-leftover';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '800px', true, NULL
+from public.quiz_questions where slug = 'a-css-5-fr-leftover';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '1000px', false, NULL
+from public.quiz_questions where slug = 'a-css-5-fr-leftover';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-5-milestone'), 'a-css-5-repeat', 2, 'single'::public.question_kind,
+        'What is `repeat(3, 1fr)` equivalent to?', 'Writing `1fr 1fr 1fr`.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`3fr`', false, NULL
+from public.quiz_questions where slug = 'a-css-5-repeat';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`33% 33% 33%`', false, NULL
+from public.quiz_questions where slug = 'a-css-5-repeat';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`minmax(3, 1fr)`', false, NULL
+from public.quiz_questions where slug = 'a-css-5-repeat';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`1fr 1fr 1fr`', true, NULL
+from public.quiz_questions where slug = 'a-css-5-repeat';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-5-milestone'), 'a-css-5-implicit', 3, 'single'::public.question_kind,
+        'What are implicit tracks?', 'Rows or columns grid creates automatically for items beyond the ones you declared.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Tracks sized with `fr`', false, NULL
+from public.quiz_questions where slug = 'a-css-5-implicit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Tracks grid creates automatically for extra items', true, NULL
+from public.quiz_questions where slug = 'a-css-5-implicit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Tracks declared with `repeat()`', false, NULL
+from public.quiz_questions where slug = 'a-css-5-implicit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Tracks that are hidden', false, NULL
+from public.quiz_questions where slug = 'a-css-5-implicit';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-5-milestone'), 'a-css-5-minmax', 4, 'single'::public.question_kind,
+        'What does `minmax(16rem, 1fr)` mean?', 'At least 16rem, at most a fair share of the leftover space.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'At least 16rem, at most a share of what is left', true, NULL
+from public.quiz_questions where slug = 'a-css-5-minmax';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Exactly 16rem', false, NULL
+from public.quiz_questions where slug = 'a-css-5-minmax';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Between 16rem and 1rem', false, NULL
+from public.quiz_questions where slug = 'a-css-5-minmax';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A minimum of one fraction unit', false, NULL
+from public.quiz_questions where slug = 'a-css-5-minmax';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-5-milestone'), 'a-css-5-empty-cell', 5, 'single'::public.question_kind,
+        'What does a full stop mean inside `grid-template-areas`?', 'A deliberately empty cell.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'A deliberately empty cell', true, NULL
+from public.quiz_questions where slug = 'a-css-5-empty-cell';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A class selector', false, NULL
+from public.quiz_questions where slug = 'a-css-5-empty-cell';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The end of a row', false, NULL
+from public.quiz_questions where slug = 'a-css-5-empty-cell';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A track sized by content', false, NULL
+from public.quiz_questions where slug = 'a-css-5-empty-cell';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-5-milestone'), 'a-css-5-container-vs-viewport', 6, 'single'::public.question_kind,
+        'Why does an `auto-fit` grid behave correctly inside a sidebar where a media query would not?', 'It responds to the container it is in; a media query only knows the viewport width.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It responds to the container, not the viewport', true, NULL
+from public.quiz_questions where slug = 'a-css-5-container-vs-viewport';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Media queries do not work in sidebars', false, NULL
+from public.quiz_questions where slug = 'a-css-5-container-vs-viewport';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It has higher specificity', false, NULL
+from public.quiz_questions where slug = 'a-css-5-container-vs-viewport';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It disables wrapping', false, NULL
+from public.quiz_questions where slug = 'a-css-5-container-vs-viewport';
+
+-- --------------------------------------------------------------------------
+-- CSS Architect — Level 6: Responsive Design
+-- --------------------------------------------------------------------------
+
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'css-responsive', 6, 'Responsive Design', 'Fluid by default, breakpoints only where the content demands one',
+       'Most responsive CSS is written the wrong way round: a fixed layout, then breakpoints to patch it. Start fluid instead, and add a breakpoint only where the content actually breaks.', 'You can build a layout that works at any width, and justify every breakpoint you added.', 'violet'
+from public.courses c where c.slug = 'css-architect'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, NULL, 'css-level-6-milestone', 'milestone'::public.assessment_kind, 'Level 6 milestone: Responsive Design', 'Six questions on fluid values, breakpoints and container queries. Pass mark 75%.',
+       0.75, 180, 6
+from public.levels l where l.slug = 'css-responsive'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+
+-- module: Responsive layout
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'css-responsive-module', 1, 'Responsive layout', 'Fluid values, media queries, container queries, and choosing breakpoints from content.',
+       55, false
+from public.levels l where l.slug = 'css-responsive'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'css-responsive-module' and p.slug = 'css-grid-module';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'css-responsive-module' and s.slug = 'responsive';
+
+-- lesson: Fluid first
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-fluid-first', 1, 'Fluid first', 'The values that adapt without any query at all', 'Before reaching for a breakpoint, there are values that simply do the right thing at every width.',
+       ARRAY['Use `max-width` rather than `width` for containers', 'Apply `clamp()` for fluid type and spacing', 'Explain why a breakpoint is a last resort']::text[], 16, 40, (select id from public.skills where slug = 'responsive'), 0.7
+from public.modules m where m.slug = 'css-responsive-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A container is `width: 1200px`. On a 400px phone, what happens?',
+       NULL, NULL, NULL, '{"options":["It overflows, and the page scrolls sideways","It shrinks to 400px automatically","It wraps onto two lines","The browser ignores the width on small screens"],"answer":"It overflows and the whole page scrolls sideways — the single most common responsive failure. `width` is an instruction, not a suggestion. What you almost always mean is `max-width: 1200px`, which says \"up to 1200px, but never wider than the space available\". That one change removes the need for a great many media queries."}'::jsonb
+from public.lessons where slug = 'css-fluid-first';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Choose `max-width` over `width` for layout containers","Use `min()`, `max()` and `clamp()` for fluid values","Explain when a query is genuinely needed"]}'::jsonb
+from public.lessons where slug = 'css-fluid-first';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'comparison'::public.block_type, 'The one-word difference that causes most overflow', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"Fluid","code":".wrap {\n  max-width: 60rem;\n  margin-inline: auto;\n}","why":"Up to 60rem, and never wider than the space available. Works at every width with no query."},"bad":{"label":"Fixed","code":".wrap {\n  width: 60rem;\n  margin-inline: auto;\n}","why":"Exactly 60rem, always. Below that the page scrolls sideways, and every later breakpoint is patching this one decision."}}'::jsonb
+from public.lessons where slug = 'css-fluid-first';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'term'::public.block_type, '`clamp(min, preferred, max)`', 'A value that scales with the preferred expression but never goes below the minimum or above the maximum. Three numbers replace a set of breakpoints.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-fluid-first';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'code_example'::public.block_type, 'Values that adapt on their own', NULL,
+       'width: 1200px           overflows below 1200px
+max-width: 1200px       up to 1200px, never wider than available
+
+width: min(100%, 65ch)  the smaller of the two — fluid, capped
+
+font-size: clamp(1rem, 0.9rem + 0.5vw, 1.5rem)
+  never below 1rem, never above 1.5rem, and scales
+  smoothly with the viewport in between
+
+padding: clamp(1rem, 5vw, 4rem)
+  the same idea for spacing', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-fluid-first';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'interactive_demo'::public.block_type, 'Fixed, fluid, and clamped', 'Narrow the preview to see the difference.',
+       NULL, NULL, NULL, '{"variants":[{"label":"max-width","code":"<style>\n  .wrap { max-width: 40rem; margin-inline: auto; border: 1px solid teal; padding: 1rem; }\n</style>\n<div class=\"wrap\">Up to 40rem wide, and never wider than the space available. Centred by the auto inline margins.</div>","note":"The everyday container. `margin-inline: auto` centres it once it stops filling the width."},{"label":"Fixed width","code":"<style>\n  .wrap { width: 40rem; border: 1px solid crimson; padding: 1rem; }\n</style>\n<div class=\"wrap\">Exactly 40rem, whatever the screen. Below that, the page scrolls sideways.</div>","note":"The same layout with one word changed, and it now overflows on any narrow screen."},{"label":"Clamped type","code":"<style>\n  .wrap { max-width: 40rem; margin-inline: auto; }\n  h2 { font-size: clamp(1.5rem, 1rem + 2vw, 3rem); }\n</style>\n<div class=\"wrap\"><h2>A heading that scales</h2><p>Never smaller than 1.5rem, never larger than 3rem.</p></div>","note":"One declaration replaces the three or four breakpoints this would otherwise need."}]}'::jsonb
+from public.lessons where slug = 'css-fluid-first';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'callout'::public.block_type, 'Set the measure in `ch`', 'Long lines are genuinely harder to read — the eye loses its place returning to the start. A comfortable measure is roughly 45–75 characters, and `max-width: 65ch` says exactly that in a unit that follows the font rather than guessing in pixels.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-fluid-first';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'predict_check'::public.block_type, 'Predict, then check', '`width: min(100%, 65ch)` — two values, and the smaller wins. Before you check: what does this do on a wide screen, and on a phone?',
+       '<style>
+  .wrap { width: min(100%, 65ch); margin-inline: auto; }
+</style>
+<div class="wrap">
+  <p>A paragraph of body text.</p>
+</div>', 'html', NULL, '{"outcome":"On a wide screen `65ch` is smaller, so the container caps at a readable measure. On a phone `100%` is smaller, so it fills the width with no overflow. It behaves exactly like `max-width: 65ch` and reads more directly as \"whichever of these is smaller\" — which is also why `min()` produces a *maximum* and `max()` produces a *minimum*, a naming that catches everyone once. `max(1rem, 3vw)` means \"at least 1rem\"."}'::jsonb
+from public.lessons where slug = 'css-fluid-first';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'progressive_detail'::public.block_type, 'Logical properties', '`margin-inline: auto` rather than `margin-left`/`margin-right`, and `padding-block` rather than top and bottom. Inline is the direction text runs; block is the direction lines stack. In English they map onto horizontal and vertical, and in Arabic or Japanese they follow the writing mode automatically — so a layout written this way needs no changes to be mirrored for a right-to-left language.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-fluid-first';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["`max-width` instead of `width` removes most overflow before it happens.","`clamp()` gives fluid type and spacing with a floor and a ceiling.","`min()` yields a maximum; `max()` yields a minimum.","`ch` expresses a readable measure in terms of the font itself."],"nextUp":"Next: media and container queries."}'::jsonb
+from public.lessons where slug = 'css-fluid-first';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why is `max-width` almost always meant where `width` is written?","What do the three values in `clamp()` do?","Why does `min()` produce a maximum?"],"points":["Because `width` is an instruction the browser obeys even when there is not room, so it overflows on narrow screens. `max-width` caps the size while still allowing it to shrink.","A floor, a preferred value that scales, and a ceiling — so the value adapts smoothly but never becomes unreadably small or absurdly large.","Because it returns whichever argument is smallest, so the result can never exceed the smallest of them — which is what a maximum is. `max()` is the mirror image and enforces a minimum."]}'::jsonb
+from public.lessons where slug = 'css-fluid-first';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-fluid-guided', 1, 'guided'::public.exercise_kind, 'A container that never overflows',
+       'Give `.wrap` a maximum width of `65ch`, centre it with automatic inline margins, and give the heading a font size that clamps between `1.5rem` and `3rem`, scaling with `1rem + 2vw` in between.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Fluid</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .wrap { border: 1px solid teal; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h2>Fresh bread, every morning</h2>
+      <p>We open at 6am and bake until we sell out.</p>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Fluid</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .wrap {
+        max-width: 65ch;
+        margin-inline: auto;
+        border: 1px solid teal;
+        padding: 1rem;
+      }
+      .wrap h2 { font-size: clamp(1.5rem, 1rem + 2vw, 3rem); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h2>Fresh bread, every morning</h2>
+      <p>We open at 6am and bake until we sell out.</p>
+    </div>
+  </body>
+</html>', ARRAY['max-width caps the size without preventing it shrinking.', 'margin-inline: auto centres a block once it is narrower than its parent.', 'clamp takes three arguments: minimum, preferred, maximum.']::text[],
+       45, 2,
+       (select id from public.skills where slug = 'responsive'), false
+from public.lessons l where l.slug = 'css-fluid-first'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.wrap', 'max-width',
+       '65ch', NULL, NULL, NULL,
+       'The container caps at a readable measure', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-fluid-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.wrap', 'margin-inline',
+       'auto', NULL, NULL, NULL,
+       'The container is centred', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-fluid-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value_matches'::public.requirement_kind, '.wrap h2', 'font-size',
+       'clamp\(', NULL, NULL, NULL,
+       'The heading uses clamp', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-fluid-guided';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-fluid-first'), NULL, 'q-css-max-width', 1, 'single'::public.question_kind,
+        'Why does `width: 1200px` cause sideways scrolling on a phone?', '`width` is obeyed exactly, so the element stays 1200px wide and overflows the screen.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Because of the box model', false, NULL
+from public.quiz_questions where slug = 'q-css-max-width';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It is obeyed exactly, so the element overflows', true, NULL
+from public.quiz_questions where slug = 'q-css-max-width';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Phones ignore pixel units', false, NULL
+from public.quiz_questions where slug = 'q-css-max-width';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It needs a media query to apply', false, NULL
+from public.quiz_questions where slug = 'q-css-max-width';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-fluid-first'), NULL, 'q-css-clamp-parts', 2, 'single'::public.question_kind,
+        'What is the middle argument of `clamp()`?', 'The preferred value, usually one that scales — the other two are the floor and ceiling.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The preferred, usually scaling, value', true, NULL
+from public.quiz_questions where slug = 'q-css-clamp-parts';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The maximum', false, NULL
+from public.quiz_questions where slug = 'q-css-clamp-parts';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The minimum', false, NULL
+from public.quiz_questions where slug = 'q-css-clamp-parts';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A fallback for old browsers', false, NULL
+from public.quiz_questions where slug = 'q-css-clamp-parts';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-fluid-first'), NULL, 'q-css-ch-unit', 3, 'single'::public.question_kind,
+        'What does the `ch` unit express?', 'A width relative to the font’s character width, which is how a readable measure is stated.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'A percentage of the viewport', false, NULL
+from public.quiz_questions where slug = 'q-css-ch-unit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The height of a line', false, NULL
+from public.quiz_questions where slug = 'q-css-ch-unit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'A width based on the font’s character width', true, NULL
+from public.quiz_questions where slug = 'q-css-ch-unit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A fixed number of pixels', false, NULL
+from public.quiz_questions where slug = 'q-css-ch-unit';
+
+-- lesson: Media and container queries
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-queries', 2, 'Media and container queries', 'Choosing breakpoints from the content, and asking about the container instead', 'When a query is genuinely needed, the question is which one — and increasingly the right answer is a container query rather than a media query.',
+       ARRAY['Write a mobile-first media query', 'Choose a breakpoint from the content, not a device', 'Use a container query and say when it is the better tool']::text[], 18, 40, (select id from public.skills where slug = 'responsive'), 0.7
+from public.modules m where m.slug = 'css-responsive-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'Where should a breakpoint go?',
+       NULL, NULL, NULL, '{"options":["Wherever the content starts to look wrong","At 768px, because that is the iPad width","At the width of the most popular phone","Every 200px, evenly"],"answer":"Wherever the content breaks. Device widths date immediately — there is no single iPad width any more, and there never really was — while the width at which a headline wraps badly or a card becomes too narrow to read is a property of *your* design and stays true. Narrow the browser until it looks wrong; that is the breakpoint, and it will not be a round number."}'::jsonb
+from public.lessons where slug = 'css-queries';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Write min-width queries in a mobile-first order","Justify a breakpoint from the design","Apply a container query to a reusable component"]}'::jsonb
+from public.lessons where slug = 'css-queries';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, NULL, 'Mobile-first means writing the narrow layout as the default and adding to it with `min-width` queries. The alternative — a wide default patched with `max-width` queries — means the smallest, slowest devices download and apply the most rules.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-queries';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'code_example'::public.block_type, 'Mobile-first, and the container alternative', NULL,
+       '/* Default: the narrow layout, no query at all */
+.cards { display: grid; gap: 1rem; }
+
+/* Then add, as space allows */
+@media (min-width: 40rem) {
+  .cards { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 64rem) {
+  .cards { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* A container query asks about the parent instead */
+.panel { container-type: inline-size; }
+
+@container (min-width: 30rem) {
+  .card { display: grid; grid-template-columns: 8rem 1fr; }
+}', 'html', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-queries';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'worked_example'::public.block_type, 'Choosing a breakpoint honestly', 'A card row that needs one. Here is how to find where, without guessing a device.',
+       NULL, NULL, NULL, '{"steps":[{"title":"Start with no query at all","code":".cards { display: grid; gap: 1rem; }","reasoning":"One column, stacked. This is the layout that works on the narrowest screen, and it is the default rather than an exception. Very often the work stops here."},{"title":"Widen the browser until it looks wrong","code":"/* Around 38rem the single column is\n   uncomfortably wide for the text. */","reasoning":"Not \"what width is a tablet\" — literally drag the window and watch. The point where the line length becomes uncomfortable is a fact about this design and this font, and it will not be a round number."},{"title":"Put the breakpoint just past it","code":"@media (min-width: 40rem) {\n  .cards { grid-template-columns: repeat(2, 1fr); }\n}","reasoning":"`rem` rather than `px` so the breakpoint respects a reader who has increased their default font size — at which point the text needs the second column sooner, and a px breakpoint would not know."},{"title":"Ask whether the query was needed at all","code":".cards {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));\n  gap: 1rem;\n}","reasoning":"For a card grid, usually not. `auto-fit` does the same job at every width, responds to the container rather than the viewport, and has no number to keep in sync with the design. Reach for a query when the layout must *change shape*, not merely change column count."}]}'::jsonb
+from public.lessons where slug = 'css-queries';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'term'::public.block_type, 'Container query', 'A query about the width of an element''s container rather than the viewport. The container must opt in with `container-type: inline-size`.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-queries';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'interactive_demo'::public.block_type, 'The same card, two contexts', 'Why the viewport is often the wrong thing to ask about.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Container query","code":"<style>\n  .panel { container-type: inline-size; border: 1px solid teal; padding: 0.5rem; }\n  .card { display: grid; gap: 0.5rem; background: #cde; padding: 0.5rem; }\n  @container (min-width: 24rem) { .card { grid-template-columns: 6rem 1fr; } }\n</style>\n<div class=\"panel\"><div class=\"card\"><div>Image</div><div>A card that rearranges itself based on the panel it is in.</div></div></div>","note":"The card asks how much room *it* has. Put the same panel in a sidebar and it lays out correctly with no extra CSS."},{"label":"Media query","code":"<style>\n  .panel { border: 1px solid crimson; padding: 0.5rem; }\n  .card { display: grid; gap: 0.5rem; background: #fee; padding: 0.5rem; }\n  @media (min-width: 24rem) { .card { grid-template-columns: 6rem 1fr; } }\n</style>\n<div class=\"panel\"><div class=\"card\"><div>Image</div><div>A card that only knows how wide the window is.</div></div></div>","note":"On a wide monitor this goes two-column even inside a 15rem sidebar, because the viewport is wide and the card has no idea it is not."}]}'::jsonb
+from public.lessons where slug = 'css-queries';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'callout'::public.block_type, 'Breakpoints named after devices', 'Variables called `$tablet` and `$phone` encode an assumption that stopped being true years ago, and they make the CSS lie: the rule is not about tablets, it is about the width at which two columns start to work. Name breakpoints after what changes — `--bp-cards-two-up` — or do not name them at all.',
+       NULL, NULL, NULL, '{"tone":"mistake"}'::jsonb
+from public.lessons where slug = 'css-queries';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'self_explain'::public.block_type, 'Explain it in your own words', 'Your team has breakpoints at 576, 768, 992 and 1200px copied from a framework, applied to every component. Write the case for changing the approach.',
+       NULL, NULL, NULL, '{"modelAnswer":"Those four numbers describe a framework''s grid, not this design''s content — so every component is being asked to change shape at moments that have nothing to do with when it actually needs to. In practice that means some components break *between* breakpoints and get patched with a fifth, while others change for no visible reason. The alternative is two moves: make components intrinsically responsive where possible, with `auto-fit`, `clamp()` and `max-width`, so most of them need no breakpoint at all; and where a genuine shape change is needed, find the width by narrowing the browser until *that component* looks wrong, and put the query there in `rem`. The result is fewer queries, each of which can be justified by pointing at the screen."}'::jsonb
+from public.lessons where slug = 'css-queries';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'checklist'::public.block_type, 'Before adding a breakpoint', NULL,
+       NULL, NULL, NULL, '{"items":["Would `max-width` or `clamp()` solve it with no query?","Would `auto-fit` handle the column count on its own?","Is the layout genuinely changing *shape*, not just size?","Did the number come from narrowing the browser, or from a device?","Is it in `rem`, so it respects the reader''s font size?","Should this be a container query instead?"]}'::jsonb
+from public.lessons where slug = 'css-queries';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Mobile-first: the narrow layout is the default, `min-width` queries add to it.","Breakpoints come from where the content breaks, not from device widths.","Use `rem` so a breakpoint respects an increased default font size.","Container queries ask about the component''s own space, which is usually the better question."],"nextUp":"Next: the Level 6 milestone."}'::jsonb
+from public.lessons where slug = 'css-queries';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["How do you find where a breakpoint belongs?","Why write breakpoints in `rem` rather than `px`?","When is a container query the better tool?"],"points":["Narrow the browser until the content looks wrong, and put the query just past that point. It is a fact about the design, not about any device, and it will not be a round number.","Because a `rem` breakpoint scales with the reader''s default font size. Someone who has increased it needs the layout to change sooner, and a `px` breakpoint cannot know that.","Whenever the component can appear in more than one context — a sidebar, a modal, a grid cell. It asks how much room the component actually has, where a media query only knows the window."]}'::jsonb
+from public.lessons where slug = 'css-queries';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-mobile-first-guided', 1, 'guided'::public.exercise_kind, 'Mobile-first, two breakpoints',
+       'Write the card grid mobile-first: one column by default, two columns from `40rem`, three from `64rem`. Use `min-width` queries and a `1rem` gap.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Responsive</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .cards > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="cards">
+      <div>Sourdough</div>
+      <div>Rye</div>
+      <div>Seeded</div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Responsive</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .cards {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      @media (min-width: 40rem) {
+        .cards { grid-template-columns: repeat(2, 1fr); }
+      }
+
+      @media (min-width: 64rem) {
+        .cards { grid-template-columns: repeat(3, 1fr); }
+      }
+
+      .cards > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="cards">
+      <div>Sourdough</div>
+      <div>Rye</div>
+      <div>Seeded</div>
+    </div>
+  </body>
+</html>', ARRAY['The single-column layout goes outside any query — that is what mobile-first means.', 'Each query is @media (min-width: …) { … }.', 'Use rem for the breakpoint values.']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'responsive'), false
+from public.lessons l where l.slug = 'css-queries'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.cards', 'display',
+       'grid', NULL, NULL, NULL,
+       'The card row is a grid', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-mobile-first-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.cards', 'grid-template-columns',
+       '1fr', NULL, NULL, NULL,
+       'One column by default', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-mobile-first-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_media_rule'::public.requirement_kind, NULL, NULL,
+       '(min-width: 40rem)', NULL, NULL, NULL,
+       'There is a 40rem breakpoint', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-mobile-first-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_media_rule'::public.requirement_kind, NULL, NULL,
+       '(min-width: 64rem)', NULL, NULL, NULL,
+       'There is a 64rem breakpoint', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-mobile-first-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value_matches'::public.requirement_kind, '.cards', 'grid-template-columns',
+       'repeat\(2,\s*1fr\)', NULL, NULL, NULL,
+       'Two columns from 40rem', NULL, 1, true, '(min-width: 40rem)'
+from public.exercises e where e.slug = 'css-mobile-first-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'css_value_matches'::public.requirement_kind, '.cards', 'grid-template-columns',
+       'repeat\(3,\s*1fr\)', NULL, NULL, NULL,
+       'Three columns from 64rem', NULL, 1, true, '(min-width: 64rem)'
+from public.exercises e where e.slug = 'css-mobile-first-guided';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-responsive-debug', 2, 'debug'::public.exercise_kind, 'Desktop-first, and overflowing',
+       'This is written the wrong way round: a fixed width and a `max-width` query patching it. Rewrite it mobile-first — one column as the default with no query, two columns from `40rem` — and replace the fixed `width` with a `max-width` so it cannot overflow.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Responsive</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .wrap { width: 60rem; margin-inline: auto; }
+      .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+
+      @media (max-width: 40rem) {
+        .cards { grid-template-columns: 1fr; }
+      }
+
+      .cards > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="cards">
+        <div>Sourdough</div>
+        <div>Rye</div>
+      </div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Responsive</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .wrap { max-width: 60rem; margin-inline: auto; }
+      .cards { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+
+      @media (min-width: 40rem) {
+        .cards { grid-template-columns: repeat(2, 1fr); }
+      }
+
+      .cards > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="cards">
+        <div>Sourdough</div>
+        <div>Rye</div>
+      </div>
+    </div>
+  </body>
+</html>', ARRAY['A fixed width overflows on narrow screens — max-width does not.', 'Mobile-first means the single column is the default, outside any query.', 'Swap the max-width query for a min-width one.']::text[],
+       60, 4,
+       (select id from public.skills where slug = 'responsive'), false
+from public.lessons l where l.slug = 'css-queries'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.wrap', 'max-width',
+       '60rem', NULL, NULL, NULL,
+       'The wrapper uses max-width', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-responsive-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.cards', 'grid-template-columns',
+       '1fr', NULL, NULL, NULL,
+       'One column is the default', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-responsive-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_media_rule'::public.requirement_kind, NULL, NULL,
+       '(min-width: 40rem)', NULL, NULL, NULL,
+       'The query is mobile-first', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-responsive-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value_matches'::public.requirement_kind, '.cards', 'grid-template-columns',
+       'repeat\(2,\s*1fr\)', NULL, NULL, NULL,
+       'Two columns from 40rem', NULL, 1, true, '(min-width: 40rem)'
+from public.exercises e where e.slug = 'css-responsive-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-queries'), NULL, 'q-css-mobile-first', 1, 'single'::public.question_kind,
+        'What does mobile-first mean in practice?', 'The narrow layout is the default with no query, and `min-width` queries add to it as space allows.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Desktop styles load first', false, NULL
+from public.quiz_questions where slug = 'q-css-mobile-first';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The narrow layout is the default; min-width queries add to it', true, NULL
+from public.quiz_questions where slug = 'q-css-mobile-first';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'You design on a phone first', false, NULL
+from public.quiz_questions where slug = 'q-css-mobile-first';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'All queries use max-width', false, NULL
+from public.quiz_questions where slug = 'q-css-mobile-first';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-queries'), NULL, 'q-css-breakpoint-source', 2, 'single'::public.question_kind,
+        'Where should a breakpoint value come from?', 'From the width at which your content stops working, found by narrowing the browser.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The most popular device width', false, NULL
+from public.quiz_questions where slug = 'q-css-breakpoint-source';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A framework’s defaults', false, NULL
+from public.quiz_questions where slug = 'q-css-breakpoint-source';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Round numbers, for tidiness', false, NULL
+from public.quiz_questions where slug = 'q-css-breakpoint-source';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The width at which the content breaks', true, NULL
+from public.quiz_questions where slug = 'q-css-breakpoint-source';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-queries'), NULL, 'q-css-container-query-why', 3, 'single'::public.question_kind,
+        'Why is a container query often better for a reusable component?', 'It responds to the space the component actually has, so it behaves correctly in a sidebar or modal.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It has higher specificity', false, NULL
+from public.quiz_questions where slug = 'q-css-container-query-why';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It works in older browsers', false, NULL
+from public.quiz_questions where slug = 'q-css-container-query-why';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It removes the need for grid', false, NULL
+from public.quiz_questions where slug = 'q-css-container-query-why';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It asks about the component’s own space, not the window', true, NULL
+from public.quiz_questions where slug = 'q-css-container-query-why';
+
+-- lesson: Milestone: one layout, every width
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-responsive-milestone', 3, 'Milestone: one layout, every width', 'Fluid where possible, queried where necessary', 'A page that works from 320px to a wide monitor, with every breakpoint justified.',
+       ARRAY['Combine fluid values with a minimum of queries', 'Justify each breakpoint', 'Avoid horizontal overflow at any width']::text[], 20, 40, (select id from public.skills where slug = 'responsive'), 0.8
+from public.modules m where m.slug = 'css-responsive-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Build a page that survives any width","Prefer intrinsic techniques to breakpoints","Explain every query you kept"]}'::jsonb
+from public.lessons where slug = 'css-responsive-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'code_example'::public.block_type, 'The order to reach for things', NULL,
+       'Reach for these first, in this order:
+
+1. max-width          stops overflow
+2. auto-fit + minmax  column count with no query
+3. clamp()            fluid type and spacing
+4. container query    when the component is reusable
+5. media query        when the layout changes SHAPE
+
+Most pages need one or two of item 5. Many need none.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-responsive-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'interactive_demo'::public.block_type, 'The same page, two approaches', 'Both work. One is much less code.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Intrinsic","code":"<style>\n  .wrap { max-width: 60rem; margin-inline: auto; padding: clamp(1rem, 4vw, 3rem); }\n  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; }\n  .cards > div { background: #cde; padding: 1rem; }\n</style>\n<div class=\"wrap\"><div class=\"cards\"><div>A</div><div>B</div><div>C</div></div></div>","note":"No media query at all. The column count, the padding and the container width all adapt on their own."},{"label":"Breakpoint-driven","code":"<style>\n  .wrap { max-width: 60rem; margin-inline: auto; padding: 1rem; }\n  .cards { display: grid; grid-template-columns: 1fr; gap: 1rem; }\n  @media (min-width: 40rem) { .cards { grid-template-columns: repeat(2, 1fr) } .wrap { padding: 2rem } }\n  @media (min-width: 64rem) { .cards { grid-template-columns: repeat(3, 1fr) } .wrap { padding: 3rem } }\n</style>\n<div class=\"wrap\"><div class=\"cards\"><div>A</div><div>B</div><div>C</div></div></div>","note":"The same result at three specific widths and stepped changes between them, with two numbers to keep in sync with the design."}]}'::jsonb
+from public.lessons where slug = 'css-responsive-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'recall'::public.block_type, 'From memory', 'From memory: list the techniques to reach for before writing a media query, and say what each one removes the need for.',
+       NULL, NULL, NULL, '{"points":["`max-width` instead of `width` — removes horizontal overflow.","`repeat(auto-fit, minmax(X, 1fr))` — removes breakpoints that only change column count.","`clamp()` — removes stepped font-size and spacing breakpoints.","Logical properties such as `margin-inline` — remove the need for right-to-left overrides.","Container queries — remove breakpoints that were really about the component, not the window."]}'::jsonb
+from public.lessons where slug = 'css-responsive-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Fluid first: `max-width`, `clamp()`, `auto-fit`.","A media query is for a change of shape, not a change of size.","Breakpoints belong in `rem` and come from the content."],"nextUp":"Next: custom properties."}'::jsonb
+from public.lessons where slug = 'css-responsive-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why does an intrinsically responsive layout usually beat a breakpoint-driven one?"],"points":["Because it responds continuously to the space available rather than stepping at a few chosen widths, so it is correct at every width instead of at three. It also has no numbers to keep in sync with the design, and it keeps working when the component is moved into a narrower context — which a viewport breakpoint cannot do."]}'::jsonb
+from public.lessons where slug = 'css-responsive-milestone';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-responsive-milestone-challenge', 1, 'challenge'::public.exercise_kind, 'A page that works at every width',
+       'Give `.wrap` a `max-width` of `60rem`, centre it, and give it padding that clamps between `1rem` and `3rem` scaling on `4vw`. Make `.cards` an `auto-fit` grid with a `12rem` minimum and a `1rem` gap. Write no media query at all.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Responsive page</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .cards > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Riverside Bakery</h1>
+      <div class="cards">
+        <div>Sourdough</div>
+        <div>Rye</div>
+        <div>Seeded</div>
+      </div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Responsive page</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .wrap {
+        max-width: 60rem;
+        margin-inline: auto;
+        padding: clamp(1rem, 4vw, 3rem);
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: 1rem;
+      }
+      .cards > div { background: #cde; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Riverside Bakery</h1>
+      <div class="cards">
+        <div>Sourdough</div>
+        <div>Rye</div>
+        <div>Seeded</div>
+      </div>
+    </div>
+  </body>
+</html>', ARRAY['clamp(1rem, 4vw, 3rem) for the padding.', 'repeat(auto-fit, minmax(12rem, 1fr)) for the columns.', 'margin-inline: auto centres the wrapper.']::text[],
+       70, 4,
+       (select id from public.skills where slug = 'responsive'), false
+from public.lessons l where l.slug = 'css-responsive-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.wrap', 'max-width',
+       '60rem', NULL, NULL, NULL,
+       'The wrapper caps at 60rem', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-responsive-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.wrap', 'margin-inline',
+       'auto', NULL, NULL, NULL,
+       'The wrapper is centred', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-responsive-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value_matches'::public.requirement_kind, '.wrap', 'padding',
+       'clamp\(', NULL, NULL, NULL,
+       'Padding is fluid', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-responsive-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value_matches'::public.requirement_kind, '.cards', 'grid-template-columns',
+       'repeat\(auto-fit,\s*minmax\(12rem,\s*1fr\)\)', NULL, NULL, NULL,
+       'The card grid is intrinsically responsive', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-responsive-milestone-challenge';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-responsive-milestone'), NULL, 'q-css-query-last-resort', 1, 'single'::public.question_kind,
+        'What is a media query genuinely for?', 'A change of layout *shape* that fluid techniques cannot express.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Any change at all between screen sizes', false, NULL
+from public.quiz_questions where slug = 'q-css-query-last-resort';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Setting font sizes', false, NULL
+from public.quiz_questions where slug = 'q-css-query-last-resort';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Preventing overflow', false, NULL
+from public.quiz_questions where slug = 'q-css-query-last-resort';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A change of shape that fluid values cannot express', true, NULL
+from public.quiz_questions where slug = 'q-css-query-last-resort';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-responsive-milestone'), NULL, 'q-css-rem-breakpoints', 2, 'single'::public.question_kind,
+        'Why write breakpoints in `rem`?', 'They then scale with the reader’s default font size, so someone using larger text gets the layout change sooner.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'They render faster', false, NULL
+from public.quiz_questions where slug = 'q-css-rem-breakpoints';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Pixels are not allowed in media queries', false, NULL
+from public.quiz_questions where slug = 'q-css-rem-breakpoints';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It avoids rounding errors', false, NULL
+from public.quiz_questions where slug = 'q-css-rem-breakpoints';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'They respect a reader’s increased default font size', true, NULL
+from public.quiz_questions where slug = 'q-css-rem-breakpoints';
+
+-- Level 6 milestone: Responsive Design questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-6-milestone'), 'a-css-6-max-width', 1, 'single'::public.question_kind,
+        'Which prevents a container overflowing a narrow screen?', '`max-width` caps the size while still allowing the element to shrink.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`max-width`', true, NULL
+from public.quiz_questions where slug = 'a-css-6-max-width';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`width`', false, NULL
+from public.quiz_questions where slug = 'a-css-6-max-width';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`min-width`', false, NULL
+from public.quiz_questions where slug = 'a-css-6-max-width';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`flex-basis`', false, NULL
+from public.quiz_questions where slug = 'a-css-6-max-width';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-6-milestone'), 'a-css-6-clamp', 2, 'single'::public.question_kind,
+        '`clamp(1rem, 0.9rem + 0.5vw, 1.5rem)` — what is the largest this can be?', '1.5rem, the third argument.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '0.5vw', false, NULL
+from public.quiz_questions where slug = 'a-css-6-clamp';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Unbounded', false, NULL
+from public.quiz_questions where slug = 'a-css-6-clamp';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '1.5rem', true, NULL
+from public.quiz_questions where slug = 'a-css-6-clamp';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '1rem', false, NULL
+from public.quiz_questions where slug = 'a-css-6-clamp';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-6-milestone'), 'a-css-6-min-max-naming', 3, 'single'::public.question_kind,
+        '`width: min(100%, 65ch)` behaves like which single property?', 'Like `max-width: 65ch` — `min()` returns the smaller, so it caps the result.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`min-width: 65ch`', false, NULL
+from public.quiz_questions where slug = 'a-css-6-min-max-naming';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`width: 65ch`', false, NULL
+from public.quiz_questions where slug = 'a-css-6-min-max-naming';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`flex-basis: 65ch`', false, NULL
+from public.quiz_questions where slug = 'a-css-6-min-max-naming';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`max-width: 65ch`', true, NULL
+from public.quiz_questions where slug = 'a-css-6-min-max-naming';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-6-milestone'), 'a-css-6-mobile-first-order', 4, 'single'::public.question_kind,
+        'In a mobile-first stylesheet, what sits outside every media query?', 'The narrow layout — it is the default that queries then add to.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Nothing; everything is in a query', false, NULL
+from public.quiz_questions where slug = 'a-css-6-mobile-first-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The narrow layout', true, NULL
+from public.quiz_questions where slug = 'a-css-6-mobile-first-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The widest layout', false, NULL
+from public.quiz_questions where slug = 'a-css-6-mobile-first-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Only the colours', false, NULL
+from public.quiz_questions where slug = 'a-css-6-mobile-first-order';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-6-milestone'), 'a-css-6-container-type', 5, 'single'::public.question_kind,
+        'What must a container declare before `@container` queries work against it?', '`container-type: inline-size` opts the element in.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`overflow: hidden`', false, NULL
+from public.quiz_questions where slug = 'a-css-6-container-type';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`container-type: inline-size`', true, NULL
+from public.quiz_questions where slug = 'a-css-6-container-type';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`display: grid`', false, NULL
+from public.quiz_questions where slug = 'a-css-6-container-type';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`position: relative`', false, NULL
+from public.quiz_questions where slug = 'a-css-6-container-type';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-6-milestone'), 'a-css-6-device-breakpoints', 6, 'single'::public.question_kind,
+        'What is wrong with breakpoints named after devices?', 'Device widths change constantly, and the rule is really about where the content breaks — which is a property of the design.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'They describe hardware that changes, not the design that does not', true, NULL
+from public.quiz_questions where slug = 'a-css-6-device-breakpoints';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'They are invalid CSS', false, NULL
+from public.quiz_questions where slug = 'a-css-6-device-breakpoints';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'They cannot use rem units', false, NULL
+from public.quiz_questions where slug = 'a-css-6-device-breakpoints';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'They only work in mobile-first order', false, NULL
+from public.quiz_questions where slug = 'a-css-6-device-breakpoints';
+
+-- --------------------------------------------------------------------------
+-- CSS Architect — Level 7: Custom Properties
+-- --------------------------------------------------------------------------
+
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'css-custom-properties', 7, 'Custom Properties', 'Design tokens that live in the cascade',
+       'Custom properties are not variables in the ordinary sense: they inherit, they can be overridden per component, and they are resolved at use rather than at definition. That is what makes theming possible.', 'You can build a token system and re-theme a component by overriding a property on one selector.', 'violet'
+from public.courses c where c.slug = 'css-architect'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, NULL, 'css-level-7-milestone', 'milestone'::public.assessment_kind, 'Level 7 milestone: Custom Properties', 'Six questions on tokens, inheritance and theming. Pass mark 75%.',
+       0.75, 180, 7
+from public.levels l where l.slug = 'css-custom-properties'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+
+-- module: Custom properties and tokens
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'css-tokens', 1, 'Custom properties and tokens', 'Declaring, inheriting, scoping and overriding values by name.',
+       50, false
+from public.levels l where l.slug = 'css-custom-properties'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'css-tokens' and p.slug = 'css-responsive-module';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'css-tokens' and s.slug = 'custom-properties';
+
+-- lesson: Declaring and using tokens
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-declaring-tokens', 1, 'Declaring and using tokens', 'Why a custom property is not a variable', 'A preprocessor variable is substituted once at build time. A custom property lives in the cascade, inherits, and can be changed at runtime — which is a completely different tool.',
+       ARRAY['Declare and use a custom property', 'Explain why they inherit', 'Use a fallback value']::text[], 15, 40, (select id from public.skills where slug = 'custom-properties'), 0.7
+from public.modules m where m.slug = 'css-tokens'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', '`:root { --brand: teal }` and `.card { --brand: crimson }`. A button inside `.card` uses `color: var(--brand)`. What colour is it?',
+       NULL, NULL, NULL, '{"options":["Crimson — the nearest ancestor that sets it wins, by inheritance","Teal — `:root` is more authoritative","Neither; a property cannot be redefined","Whichever was declared later in the file"],"answer":"Crimson. Custom properties inherit exactly like `color` does, so the value a `var()` sees is whatever the nearest ancestor set. That is the entire basis of theming in modern CSS: override one property on a wrapper and everything inside it changes, without a single new rule and without touching the components."}'::jsonb
+from public.lessons where slug = 'css-declaring-tokens';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Declare a custom property and read it with `var()`","Explain the consequence of custom properties inheriting","Supply a fallback for a property that may not be set"]}'::jsonb
+from public.lessons where slug = 'css-declaring-tokens';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'term'::public.block_type, 'Custom property', 'A property whose name begins with two hyphens, holding any value. Read it back with `var(--name)`.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-declaring-tokens';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'code_example'::public.block_type, 'Declaring and using', NULL,
+       ':root {
+  --brand: teal;
+  --space: 1rem;
+  --radius: 0.5rem;
+}
+
+.card {
+  padding: var(--space);
+  border-radius: var(--radius);
+  border: 1px solid var(--brand);
+}
+
+var(--missing, 1rem)     use 1rem if --missing is not set
+var(--a, var(--b, 0))    fallbacks can nest', 'html', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-declaring-tokens';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, '`:root` is just the `<html>` element', 'It is written `:root` rather than `html` by convention, because it carries slightly more specificity and signals intent — these are document-wide tokens, not styles for the html element. Anything declared there inherits to every element on the page.',
+       NULL, NULL, NULL, '{"tone":"note"}'::jsonb
+from public.lessons where slug = 'css-declaring-tokens';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'interactive_demo'::public.block_type, 'Tokens, and overriding them', 'The same components, re-themed by one declaration.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Global tokens","code":"<style>\n  :root { --brand: teal; --space: 1rem; }\n  .card { border: 2px solid var(--brand); padding: var(--space); }\n</style>\n<div class=\"card\">Sourdough</div>","note":"One place defines the values; the component reads them by name."},{"label":"Scoped override","code":"<style>\n  :root { --brand: teal; --space: 1rem; }\n  .card { border: 2px solid var(--brand); padding: var(--space); }\n  .featured { --brand: crimson; --space: 2rem; }\n</style>\n<div class=\"card\">Sourdough</div>\n<div class=\"card featured\">Rye — featured</div>","note":"The featured card redefines the tokens for itself. The `.card` rule is untouched and does not know a variant exists."},{"label":"Fallback","code":"<style>\n  .card { padding: var(--space, 1rem); border: 2px solid var(--brand, dimgray); }\n</style>\n<div class=\"card\">No tokens defined at all — the fallbacks apply.</div>","note":"A component that works standalone and picks up tokens when they exist."}]}'::jsonb
+from public.lessons where slug = 'css-declaring-tokens';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'predict_check'::public.block_type, 'Predict, then check', 'The token is declared on `.card`, and the button is a sibling rather than a child. Before you check: what colour is the button?',
+       '<style>
+  .card { --brand: teal; }
+  .button { color: var(--brand); }
+</style>
+<div class="card">Inside the card</div>
+<button class="button">Outside it</button>', 'html', NULL, '{"outcome":"It has no colour from that rule at all — `var(--brand)` resolves to nothing, so the `color` declaration is invalid and dropped, and the button falls back to its inherited or default colour. Custom properties reach *descendants* only, exactly like inheritance. This is the commonest mistake with tokens: declaring them on a component and then trying to use them from a sibling. Document-wide tokens belong on `:root`."}'::jsonb
+from public.lessons where slug = 'css-declaring-tokens';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'progressive_detail'::public.block_type, 'Why they are resolved at use, not at definition', 'A preprocessor variable is replaced by its value when the stylesheet is compiled — after that the variable does not exist. A custom property is live: the browser looks it up each time the `var()` is evaluated, for each element. That is why one override on an ancestor re-themes everything below it, why a media query can change a token and every component follows, and why JavaScript can change a theme by setting a single property. None of that is possible with a compile-time variable.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-declaring-tokens';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["A custom property starts with `--` and is read with `var()`.","They inherit, so a value set on an ancestor reaches every descendant.","Overriding one on a wrapper re-themes everything inside it.","`var(--name, fallback)` keeps a component working when the token is absent."],"nextUp":"Next: building a token system."}'::jsonb
+from public.lessons where slug = 'css-declaring-tokens';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What makes a custom property different from a preprocessor variable?","Where do document-wide tokens belong, and why?","What happens when `var()` refers to a property that is not set and there is no fallback?"],"points":["It lives in the cascade and is resolved each time it is used, so it inherits and can be overridden per element or changed at runtime. A preprocessor variable is substituted once at build time and then no longer exists.","On `:root`, because custom properties only reach descendants — and everything on the page is a descendant of the root element.","The whole declaration is invalid and dropped, so the property falls back to its inherited or initial value. Nothing warns you."]}'::jsonb
+from public.lessons where slug = 'css-declaring-tokens';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-tokens-guided', 1, 'guided'::public.exercise_kind, 'Build a small token set',
+       'Declare `--brand: teal`, `--space: 1rem` and `--radius: 0.5rem` on `:root`, then use all three in the `.card` rule for its border colour, padding and border radius.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tokens</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .card { border-style: solid; border-width: 2px; }
+    </style>
+  </head>
+  <body>
+    <div class="card">Sourdough workshop</div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tokens</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --brand: teal;
+        --space: 1rem;
+        --radius: 0.5rem;
+      }
+
+      .card {
+        border-style: solid;
+        border-width: 2px;
+        border-color: var(--brand);
+        padding: var(--space);
+        border-radius: var(--radius);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">Sourdough workshop</div>
+  </body>
+</html>', ARRAY['Custom property names start with two hyphens.', ':root is where document-wide tokens belong.', 'Read them back with var(--name).']::text[],
+       45, 2,
+       (select id from public.skills where slug = 'custom-properties'), false
+from public.lessons l where l.slug = 'css-declaring-tokens'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_custom_property'::public.requirement_kind, '.card', '--brand',
+       NULL, NULL, NULL, NULL,
+       'The brand token reaches the card', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_custom_property'::public.requirement_kind, '.card', '--space',
+       NULL, NULL, NULL, NULL,
+       'The spacing token reaches the card', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.card', 'border-color',
+       'teal', NULL, NULL, NULL,
+       'The border colour resolves from the token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, '.card', 'padding',
+       '1rem', NULL, NULL, NULL,
+       'The padding resolves from the token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value'::public.requirement_kind, '.card', 'border-radius',
+       '0.5rem', NULL, NULL, NULL,
+       'The radius resolves from the token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-guided';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-declaring-tokens'), NULL, 'q-css-token-inherits', 1, 'single'::public.question_kind,
+        'Do custom properties inherit?', 'Yes — which is what makes scoped overrides and theming work.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Only inside `:root`', false, NULL
+from public.quiz_questions where slug = 'q-css-token-inherits';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Only if declared with `inherit`', false, NULL
+from public.quiz_questions where slug = 'q-css-token-inherits';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Yes, like `color` does', true, NULL
+from public.quiz_questions where slug = 'q-css-token-inherits';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'No, they are global only', false, NULL
+from public.quiz_questions where slug = 'q-css-token-inherits';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-declaring-tokens'), NULL, 'q-css-var-fallback', 2, 'single'::public.question_kind,
+        'What does `var(--space, 1rem)` do when `--space` is not defined?', 'Uses the fallback of 1rem.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Throws an error', false, NULL
+from public.quiz_questions where slug = 'q-css-var-fallback';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Uses zero', false, NULL
+from public.quiz_questions where slug = 'q-css-var-fallback';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Uses 1rem', true, NULL
+from public.quiz_questions where slug = 'q-css-var-fallback';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Drops the declaration', false, NULL
+from public.quiz_questions where slug = 'q-css-var-fallback';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-declaring-tokens'), NULL, 'q-css-token-scope', 3, 'single'::public.question_kind,
+        'A token declared on `.card` — which elements can read it?', '`.card` and its descendants only. Siblings cannot see it.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Only `.card` itself', false, NULL
+from public.quiz_questions where slug = 'q-css-token-scope';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Its siblings as well', false, NULL
+from public.quiz_questions where slug = 'q-css-token-scope';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`.card` and its descendants', true, NULL
+from public.quiz_questions where slug = 'q-css-token-scope';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Every element on the page', false, NULL
+from public.quiz_questions where slug = 'q-css-token-scope';
+
+-- lesson: Theming with tokens
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-theming', 2, 'Theming with tokens', 'One override, a whole new appearance', 'A theme is not a second stylesheet. It is the same stylesheet with different token values, which is why the approach scales.',
+       ARRAY['Re-theme a component by scoping tokens', 'Build a dark theme without duplicating rules', 'Respect a system colour-scheme preference']::text[], 17, 40, (select id from public.skills where slug = 'custom-properties'), 0.7
+from public.modules m where m.slug = 'css-tokens'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'You need a dark theme. Which approach scales best?',
+       NULL, NULL, NULL, '{"options":["Redefine the same token names under a `[data-theme=\"dark\"]` selector","Write a second stylesheet with every rule duplicated","Add a `.dark` class to every component and style each one","Use `filter: invert(1)` on the whole page"],"answer":"Redefine the tokens. Every component already reads its colours by name, so changing what those names mean changes everything at once — no rule is duplicated and no component knows a theme exists. The other approaches all scale with the number of components rather than the number of themes, which is the wrong direction."}'::jsonb
+from public.lessons where slug = 'css-theming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Scope tokens to create a variant","Implement a theme with one block of overrides","Honour `prefers-color-scheme`"]}'::jsonb
+from public.lessons where slug = 'css-theming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'worked_example'::public.block_type, 'Adding a dark theme without touching a single component', 'The whole technique, in four steps.',
+       NULL, NULL, NULL, '{"steps":[{"title":"Components must read colours by name","code":".card {\n  background: var(--surface);\n  color: var(--text);\n  border: 1px solid var(--border);\n}","reasoning":"Nothing here is a literal colour. This is the step that makes everything after it possible, and it is the one that has to be done before a theme is ever contemplated."},{"title":"Define the default theme once","code":":root {\n  --surface: white;\n  --text: #111;\n  --border: #ddd;\n}","reasoning":"These are the light values. Note that the names describe *roles* — surface, text, border — not appearances. A token called `--white` would be a lie the moment a dark theme existed."},{"title":"Override the same names for dark","code":"[data-theme=\"dark\"] {\n  --surface: #111;\n  --text: #f4f4f4;\n  --border: #333;\n}","reasoning":"Three declarations re-theme the entire site. Because the tokens inherit, putting `data-theme=\"dark\"` on `<html>` changes every descendant — and putting it on one panel themes just that panel."},{"title":"Follow the system preference by default","code":"@media (prefers-color-scheme: dark) {\n  :root:not([data-theme=\"light\"]) {\n    --surface: #111;\n    --text: #f4f4f4;\n    --border: #333;\n  }\n}","reasoning":"Respects the choice the reader already made in their operating system, while `:not([data-theme=\"light\"])` still lets an explicit setting win. Someone who has chosen dark everywhere should not have to choose again on your site."}]}'::jsonb
+from public.lessons where slug = 'css-theming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'interactive_demo'::public.block_type, 'One token set, two themes', 'The component CSS is identical in both.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Light","code":"<style>\n  :root { --surface: white; --text: #111; --border: #ddd; }\n  .card { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 1rem; }\n</style>\n<div class=\"card\">Sourdough workshop</div>","note":"The default token values."},{"label":"Dark","code":"<style>\n  :root { --surface: white; --text: #111; --border: #ddd; }\n  [data-theme=\"dark\"] { --surface: #111; --text: #f4f4f4; --border: #333; }\n  .card { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 1rem; }\n</style>\n<div data-theme=\"dark\"><div class=\"card\">Sourdough workshop</div></div>","note":"The `.card` rule has not changed by one character. Three token overrides did all of it."},{"label":"Scoped to one panel","code":"<style>\n  :root { --surface: white; --text: #111; --border: #ddd; }\n  [data-theme=\"dark\"] { --surface: #111; --text: #f4f4f4; --border: #333; }\n  .card { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 1rem; margin-bottom: 0.5rem; }\n</style>\n<div class=\"card\">Light card</div>\n<div data-theme=\"dark\"><div class=\"card\">Dark card, same rule</div></div>","note":"Because tokens inherit, a theme can apply to a subtree rather than the whole page — useful for a preview panel or an inverted footer."}]}'::jsonb
+from public.lessons where slug = 'css-theming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, 'Name tokens after their role, not their appearance', '`--surface` and `--text` survive a dark theme. `--white` and `--dark-grey` become actively misleading the moment one exists, and a stylesheet full of `--white: #111` is worse than no tokens at all. The same applies to `--space-4` over `--space-16px`.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-theming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'self_explain'::public.block_type, 'Explain it in your own words', 'A colleague proposes a dark theme as a second stylesheet, loaded instead of the first. Write the case against it — be specific about what happens over the following year.',
+       NULL, NULL, NULL, '{"modelAnswer":"It doubles every future change. Each new component, each tweak to an existing one, has to be made twice and kept in sync by hand — and the two files drift, because nothing enforces the relationship. Bugs then appear in one theme only, which are the most annoying kind to reproduce. It also cannot do partial theming: a dark footer inside a light page is impossible with a whole-document swap, but trivial when the tokens inherit. And a third theme — high contrast, or a seasonal brand — means a third full copy. The token approach costs one block of overrides per theme regardless of how many components exist, which is the only version of this that scales."}'::jsonb
+from public.lessons where slug = 'css-theming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'checklist'::public.block_type, 'A workable token system', NULL,
+       NULL, NULL, NULL, '{"items":["Tokens named after their role, not their appearance","Defined once on `:root`","Components read every colour and space through `var()`","A theme is a block of overrides, never a duplicated stylesheet","`prefers-color-scheme` respected by default","An explicit user choice able to override the system preference"]}'::jsonb
+from public.lessons where slug = 'css-theming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["A theme is the same stylesheet with different token values.","Because tokens inherit, a theme can apply to the page or to one subtree.","Name tokens after roles — `--surface`, not `--white`.","Honour `prefers-color-scheme`, and let an explicit choice win over it."],"nextUp":"Next: the Level 7 milestone."}'::jsonb
+from public.lessons where slug = 'css-theming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why does a token-based theme scale where a second stylesheet does not?","Why name a token `--surface` rather than `--white`?","How can a theme apply to only part of a page?"],"points":["Because it costs one block of overrides per theme, regardless of how many components exist — whereas a duplicated stylesheet costs double work on every future change and drifts out of sync.","Because the name has to stay true in every theme. `--white: #111` in a dark theme is a lie, and a stylesheet that lies is worse than one with no tokens.","By putting the overriding selector on a wrapper rather than the root. Tokens inherit, so only that subtree sees the new values."]}'::jsonb
+from public.lessons where slug = 'css-theming';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-theme-guided', 1, 'guided'::public.exercise_kind, 'Add a dark theme',
+       'The card already reads its colours from tokens. Define the light values on `:root` — `--surface: white`, `--text: #111`, `--border: #ddd` — and add a `[data-theme="dark"]` block overriding the same three names with `#111`, `#f4f4f4` and `#333`. Do not change the `.card` rule.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Theme</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .card {
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">Light card</div>
+    <div data-theme="dark">
+      <div class="card">Dark card</div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Theme</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --surface: white;
+        --text: #111;
+        --border: #ddd;
+      }
+
+      [data-theme="dark"] {
+        --surface: #111;
+        --text: #f4f4f4;
+        --border: #333;
+      }
+
+      .card {
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">Light card</div>
+    <div data-theme="dark">
+      <div class="card">Dark card</div>
+    </div>
+  </body>
+</html>', ARRAY['The light values go on :root so every element inherits them.', 'The dark block redefines exactly the same three names.', 'You should not need to touch the .card rule at all.']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'custom-properties'), false
+from public.lessons l where l.slug = 'css-theming'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, 'body > .card', 'background',
+       'white', NULL, NULL, NULL,
+       'The light card resolves to the light surface', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-theme-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '[data-theme="dark"] .card', 'background',
+       '#111', NULL, NULL, NULL,
+       'The dark card resolves to the dark surface', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-theme-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '[data-theme="dark"] .card', 'color',
+       '#f4f4f4', NULL, NULL, NULL,
+       'The dark card text follows the theme', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-theme-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_custom_property'::public.requirement_kind, '.card', '--border',
+       NULL, NULL, NULL, NULL,
+       'The border token is defined', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-theme-guided';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-tokens-debug', 2, 'debug'::public.exercise_kind, 'Tokens that do not reach',
+       'Two faults. The tokens are declared on `.theme`, which is a *sibling* of the card rather than an ancestor, so nothing resolves — move them to `:root`. And `--white` is a misleading name in a file that has a dark theme: rename it to `--surface` everywhere it appears.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tokens</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .theme { --white: #fff; --text: #111; }
+
+      .card {
+        background: var(--white);
+        color: var(--text);
+        padding: 1rem;
+        border: 1px solid #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="theme"></div>
+    <div class="card">Sourdough workshop</div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tokens</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root { --surface: #fff; --text: #111; }
+
+      .card {
+        background: var(--surface);
+        color: var(--text);
+        padding: 1rem;
+        border: 1px solid #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="theme"></div>
+    <div class="card">Sourdough workshop</div>
+  </body>
+</html>', ARRAY['Custom properties reach descendants only — a sibling cannot see them.', ':root is an ancestor of everything.', 'Rename --white to --surface in both the declaration and the var().']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'custom-properties'), false
+from public.lessons l where l.slug = 'css-theming'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_custom_property'::public.requirement_kind, '.card', '--surface',
+       NULL, NULL, NULL, NULL,
+       'The card can read a role-named surface token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.card', 'background',
+       '#fff', NULL, NULL, NULL,
+       'The background resolves from the token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.card', 'color',
+       '#111', NULL, NULL, NULL,
+       'The text colour resolves from the token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-theming'), NULL, 'q-css-theme-approach', 1, 'single'::public.question_kind,
+        'What is a theme, in a token-based stylesheet?', 'The same rules with different token values — a block of overrides, not a second stylesheet.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'A class on every component', false, NULL
+from public.quiz_questions where slug = 'q-css-theme-approach';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A filter applied to the page', false, NULL
+from public.quiz_questions where slug = 'q-css-theme-approach';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'A block of token overrides', true, NULL
+from public.quiz_questions where slug = 'q-css-theme-approach';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A duplicate stylesheet', false, NULL
+from public.quiz_questions where slug = 'q-css-theme-approach';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-theming'), NULL, 'q-css-token-naming', 2, 'single'::public.question_kind,
+        'Why is `--surface` a better token name than `--white`?', 'It stays true in every theme; `--white: #111` in a dark theme is actively misleading.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Colour names are invalid in custom properties', false, NULL
+from public.quiz_questions where slug = 'q-css-token-naming';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It has higher specificity', false, NULL
+from public.quiz_questions where slug = 'q-css-token-naming';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It describes the role, so it stays true in any theme', true, NULL
+from public.quiz_questions where slug = 'q-css-token-naming';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It is shorter', false, NULL
+from public.quiz_questions where slug = 'q-css-token-naming';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-theming'), NULL, 'q-css-prefers-scheme', 3, 'single'::public.question_kind,
+        'What does `@media (prefers-color-scheme: dark)` let you do?', 'Follow the choice the reader already made at the operating-system level.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Force dark mode on everyone', false, NULL
+from public.quiz_questions where slug = 'q-css-prefers-scheme';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Detect the time of day', false, NULL
+from public.quiz_questions where slug = 'q-css-prefers-scheme';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Change the theme when the page scrolls', false, NULL
+from public.quiz_questions where slug = 'q-css-prefers-scheme';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Respect the reader’s system-level preference', true, NULL
+from public.quiz_questions where slug = 'q-css-prefers-scheme';
+
+-- lesson: Milestone: a themeable component
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-tokens-milestone', 3, 'Milestone: a themeable component', 'Tokens, a variant and a theme', 'One component, re-themed three ways without duplicating a rule.',
+       ARRAY['Build a component entirely on tokens', 'Add a variant by scoping token values', 'Add a theme by overriding the same names']::text[], 18, 40, (select id from public.skills where slug = 'custom-properties'), 0.8
+from public.modules m where m.slug = 'css-tokens'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Express a component in tokens","Create a variant with scoped overrides","Create a theme with root overrides"]}'::jsonb
+from public.lessons where slug = 'css-tokens-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'code_example'::public.block_type, 'The whole system', NULL,
+       ':root        the default values, inherited everywhere
+[data-theme] a theme — the same names, different values
+.variant     a component variant — scoped to one subtree
+var(--x, y)  a fallback, so the component stands alone
+
+Variant and theme use the same mechanism. The only
+difference is where the override is scoped.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-tokens-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'interactive_demo'::public.block_type, 'One component, three appearances', 'The `.card` rule is identical in all three.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Default","code":"<style>\n  :root { --surface: #fff; --text: #111; --accent: teal; }\n  .card { background: var(--surface); color: var(--text); border-left: 4px solid var(--accent); padding: 1rem; }\n</style>\n<div class=\"card\">Sourdough</div>","note":"Root tokens."},{"label":"Variant","code":"<style>\n  :root { --surface: #fff; --text: #111; --accent: teal; }\n  .featured { --accent: crimson; }\n  .card { background: var(--surface); color: var(--text); border-left: 4px solid var(--accent); padding: 1rem; }\n</style>\n<div class=\"card featured\">Rye — featured</div>","note":"One token overridden on the element itself."},{"label":"Theme","code":"<style>\n  :root { --surface: #fff; --text: #111; --accent: teal; }\n  [data-theme=\"dark\"] { --surface: #111; --text: #f4f4f4; }\n  .card { background: var(--surface); color: var(--text); border-left: 4px solid var(--accent); padding: 1rem; }\n</style>\n<div data-theme=\"dark\"><div class=\"card\">Seeded</div></div>","note":"The same mechanism scoped to an ancestor instead."}]}'::jsonb
+from public.lessons where slug = 'css-tokens-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'recall'::public.block_type, 'From memory', 'From memory: what do each of these do, and where does each belong?',
+       NULL, NULL, NULL, '{"points":["`:root { --x: … }` — declares a document-wide token every element inherits.","`var(--x)` — reads it, resolved fresh for each element that uses it.","`var(--x, fallback)` — reads it, with a value to use when it is not set.","`.variant { --x: … }` — overrides it for one element and its descendants.","`[data-theme=\"dark\"] { --x: … }` — overrides it for a whole subtree."]}'::jsonb
+from public.lessons where slug = 'css-tokens-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Variants and themes are the same mechanism at different scopes.","Components should contain no literal colours at all.","Fallbacks let a component work before the tokens exist."],"nextUp":"Next: typography and colour."}'::jsonb
+from public.lessons where slug = 'css-tokens-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why is \"the component contains no literal colours\" the step that makes everything else possible?"],"points":["Because every later capability — variants, themes, a high-contrast mode, a per-section accent — works by changing what a name means. If a component hard-codes a colour, none of those can reach it, and the only remaining option is to duplicate the rule. Doing this one thing first is what turns theming from a rewrite into three lines."]}'::jsonb
+from public.lessons where slug = 'css-tokens-milestone';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-tokens-milestone-challenge', 1, 'challenge'::public.exercise_kind, 'Tokens, a variant and a theme',
+       'Define `--surface: #fff`, `--text: #111` and `--accent: teal` on `:root`. Make `.card` use all three — background, colour, and a `4px` solid left border in the accent. Add a `.featured` variant that overrides `--accent` to `crimson`, and a `[data-theme="dark"]` block overriding `--surface` to `#111` and `--text` to `#f4f4f4`. The `.card` rule must contain no literal colours.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tokens milestone</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .card { padding: 1rem; margin-bottom: 0.5rem; }
+    </style>
+  </head>
+  <body>
+    <div class="card">Sourdough</div>
+    <div class="card featured">Rye — featured</div>
+    <div data-theme="dark">
+      <div class="card">Seeded</div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tokens milestone</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --surface: #fff;
+        --text: #111;
+        --accent: teal;
+      }
+
+      [data-theme="dark"] {
+        --surface: #111;
+        --text: #f4f4f4;
+      }
+
+      .featured { --accent: crimson; }
+
+      .card {
+        background: var(--surface);
+        color: var(--text);
+        border-left: 4px solid var(--accent);
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">Sourdough</div>
+    <div class="card featured">Rye — featured</div>
+    <div data-theme="dark">
+      <div class="card">Seeded</div>
+    </div>
+  </body>
+</html>', ARRAY['Declare the three tokens on :root first.', '.featured only needs to override --accent — nothing else.', 'The theme block overrides --surface and --text on a wrapper.', 'Every colour in .card should be a var().']::text[],
+       70, 4,
+       (select id from public.skills where slug = 'custom-properties'), false
+from public.lessons l where l.slug = 'css-tokens-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, 'body > .card', 'background',
+       '#fff', NULL, NULL, NULL,
+       'The default card uses the surface token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, 'body > .card', 'color',
+       '#111', NULL, NULL, NULL,
+       'The default card uses the text token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.featured', 'border-left',
+       '4px solid crimson', NULL, NULL, NULL,
+       'The variant overrides only the accent', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, '[data-theme="dark"] .card', 'background',
+       '#111', NULL, NULL, NULL,
+       'The theme changes the surface', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value'::public.requirement_kind, '[data-theme="dark"] .card', 'color',
+       '#f4f4f4', NULL, NULL, NULL,
+       'The theme changes the text colour', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-tokens-milestone-challenge';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-tokens-milestone'), NULL, 'q-css-variant-vs-theme', 1, 'single'::public.question_kind,
+        'What is the difference between a variant and a theme, mechanically?', 'Only the scope of the override — the mechanism is identical.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Themes cannot use custom properties', false, NULL
+from public.quiz_questions where slug = 'q-css-variant-vs-theme';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Only where the override is scoped', true, NULL
+from public.quiz_questions where slug = 'q-css-variant-vs-theme';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Themes use classes, variants use attributes', false, NULL
+from public.quiz_questions where slug = 'q-css-variant-vs-theme';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Variants require duplicated rules', false, NULL
+from public.quiz_questions where slug = 'q-css-variant-vs-theme';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-tokens-milestone'), NULL, 'q-css-no-literal-colours', 2, 'single'::public.question_kind,
+        'Why should a themeable component contain no literal colours?', 'Every theme, variant and contrast mode works by changing what a token name means — a literal colour is unreachable by all of them.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It reduces specificity', false, NULL
+from public.quiz_questions where slug = 'q-css-no-literal-colours';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A literal colour cannot be reached by any theme or variant', true, NULL
+from public.quiz_questions where slug = 'q-css-no-literal-colours';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Literal colours are slower to render', false, NULL
+from public.quiz_questions where slug = 'q-css-no-literal-colours';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Hex codes are invalid in components', false, NULL
+from public.quiz_questions where slug = 'q-css-no-literal-colours';
+
+-- Level 7 milestone: Custom Properties questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-7-milestone'), 'a-css-7-syntax', 1, 'single'::public.question_kind,
+        'How is a custom property named?', 'It begins with two hyphens.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Any valid identifier', false, NULL
+from public.quiz_questions where slug = 'a-css-7-syntax';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Beginning with `--`', true, NULL
+from public.quiz_questions where slug = 'a-css-7-syntax';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Beginning with `$`', false, NULL
+from public.quiz_questions where slug = 'a-css-7-syntax';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Beginning with `@`', false, NULL
+from public.quiz_questions where slug = 'a-css-7-syntax';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-7-milestone'), 'a-css-7-resolved-when', 2, 'single'::public.question_kind,
+        'When is a custom property resolved?', 'Each time it is used, per element — which is why overrides and runtime changes work.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'When the element is first painted', false, NULL
+from public.quiz_questions where slug = 'a-css-7-resolved-when';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Each time it is used, per element', true, NULL
+from public.quiz_questions where slug = 'a-css-7-resolved-when';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Once, when the stylesheet is compiled', false, NULL
+from public.quiz_questions where slug = 'a-css-7-resolved-when';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Only on page load', false, NULL
+from public.quiz_questions where slug = 'a-css-7-resolved-when';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-7-milestone'), 'a-css-7-sibling-scope', 3, 'single'::public.question_kind,
+        'A token declared on `.panel` — can a sibling of `.panel` use it?', 'No. Custom properties reach descendants only.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Yes, they are global', false, NULL
+from public.quiz_questions where slug = 'a-css-7-sibling-scope';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Only with `inherit`', false, NULL
+from public.quiz_questions where slug = 'a-css-7-sibling-scope';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Only inside a media query', false, NULL
+from public.quiz_questions where slug = 'a-css-7-sibling-scope';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'No, only descendants', true, NULL
+from public.quiz_questions where slug = 'a-css-7-sibling-scope';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-7-milestone'), 'a-css-7-missing-var', 4, 'single'::public.question_kind,
+        'What happens to `color: var(--missing)` with no fallback?', 'The declaration is invalid and dropped, silently.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The declaration is dropped silently', true, NULL
+from public.quiz_questions where slug = 'a-css-7-missing-var';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The colour becomes black', false, NULL
+from public.quiz_questions where slug = 'a-css-7-missing-var';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The whole rule is dropped', false, NULL
+from public.quiz_questions where slug = 'a-css-7-missing-var';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'An error is logged', false, NULL
+from public.quiz_questions where slug = 'a-css-7-missing-var';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-7-milestone'), 'a-css-7-theme-cost', 5, 'single'::public.question_kind,
+        'What does adding a second theme cost in a token-based stylesheet?', 'One block of overrides, regardless of how many components there are.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'A duplicate of every rule', false, NULL
+from public.quiz_questions where slug = 'a-css-7-theme-cost';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'A class on every component', false, NULL
+from public.quiz_questions where slug = 'a-css-7-theme-cost';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'A second stylesheet file', false, NULL
+from public.quiz_questions where slug = 'a-css-7-theme-cost';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'One block of token overrides', true, NULL
+from public.quiz_questions where slug = 'a-css-7-theme-cost';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-7-milestone'), 'a-css-7-root-why', 6, 'single'::public.question_kind,
+        'Why are document-wide tokens declared on `:root`?', 'It is the ancestor of every element, and custom properties inherit.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It is the only place they are valid', false, NULL
+from public.quiz_questions where slug = 'a-css-7-root-why';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It makes them non-inheriting', false, NULL
+from public.quiz_questions where slug = 'a-css-7-root-why';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It gives them `!important`', false, NULL
+from public.quiz_questions where slug = 'a-css-7-root-why';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Everything on the page is a descendant of it', true, NULL
+from public.quiz_questions where slug = 'a-css-7-root-why';
+
+-- --------------------------------------------------------------------------
+-- CSS Architect — Level 8: Typography and Colour
+-- --------------------------------------------------------------------------
+
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'css-typography', 8, 'Typography and Colour', 'The parts that are requirements, not taste',
+       'Most typography advice is presented as taste. A useful amount of it is not: line length, line height and contrast ratio have numbers behind them, and two of those numbers are accessibility requirements.', 'You can set readable type on a scale and choose colours that meet contrast requirements.', 'violet'
+from public.courses c where c.slug = 'css-architect'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, NULL, 'css-level-8-milestone', 'milestone'::public.assessment_kind, 'Level 8 milestone: Typography and Colour', 'Six questions on scale, measure, leading and contrast. Pass mark 75%.',
+       0.75, 180, 8
+from public.levels l where l.slug = 'css-typography'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+
+-- module: Type and colour systems
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'css-type-colour', 1, 'Type and colour systems', 'Scale, measure, rhythm, contrast — and which of those you may not compromise on.',
+       52, false
+from public.levels l where l.slug = 'css-typography'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'css-type-colour' and p.slug = 'css-tokens';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'css-type-colour' and s.slug = 'typography';
+
+-- lesson: Readable type
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-readable-type', 1, 'Readable type', 'Measure, leading and scale', 'Three numbers do most of the work: how long a line is, how far apart lines sit, and how sizes relate to each other.',
+       ARRAY['Set a comfortable line length', 'Choose line height as a ratio', 'Build a modular type scale']::text[], 17, 40, (select id from public.skills where slug = 'typography'), 0.7
+from public.modules m where m.slug = 'css-type-colour'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A paragraph of body text runs the full width of a 1400px screen. Why is that hard to read?',
+       NULL, NULL, NULL, '{"options":["The eye loses its place returning to the start of the next line","Long lines render more slowly","Browsers cannot hyphenate long lines","It is not a problem; wider is always better"],"answer":"The return sweep. At the end of a very long line the eye has to travel a long way back and find the start of the next one, and it increasingly lands on the wrong line. This is why the recommendation is roughly 45–75 characters per line — and why `max-width: 65ch` on your text container is one of the highest-value single declarations in CSS."}'::jsonb
+from public.lessons where slug = 'css-readable-type';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Constrain line length with `ch`","Set line height as a unitless ratio and explain why","Generate a type scale from one ratio"]}'::jsonb
+from public.lessons where slug = 'css-readable-type';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'term'::public.block_type, 'Measure', 'The length of a line of text, counted in characters. Comfortable body text sits at roughly 45–75.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-readable-type';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'term'::public.block_type, 'Leading', 'The vertical distance between lines of text — `line-height` in CSS. Body text usually wants 1.5 or more.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-readable-type';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'code_example'::public.block_type, 'The three numbers', NULL,
+       '.prose      { max-width: 65ch; }      measure
+body        { line-height: 1.5; }     leading, unitless
+h1          { line-height: 1.1; }     large text needs less
+
+1ch = the width of the "0" glyph in the current font,
+so 65ch tracks the font rather than guessing at pixels.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-readable-type';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'callout'::public.block_type, 'Line height must be unitless', '`line-height: 1.5` inherits as the *ratio*, so each descendant computes its own spacing from its own font size. `line-height: 24px` inherits as 24px, so a heading at 40px gets 24px of line height and its lines collide. This is one of the few places where the unit changes what inheritance means, and it catches people repeatedly.',
+       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
+from public.lessons where slug = 'css-readable-type';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'interactive_demo'::public.block_type, 'Measure and leading', 'The same paragraph, three settings.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Unconstrained","code":"<style>\n  p { line-height: 1.2; }\n</style>\n<p>Sourdough is a slow bread. The starter is a live culture of wild yeast and bacteria, and it works on its own schedule rather than yours. A loaf that would take three hours with commercial yeast takes a day or more, and most of that time is waiting rather than working. The waiting is the technique.</p>","note":"Full width, tight leading. Notice how hard it is to find the next line."},{"label":"Measure constrained","code":"<style>\n  p { max-width: 65ch; line-height: 1.2; }\n</style>\n<p>Sourdough is a slow bread. The starter is a live culture of wild yeast and bacteria, and it works on its own schedule rather than yours. A loaf that would take three hours with commercial yeast takes a day or more, and most of that time is waiting rather than working. The waiting is the technique.</p>","note":"One declaration, and the return sweep is short again."},{"label":"Both","code":"<style>\n  p { max-width: 65ch; line-height: 1.6; }\n</style>\n<p>Sourdough is a slow bread. The starter is a live culture of wild yeast and bacteria, and it works on its own schedule rather than yours. A loaf that would take three hours with commercial yeast takes a day or more, and most of that time is waiting rather than working. The waiting is the technique.</p>","note":"Comfortable leading as well. This is the baseline every text page should start from."}]}'::jsonb
+from public.lessons where slug = 'css-readable-type';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'worked_example'::public.block_type, 'Building a type scale', 'Sizes chosen by a ratio rather than one at a time.',
+       NULL, NULL, NULL, '{"steps":[{"title":"Pick a base and a ratio","code":":root {\n  --text-base: 1rem;    /* 16px, the browser default */\n  --ratio: 1.25;        /* major third */\n}","reasoning":"Starting from `1rem` means the reader''s own browser font-size setting is honoured — someone who set 20px because they need it gets a proportionally larger page rather than being overridden."},{"title":"Derive the steps","code":":root {\n  --text-sm:  0.8rem;    /* base ÷ 1.25 */\n  --text-base: 1rem;\n  --text-lg:  1.25rem;   /* base × 1.25 */\n  --text-xl:  1.563rem;  /* × 1.25 again */\n  --text-2xl: 1.953rem;\n}","reasoning":"Each step is the previous one multiplied by the ratio. The sizes then relate to each other by construction, which is what makes a page look deliberate rather than assembled."},{"title":"Use the steps, never raw numbers","code":"h1 { font-size: var(--text-2xl); line-height: 1.1; }\nh2 { font-size: var(--text-xl);  line-height: 1.2; }\np  { font-size: var(--text-base); }\nsmall { font-size: var(--text-sm); }","reasoning":"A stylesheet with five sizes in it looks designed. One with `font-size: 17px` in nineteen different places does not, and cannot be adjusted globally."},{"title":"Tighten leading as size grows","code":"h1 { line-height: 1.1; }\np  { line-height: 1.6; }","reasoning":"Leading is proportional, so a large heading at 1.6 gets a cavernous gap. Big text needs a smaller ratio; small text needs a larger one."}]}'::jsonb
+from public.lessons where slug = 'css-readable-type';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'predict_check'::public.block_type, 'Predict, then check', 'The line height is 32px and the heading is 48px. Before you check: what happens to the heading?',
+       '<style>
+  body { font-size: 16px; line-height: 32px; }
+  h1 { font-size: 48px; }
+</style>
+<h1>A heading that will wrap onto two lines here</h1>', 'html', NULL, '{"outcome":"Its lines overlap. `line-height: 32px` inherits as a fixed 32px, so a 48px heading gets 32px of line box — less than the text is tall. Had it been written `line-height: 2`, the heading would have computed 96px from its own font size. The unitless form is not a style preference; it is the only form that survives inheritance."}'::jsonb
+from public.lessons where slug = 'css-readable-type';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'progressive_detail'::public.block_type, 'Why `rem` and not `px` for font size', 'A reader who has set their browser default to 20px has usually done it because they need to. `font-size: 16px` overrides that decision; `font-size: 1rem` honours it, and the whole scale moves with it. This is the single most common accessibility failure in otherwise careful stylesheets. Use `rem` for type, and `px` only where a value genuinely should not scale — a hairline border, for instance.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-readable-type';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Constrain measure to roughly 45–75 characters — `max-width: 65ch`.","Set `line-height` unitless so it inherits as a ratio.","Build sizes from one base and one ratio, held in tokens.","Size type in `rem` so the reader’s own setting is honoured."],"nextUp":"Next: colour and contrast."}'::jsonb
+from public.lessons where slug = 'css-readable-type';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 12, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why must `line-height` be unitless?","What does `65ch` mean, and why is it better than a pixel width?","Why size type in `rem` rather than `px`?"],"points":["Because it inherits as a ratio, so each element computes its spacing from its own font size. A fixed length inherits as that same length, and large text ends up with lines that collide.","The width of 65 zero-glyphs in the current font — so it tracks the actual typeface rather than guessing. Change the font and the measure stays right.","Because `rem` is relative to the reader’s browser font-size setting, which they may have raised because they need it. A pixel size silently overrides that decision."]}'::jsonb
+from public.lessons where slug = 'css-readable-type';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-type-guided', 1, 'guided'::public.exercise_kind, 'Set readable body text',
+       'Give `.prose` a `max-width` of `65ch` and a unitless `line-height` of `1.6`. Give `h1` a `font-size` of `2rem` and a `line-height` of `1.1`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Type</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .prose { }
+      h1 { }
+    </style>
+  </head>
+  <body>
+    <div class="prose">
+      <h1>Sourdough, slowly</h1>
+      <p>The starter is a live culture of wild yeast and bacteria, and it works on its own schedule rather than yours.</p>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Type</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .prose {
+        max-width: 65ch;
+        line-height: 1.6;
+      }
+
+      h1 {
+        font-size: 2rem;
+        line-height: 1.1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="prose">
+      <h1>Sourdough, slowly</h1>
+      <p>The starter is a live culture of wild yeast and bacteria, and it works on its own schedule rather than yours.</p>
+    </div>
+  </body>
+</html>', ARRAY['The ch unit measures character widths in the current font.', 'Line height takes no unit — just the number.', 'Large text wants a tighter ratio than body text.']::text[],
+       45, 2,
+       (select id from public.skills where slug = 'typography'), false
+from public.lessons l where l.slug = 'css-readable-type'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.prose', 'max-width',
+       '65ch', NULL, NULL, NULL,
+       'The measure is constrained', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-type-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.prose', 'line-height',
+       '1.6', NULL, NULL, NULL,
+       'Body leading is comfortable and unitless', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-type-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, 'h1', 'font-size',
+       '2rem', NULL, NULL, NULL,
+       'The heading is sized in rem', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-type-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, 'h1', 'line-height',
+       '1.1', NULL, NULL, NULL,
+       'The heading leading is tightened', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-type-guided';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-readable-type'), NULL, 'q-css-measure', 1, 'single'::public.question_kind,
+        'Roughly how many characters per line reads comfortably?', 'About 45–75. Beyond that the return sweep starts to fail.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '45–75', true, NULL
+from public.quiz_questions where slug = 'q-css-measure';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '20–30', false, NULL
+from public.quiz_questions where slug = 'q-css-measure';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '100–140', false, NULL
+from public.quiz_questions where slug = 'q-css-measure';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'As many as fit', false, NULL
+from public.quiz_questions where slug = 'q-css-measure';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-readable-type'), NULL, 'q-css-lineheight-unit', 2, 'single'::public.question_kind,
+        'Why should `line-height` be unitless?', 'It inherits as a ratio, so each element computes from its own font size.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It inherits as a ratio rather than a fixed length', true, NULL
+from public.quiz_questions where slug = 'q-css-lineheight-unit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Units are invalid on line-height', false, NULL
+from public.quiz_questions where slug = 'q-css-lineheight-unit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It renders faster', false, NULL
+from public.quiz_questions where slug = 'q-css-lineheight-unit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It increases specificity', false, NULL
+from public.quiz_questions where slug = 'q-css-lineheight-unit';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-readable-type'), NULL, 'q-css-rem-type', 3, 'single'::public.question_kind,
+        'Why size body text in `rem` rather than `px`?', 'It honours the reader’s own browser font-size setting.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'rem is faster to parse', false, NULL
+from public.quiz_questions where slug = 'q-css-rem-type';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It respects the reader’s browser font-size setting', true, NULL
+from public.quiz_questions where slug = 'q-css-rem-type';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It is more precise', false, NULL
+from public.quiz_questions where slug = 'q-css-rem-type';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'px is deprecated', false, NULL
+from public.quiz_questions where slug = 'q-css-rem-type';
+
+-- lesson: Colour and contrast
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-colour-contrast', 2, 'Colour and contrast', 'Where taste stops and requirements begin', 'Which colours you choose is taste. Whether text can be read against its background is a measurable requirement with a number attached.',
+       ARRAY['Explain the WCAG contrast thresholds', 'Build a colour system on roles', 'Never signal meaning by colour alone']::text[], 17, 40, (select id from public.skills where slug = 'typography'), 0.7
+from public.modules m where m.slug = 'css-type-colour'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'Light grey text on white looks elegant in the mock-up. What is the problem?',
+       NULL, NULL, NULL, '{"options":["It may fail the contrast requirement, which is measurable and not a matter of taste","Grey text renders slowly","Grey is not a valid CSS colour","Nothing — if the designer approved it, it is fine"],"answer":"It probably fails contrast. WCAG sets 4.5:1 for normal body text and 3:1 for large text, and light-grey-on-white routinely lands near 2:1. This is the point where design opinion stops: someone with low vision, or anyone outdoors in sunlight, cannot read it. The number decides, not the mock-up."}'::jsonb
+from public.lessons where slug = 'css-colour-contrast';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Apply the 4.5:1 and 3:1 thresholds","Organise colour by role","Pair colour with a second signal"]}'::jsonb
+from public.lessons where slug = 'css-colour-contrast';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'term'::public.block_type, 'Contrast ratio', 'A measure of the relative luminance of two colours, from 1:1 (identical) to 21:1 (black on white). Body text needs at least 4.5:1.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-colour-contrast';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'code_example'::public.block_type, 'The thresholds', NULL,
+       '4.5:1   normal body text                  required
+3:1     large text (24px, or 18.7px bold)    required
+3:1     UI components and focus indicators   required
+7:1     enhanced (AAA) for body text         stricter target
+
+Measured between the text colour and what is actually
+behind it — including any background image.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-colour-contrast';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'comparison'::public.block_type, 'Colour as the only signal', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"Colour plus a second signal","code":".error {\n  color: #b00020;\n  border-left: 3px solid currentColor;\n}\n/* and the message text says \"Error:\" */","why":"Readable to someone who cannot distinguish red from green, and to someone reading a printout in black and white."},"bad":{"label":"Colour alone","code":".error { color: red; }\n.success { color: green; }\n/* the only difference between the two states */","why":"Around one in twelve men cannot reliably tell these apart. The state becomes invisible."}}'::jsonb
+from public.lessons where slug = 'css-colour-contrast';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'interactive_demo'::public.block_type, 'Contrast, seen', 'The same text against the same background.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Fails","code":"<style>\n  .note { color: #aaa; background: #fff; padding: 1rem; }\n</style>\n<p class=\"note\">Roughly 2.3:1 — under the 4.5:1 requirement for body text.</p>","note":"This is the light-grey-on-white that appears in a great many mock-ups."},{"label":"Passes","code":"<style>\n  .note { color: #595959; background: #fff; padding: 1rem; }\n</style>\n<p class=\"note\">Roughly 7:1 — comfortably over the requirement, and still grey.</p>","note":"Darkening the same hue keeps the intended restraint and clears the threshold."},{"label":"Colour plus a second signal","code":"<style>\n  .error { color: #b00020; border-left: 3px solid currentColor; padding-left: 0.75rem; }\n</style>\n<p class=\"error\">Error: the starter has not been fed for six days.</p>","note":"The border and the word \"Error\" both survive when the colour does not."}]}'::jsonb
+from public.lessons where slug = 'css-colour-contrast';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'callout'::public.block_type, '`currentColor` keeps a component honest', 'It resolves to whatever `color` is on that element, so a border or an SVG icon follows the text colour automatically — including through every theme override. It is the one keyword that makes "the border matches the text" true by construction rather than by discipline.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-colour-contrast';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'self_explain'::public.block_type, 'Explain it in your own words', 'Your designer says the light grey is intentional and the contrast requirement is a guideline. Write your reply.',
+       NULL, NULL, NULL, '{"modelAnswer":"It is not a guideline in the sense of being optional: WCAG 1.4.3 is a level AA success criterion, and in many jurisdictions accessibility conformance is a legal requirement for public-facing services. But the more useful argument is the practical one — the people who cannot read light grey on white include anyone with low vision, anyone over about fifty, and everyone using the site outdoors on a phone, which is a large fraction of real traffic rather than an edge case. The restraint the designer wants is achievable: keep the same hue and darken it until it measures 4.5:1. The design intent survives; the text becomes readable. That is a better outcome than a debate about whether the rule is binding."}'::jsonb
+from public.lessons where slug = 'css-colour-contrast';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'checklist'::public.block_type, 'Colour system review', NULL,
+       NULL, NULL, NULL, '{"items":["Body text measures at least 4.5:1 against its actual background","Large text and UI components at least 3:1","Focus indicators visible and at least 3:1","No state signalled by colour alone","Colours named by role, so themes can override them","Contrast checked in both light and dark themes"]}'::jsonb
+from public.lessons where slug = 'css-colour-contrast';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Contrast is measurable: 4.5:1 for body text, 3:1 for large text and UI.","Never signal meaning by colour alone.","`currentColor` ties borders and icons to the text colour.","Check contrast in every theme, not just the default one."],"nextUp":"Next: the Level 8 milestone."}'::jsonb
+from public.lessons where slug = 'css-colour-contrast';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What are the two contrast thresholds, and which text does each cover?","Why is colour-only signalling a failure?","What does `currentColor` resolve to?"],"points":["4.5:1 for normal body text, and 3:1 for large text — 24px, or 18.7px bold — as well as for UI components and focus indicators.","Because a substantial number of readers cannot distinguish the colours in question, and because the signal disappears entirely in greyscale or high-contrast modes. The state has to be carried by something else as well: a word, an icon, a border.","The computed `color` of the element it is used on — so borders, outlines and icons follow the text colour through every theme automatically."]}'::jsonb
+from public.lessons where slug = 'css-colour-contrast';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-contrast-debug', 1, 'debug'::public.exercise_kind, 'Fix the contrast failure',
+       'Two accessibility faults. The body text is `#aaa` on white, well under 4.5:1 — change it to `#595959`. And `.error` is signalled by colour alone; add `border-left: 3px solid currentColor` so the state survives without colour.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Contrast</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      body { background: #fff; color: #aaa; }
+
+      .error {
+        color: #b00020;
+        padding-left: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <p>The starter doubles in about six hours at room temperature.</p>
+    <p class="error">Error: the starter has not been fed for six days.</p>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Contrast</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      body { background: #fff; color: #595959; }
+
+      .error {
+        color: #b00020;
+        border-left: 3px solid currentColor;
+        padding-left: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <p>The starter doubles in about six hours at room temperature.</p>
+    <p class="error">Error: the starter has not been fed for six days.</p>
+  </body>
+</html>', ARRAY['Keep the grey, but darken it until it clears 4.5:1.', 'currentColor resolves to the element’s own color.', 'The border gives the state a second, non-colour signal.']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'typography'), false
+from public.lessons l where l.slug = 'css-colour-contrast'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, 'body', 'color',
+       '#595959', NULL, NULL, NULL,
+       'Body text clears the contrast threshold', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-contrast-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value_matches'::public.requirement_kind, '.error', 'border-left',
+       'currentColor', NULL, NULL, NULL,
+       'The error state carries a non-colour signal', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-contrast-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.error', 'color',
+       '#b00020', NULL, NULL, NULL,
+       'The error colour is kept', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-contrast-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-colour-contrast'), NULL, 'q-css-contrast-body', 1, 'single'::public.question_kind,
+        'What contrast ratio does normal body text require?', '4.5:1 against its actual background.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '10:1', false, NULL
+from public.quiz_questions where slug = 'q-css-contrast-body';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '4.5:1', true, NULL
+from public.quiz_questions where slug = 'q-css-contrast-body';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '2:1', false, NULL
+from public.quiz_questions where slug = 'q-css-contrast-body';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '3:1', false, NULL
+from public.quiz_questions where slug = 'q-css-contrast-body';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-colour-contrast'), NULL, 'q-css-colour-alone', 2, 'single'::public.question_kind,
+        'Why is signalling a state by colour alone a failure?', 'Many readers cannot distinguish the colours, and the signal vanishes in greyscale or high-contrast modes.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Readers who cannot distinguish the colours lose the signal entirely', true, NULL
+from public.quiz_questions where slug = 'q-css-colour-alone';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Colour is slow to render', false, NULL
+from public.quiz_questions where slug = 'q-css-colour-alone';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'CSS colours are unreliable across browsers', false, NULL
+from public.quiz_questions where slug = 'q-css-colour-alone';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It is only a problem when printing', false, NULL
+from public.quiz_questions where slug = 'q-css-colour-alone';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-colour-contrast'), NULL, 'q-css-currentcolor', 3, 'single'::public.question_kind,
+        'What does `currentColor` resolve to?', 'The element’s own computed `color`.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The element’s computed `color`', true, NULL
+from public.quiz_questions where slug = 'q-css-currentcolor';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The page background', false, NULL
+from public.quiz_questions where slug = 'q-css-currentcolor';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The browser default colour', false, NULL
+from public.quiz_questions where slug = 'q-css-currentcolor';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The last colour declared in the file', false, NULL
+from public.quiz_questions where slug = 'q-css-currentcolor';
+
+-- lesson: Milestone: a readable article
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-type-milestone', 3, 'Milestone: a readable article', 'Scale, measure and contrast together', 'Everything from this level applied to one page of text.',
+       ARRAY['Apply a type scale from tokens', 'Constrain measure and set leading', 'Meet the contrast requirement']::text[], 18, 40, (select id from public.skills where slug = 'typography'), 0.8
+from public.modules m where m.slug = 'css-type-colour'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Combine scale, measure, leading and contrast into one readable page"]}'::jsonb
+from public.lessons where slug = 'css-type-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'code_example'::public.block_type, 'The whole level, in five lines', NULL,
+       'max-width: 65ch     measure
+line-height: 1.6    leading (unitless)
+font-size: 1rem     honours the reader''s setting
+--text-*            a scale, not ad-hoc numbers
+4.5:1               contrast, non-negotiable', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-type-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'recall'::public.block_type, 'From memory', 'From memory: what number belongs with each of these, and why?',
+       NULL, NULL, NULL, '{"points":["Comfortable measure — 45–75 characters, because a longer return sweep makes the eye lose its line.","Body leading — about 1.5–1.6, unitless so it inherits as a ratio.","Heading leading — about 1.1, because leading is proportional and large text needs less.","Body-text contrast — 4.5:1, a requirement rather than a preference.","Large-text and UI contrast — 3:1."]}'::jsonb
+from public.lessons where slug = 'css-type-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Type decisions come from numbers more often than people expect.","A scale in tokens beats sizes chosen one at a time.","Contrast is measured, not judged."],"nextUp":"Next: transitions and animation."}'::jsonb
+from public.lessons where slug = 'css-type-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Which parts of this level are taste, and which are requirements?"],"points":["Taste: which typeface, which ratio for the scale, which hue. Requirements: the contrast thresholds, and honouring the reader''s font-size setting by sizing in `rem`. Measure and leading sit in between — strongly evidenced recommendations rather than pass/fail rules, but you need a reason to depart from them."]}'::jsonb
+from public.lessons where slug = 'css-type-milestone';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-type-milestone-challenge', 1, 'challenge'::public.exercise_kind, 'Set an article',
+       'On `:root` define `--text-base: 1rem` and `--text-2xl: 2rem`. Give `.prose` a `max-width` of `65ch`, `line-height` `1.6`, `font-size` `var(--text-base)` and `color` `#333`. Give `h1` `font-size: var(--text-2xl)` and `line-height: 1.1`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Article</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      body { background: #fff; }
+    </style>
+  </head>
+  <body>
+    <article class="prose">
+      <h1>Sourdough, slowly</h1>
+      <p>The starter is a live culture of wild yeast and bacteria, and it works on its own schedule rather than yours.</p>
+    </article>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Article</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --text-base: 1rem;
+        --text-2xl: 2rem;
+      }
+
+      body { background: #fff; }
+
+      .prose {
+        max-width: 65ch;
+        line-height: 1.6;
+        font-size: var(--text-base);
+        color: #333;
+      }
+
+      h1 {
+        font-size: var(--text-2xl);
+        line-height: 1.1;
+      }
+    </style>
+  </head>
+  <body>
+    <article class="prose">
+      <h1>Sourdough, slowly</h1>
+      <p>The starter is a live culture of wild yeast and bacteria, and it works on its own schedule rather than yours.</p>
+    </article>
+  </body>
+</html>', ARRAY['Declare both tokens on :root first.', 'Read them back with var().', 'Line height stays unitless.', '#333 on white is around 12:1 — comfortably over the requirement.']::text[],
+       70, 4,
+       (select id from public.skills where slug = 'typography'), false
+from public.lessons l where l.slug = 'css-type-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.prose', 'max-width',
+       '65ch', NULL, NULL, NULL,
+       'The measure is constrained', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-type-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.prose', 'line-height',
+       '1.6', NULL, NULL, NULL,
+       'Leading is comfortable and unitless', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-type-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.prose', 'font-size',
+       '1rem', NULL, NULL, NULL,
+       'Body size resolves from the token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-type-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, '.prose', 'color',
+       '#333', NULL, NULL, NULL,
+       'Body text clears the contrast requirement', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-type-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value'::public.requirement_kind, 'h1', 'font-size',
+       '2rem', NULL, NULL, NULL,
+       'The heading resolves from the scale', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-type-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'css_value'::public.requirement_kind, 'h1', 'line-height',
+       '1.1', NULL, NULL, NULL,
+       'Heading leading is tightened', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-type-milestone-challenge';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-type-milestone'), NULL, 'q-css-scale-benefit', 1, 'single'::public.question_kind,
+        'Why derive font sizes from one base and one ratio?', 'The sizes then relate to each other by construction, and the whole page can be adjusted from one place.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Browsers require it', false, NULL
+from public.quiz_questions where slug = 'q-css-scale-benefit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It improves specificity', false, NULL
+from public.quiz_questions where slug = 'q-css-scale-benefit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The sizes relate to each other, and can be adjusted from one place', true, NULL
+from public.quiz_questions where slug = 'q-css-scale-benefit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It reduces file size', false, NULL
+from public.quiz_questions where slug = 'q-css-scale-benefit';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-type-milestone'), NULL, 'q-css-heading-leading', 2, 'single'::public.question_kind,
+        'Why do large headings want a smaller `line-height` ratio than body text?', 'Leading is proportional, so the same ratio produces a much larger gap at a larger size.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Headings are never more than one line', false, NULL
+from public.quiz_questions where slug = 'q-css-heading-leading';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Browsers ignore line-height on headings', false, NULL
+from public.quiz_questions where slug = 'q-css-heading-leading';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It is required by the spec', false, NULL
+from public.quiz_questions where slug = 'q-css-heading-leading';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The ratio is proportional, so a large size produces a large gap', true, NULL
+from public.quiz_questions where slug = 'q-css-heading-leading';
+
+-- Level 8 milestone: Typography and Colour questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-8-milestone'), 'a-css-8-measure', 1, 'single'::public.question_kind,
+        'Which declaration constrains line length to a comfortable measure?', '`ch` tracks the font, so 65ch stays right when the typeface changes.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`overflow-wrap: break-word`', false, NULL
+from public.quiz_questions where slug = 'a-css-8-measure';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`max-width: 65ch`', true, NULL
+from public.quiz_questions where slug = 'a-css-8-measure';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`width: 100%`', false, NULL
+from public.quiz_questions where slug = 'a-css-8-measure';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`max-width: 100vw`', false, NULL
+from public.quiz_questions where slug = 'a-css-8-measure';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-8-milestone'), 'a-css-8-lineheight', 2, 'single'::public.question_kind,
+        'What goes wrong with `line-height: 24px` on `body`?', 'It inherits as a fixed length, so large text gets too little line box and the lines collide.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It only applies to the body element', false, NULL
+from public.quiz_questions where slug = 'a-css-8-lineheight';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It disables inheritance entirely', false, NULL
+from public.quiz_questions where slug = 'a-css-8-lineheight';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Large text inherits 24px and its lines collide', true, NULL
+from public.quiz_questions where slug = 'a-css-8-lineheight';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It is invalid CSS', false, NULL
+from public.quiz_questions where slug = 'a-css-8-lineheight';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-8-milestone'), 'a-css-8-rem', 3, 'single'::public.question_kind,
+        'What does sizing type in `rem` preserve?', 'The reader’s own browser font-size setting.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Print layout', false, NULL
+from public.quiz_questions where slug = 'a-css-8-rem';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The reader’s browser font-size setting', true, NULL
+from public.quiz_questions where slug = 'a-css-8-rem';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Pixel-perfect rendering', false, NULL
+from public.quiz_questions where slug = 'a-css-8-rem';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The element’s own font size', false, NULL
+from public.quiz_questions where slug = 'a-css-8-rem';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-8-milestone'), 'a-css-8-contrast-large', 4, 'single'::public.question_kind,
+        'What contrast ratio do large text and UI components require?', '3:1 — body text is the stricter 4.5:1.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '7:1', false, NULL
+from public.quiz_questions where slug = 'a-css-8-contrast-large';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '3:1', true, NULL
+from public.quiz_questions where slug = 'a-css-8-contrast-large';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '4.5:1', false, NULL
+from public.quiz_questions where slug = 'a-css-8-contrast-large';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '1.5:1', false, NULL
+from public.quiz_questions where slug = 'a-css-8-contrast-large';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-8-milestone'), 'a-css-8-second-signal', 5, 'single'::public.question_kind,
+        'An error state is shown in red. What else does it need?', 'A second, non-colour signal — a word, an icon or a border.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'A larger font size', false, NULL
+from public.quiz_questions where slug = 'a-css-8-second-signal';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Nothing; red is universally understood', false, NULL
+from public.quiz_questions where slug = 'a-css-8-second-signal';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'A non-colour signal as well, such as text or an icon', true, NULL
+from public.quiz_questions where slug = 'a-css-8-second-signal';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A brighter red', false, NULL
+from public.quiz_questions where slug = 'a-css-8-second-signal';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-8-milestone'), 'a-css-8-currentcolor-use', 6, 'single'::public.question_kind,
+        'Why use `currentColor` for a component’s border?', 'It follows the text colour through every theme, without a second token or a second rule.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It disables inheritance', false, NULL
+from public.quiz_questions where slug = 'a-css-8-currentcolor-use';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The border follows the text colour through every theme automatically', true, NULL
+from public.quiz_questions where slug = 'a-css-8-currentcolor-use';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It has higher specificity', false, NULL
+from public.quiz_questions where slug = 'a-css-8-currentcolor-use';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It is the only way to set a border colour', false, NULL
+from public.quiz_questions where slug = 'a-css-8-currentcolor-use';
+
+-- --------------------------------------------------------------------------
+-- CSS Architect — Level 9: Transitions and Motion
+-- --------------------------------------------------------------------------
+
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'css-motion', 9, 'Transitions and Motion', 'Cheap to animate, and safe to animate',
+       'Motion has two constraints that are not matters of taste: only a few properties animate without forcing layout on every frame, and some readers have told their operating system that motion makes them ill.', 'You can build transitions and keyframe animations that stay smooth and that honour a reduced-motion preference.', 'violet'
+from public.courses c where c.slug = 'css-architect'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, NULL, 'css-level-9-milestone', 'milestone'::public.assessment_kind, 'Level 9 milestone: Transitions and Motion', 'Six questions on transitions, keyframes, animation cost and reduced motion. Pass mark 75%.',
+       0.75, 180, 9
+from public.levels l where l.slug = 'css-motion'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+
+-- module: Motion that helps
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'css-motion-module', 1, 'Motion that helps', 'Transitions, keyframes, the compositor, and the preference you must respect.',
+       52, false
+from public.levels l where l.slug = 'css-motion'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'css-motion-module' and p.slug = 'css-type-colour';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'css-motion-module' and s.slug = 'animation';
+
+-- lesson: Transitions
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-transitions', 1, 'Transitions', 'Interpolating between two states', 'A transition does one thing: when a property changes, take some time over it instead of jumping. Everything else is detail about which properties and how long.',
+       ARRAY['Write a transition and name the properties explicitly', 'Choose a duration and an easing that suit the change', 'Explain why `transition: all` is a poor default']::text[], 16, 40, (select id from public.skills where slug = 'animation'), 0.7
+from public.modules m where m.slug = 'css-motion-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A button has `transition: all 0.3s`. Why is that a worse default than naming the properties?',
+       NULL, NULL, NULL, '{"options":["It animates properties you never intended, including expensive ones","`all` is invalid and the transition never runs","It makes the transition twice as slow","Nothing is wrong with it"],"answer":"It animates everything, including properties you did not think about. Add a `:hover` that changes `width` or `padding` later and you have silently signed up for a layout pass on every frame — plus odd behaviour when unrelated properties change, such as a fade-in of a colour you meant to switch instantly. Naming the properties means the transition only ever does what you asked for."}'::jsonb
+from public.lessons where slug = 'css-transitions';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Write a transition with explicit properties","Pick a duration in the 150–300ms range and justify it","Explain why easing matters"]}'::jsonb
+from public.lessons where slug = 'css-transitions';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'term'::public.block_type, 'Transition', 'An instruction to interpolate a property over time whenever its value changes, rather than switching instantly.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-transitions';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'code_example'::public.block_type, 'The shape of it', NULL,
+       '.button {
+  background: teal;
+  transition: background 200ms ease-out;
+}
+.button:hover { background: darkcyan; }
+
+transition: <property> <duration> <easing> <delay>;
+transition: background 200ms ease-out, transform 150ms ease-out;
+
+The transition goes on the *resting* state, not on
+:hover — otherwise it only applies on the way in.', 'html', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-transitions';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'interactive_demo'::public.block_type, 'The same hover, three ways', 'Move the pointer over each.',
+       NULL, NULL, NULL, '{"variants":[{"label":"No transition","code":"<style>\n  .button { background: teal; color: #fff; border: 0; padding: 0.6rem 1rem; }\n  .button:hover { background: darkcyan; }\n</style>\n<button class=\"button\">Feed the starter</button>","note":"Instant. Not wrong — but the change is easy to miss."},{"label":"Transitioned","code":"<style>\n  .button { background: teal; color: #fff; border: 0; padding: 0.6rem 1rem; transition: background 200ms ease-out; }\n  .button:hover { background: darkcyan; }\n</style>\n<button class=\"button\">Feed the starter</button>","note":"The eye registers the change without being interrupted by it."},{"label":"Too slow","code":"<style>\n  .button { background: teal; color: #fff; border: 0; padding: 0.6rem 1rem; transition: background 1200ms ease-out; }\n  .button:hover { background: darkcyan; }\n</style>\n<button class=\"button\">Feed the starter</button>","note":"The interface now feels like it is thinking. Anything a user triggers should finish in about 150–300ms."}]}'::jsonb
+from public.lessons where slug = 'css-transitions';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'comparison'::public.block_type, 'Naming properties versus `all`', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"Explicit","code":".card {\n  transition: background 200ms ease-out,\n              transform 150ms ease-out;\n}","why":"Only these two properties ever animate. Adding a hover that changes padding next month costs nothing."},"bad":{"label":"`transition: all`","code":".card {\n  transition: all 200ms ease-out;\n}","why":"Every future property change becomes an animation, including ones that force layout on every frame. The bug appears months later, in a rule that looks innocent."}}'::jsonb
+from public.lessons where slug = 'css-transitions';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'callout'::public.block_type, 'Where the transition declaration belongs', 'On the resting state — `.button`, not `.button:hover`. Put it on `:hover` and the animation runs on the way in but the element snaps back instantly when the pointer leaves, because there is no transition in force at that point. That asymmetry is occasionally what you want, and almost always a mistake.',
+       NULL, NULL, NULL, '{"tone":"note"}'::jsonb
+from public.lessons where slug = 'css-transitions';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'progressive_detail'::public.block_type, 'Easing, briefly', '`linear` moves at a constant rate and reads as mechanical. `ease-out` starts fast and settles — right for things entering or responding to a click, because the response feels immediate. `ease-in` starts slow, which suits things leaving. `ease-in-out` suits movement between two positions. If you only remember one: `ease-out` for anything the user triggered.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-transitions';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'predict_check'::public.block_type, 'Predict, then check', 'The transition is declared inside `:hover`. Before you check: what happens on the way in, and on the way out?',
+       '<style>
+  .box { width: 100px; height: 100px; background: teal; }
+  .box:hover { transition: background 400ms; background: crimson; }
+</style>
+<div class="box"></div>', 'html', NULL, '{"outcome":"It fades to crimson over 400ms on the way in, then snaps back to teal instantly when the pointer leaves. On the way out the `:hover` rule no longer applies, so the transition declaration is gone with it and there is nothing left to interpolate. Moving the declaration to `.box` makes both directions smooth."}'::jsonb
+from public.lessons where slug = 'css-transitions';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["A transition interpolates a property when its value changes.","It belongs on the resting state, not on `:hover`.","Name the properties — `all` animates things you never intended.","User-triggered changes want roughly 150–300ms and `ease-out`."],"nextUp":"Next: keyframes and what is cheap to animate."}'::jsonb
+from public.lessons where slug = 'css-transitions';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why does the transition declaration belong on the resting state?","What is wrong with `transition: all`?","Roughly how long should a hover or click response take?"],"points":["Because it has to be in force in both directions. Declared inside `:hover`, it disappears the moment the pointer leaves, so the element snaps back instantly.","It animates every property that ever changes on that element, including ones added later and ones that are expensive to animate. The resulting bug is far from the code that caused it.","About 150–300ms. Faster is barely perceptible; much slower makes the interface feel like it is deliberating."]}'::jsonb
+from public.lessons where slug = 'css-transitions';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-transition-guided', 1, 'guided'::public.exercise_kind, 'Transition a button',
+       'Give `.button` a transition of `background 200ms ease-out` — on the resting state, not on `:hover`. The hover rule already changes the background.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Transition</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .button {
+        background: teal;
+        color: #fff;
+        border: 0;
+        padding: 0.6rem 1rem;
+      }
+
+      .button:hover { background: darkcyan; }
+    </style>
+  </head>
+  <body>
+    <button class="button">Feed the starter</button>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Transition</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .button {
+        background: teal;
+        color: #fff;
+        border: 0;
+        padding: 0.6rem 1rem;
+        transition: background 200ms ease-out;
+      }
+
+      .button:hover { background: darkcyan; }
+    </style>
+  </head>
+  <body>
+    <button class="button">Feed the starter</button>
+  </body>
+</html>', ARRAY['The transition goes in the .button rule.', 'Name the property rather than using all.', 'The order is property, duration, easing.']::text[],
+       45, 2,
+       (select id from public.skills where slug = 'animation'), false
+from public.lessons l where l.slug = 'css-transitions'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.button', 'transition',
+       'background 200ms ease-out', NULL, NULL, NULL,
+       'The transition names its property', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-transition-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.button:hover', 'background',
+       'darkcyan', NULL, NULL, NULL,
+       'The hover state still changes the background', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-transition-guided';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-transitions'), NULL, 'q-css-transition-where', 1, 'single'::public.question_kind,
+        'Where should the `transition` declaration go?', 'On the resting state, so it applies in both directions.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'On the `:hover` state', false, NULL
+from public.quiz_questions where slug = 'q-css-transition-where';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'On `body`', false, NULL
+from public.quiz_questions where slug = 'q-css-transition-where';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Either; there is no difference', false, NULL
+from public.quiz_questions where slug = 'q-css-transition-where';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'On the resting state', true, NULL
+from public.quiz_questions where slug = 'q-css-transition-where';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-transitions'), NULL, 'q-css-transition-all', 2, 'single'::public.question_kind,
+        'Why avoid `transition: all`?', 'It animates properties you never intended, including expensive ones added later.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It disables easing', false, NULL
+from public.quiz_questions where slug = 'q-css-transition-all';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It animates properties you never intended', true, NULL
+from public.quiz_questions where slug = 'q-css-transition-all';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It is invalid CSS', false, NULL
+from public.quiz_questions where slug = 'q-css-transition-all';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It doubles the duration', false, NULL
+from public.quiz_questions where slug = 'q-css-transition-all';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-transitions'), NULL, 'q-css-duration', 3, 'single'::public.question_kind,
+        'Roughly how long should a user-triggered transition last?', '150–300ms. Longer and the interface feels slow.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '1–2 seconds', false, NULL
+from public.quiz_questions where slug = 'q-css-duration';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'As long as looks pleasing', false, NULL
+from public.quiz_questions where slug = 'q-css-duration';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '150–300ms', true, NULL
+from public.quiz_questions where slug = 'q-css-duration';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '20–40ms', false, NULL
+from public.quiz_questions where slug = 'q-css-duration';
+
+-- lesson: Keyframes, cost and consent
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-keyframes-motion', 2, 'Keyframes, cost and consent', 'The compositor, and `prefers-reduced-motion`', 'Two constraints decide most animation questions: which properties the browser can animate without recalculating layout, and whether the reader has asked for less motion.',
+       ARRAY['Write a keyframe animation', 'Animate only `transform` and `opacity` where possible', 'Honour `prefers-reduced-motion`']::text[], 18, 40, (select id from public.skills where slug = 'animation'), 0.7
+from public.modules m where m.slug = 'css-motion-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'Why animate `transform: translateX()` rather than `left`?',
+       NULL, NULL, NULL, '{"options":["Transform is handled by the compositor, so no layout is recalculated per frame","Transform is newer syntax for the same thing","`left` only works on positioned elements","There is no difference in practice"],"answer":"Because `transform` and `opacity` can be handled by the compositor — the browser can move or fade an already-painted layer without recalculating layout or repainting. Animating `left`, `width`, `margin` or `top` forces the browser to redo layout on every single frame, for the element and often for everything around it. On a mid-range phone that is the difference between smooth and visibly stuttering."}'::jsonb
+from public.lessons where slug = 'css-keyframes-motion';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Define and apply a `@keyframes` animation","Name the two properties that are cheap to animate","Write a reduced-motion block that actually works"]}'::jsonb
+from public.lessons where slug = 'css-keyframes-motion';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'code_example'::public.block_type, 'Keyframes', NULL,
+       '@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.panel {
+  animation: fade-up 250ms ease-out;
+}
+
+animation: <name> <duration> <easing> <delay>
+           <iteration-count> <direction> <fill-mode>', 'html', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-keyframes-motion';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'worked_example'::public.block_type, 'Cheap animation, and consent', 'The two constraints, applied to one panel.',
+       NULL, NULL, NULL, '{"steps":[{"title":"Animate transform and opacity only","code":"@keyframes fade-up {\n  from { opacity: 0; transform: translateY(8px); }\n  to   { opacity: 1; transform: none; }\n}","reasoning":"Both are compositor properties. The same effect written with `margin-top` and `visibility` would force a layout pass on every frame and would not fade at all."},{"title":"Keep it short","code":".panel { animation: fade-up 250ms ease-out; }","reasoning":"Entrance animation should be over before the reader has finished deciding to look at it. A long entrance is a delay wearing a costume."},{"title":"Ask whether motion is welcome","code":"@media (prefers-reduced-motion: reduce) {\n  .panel { animation: none; }\n}","reasoning":"This media query reports a setting the reader has already changed in their operating system. For people with vestibular disorders, large motion can cause genuine nausea and dizziness — this is not a preference about taste."},{"title":"Or reduce globally, once","code":"@media (prefers-reduced-motion: reduce) {\n  *, *::before, *::after {\n    animation-duration: 0.01ms !important;\n    animation-iteration-count: 1 !important;\n    transition-duration: 0.01ms !important;\n    scroll-behavior: auto !important;\n  }\n}","reasoning":"One block that catches everything, including animations added later by someone who forgot. This is one of the very few defensible uses of `!important`: it is a deliberate override of author styles on the reader''s behalf, and it must win."}]}'::jsonb
+from public.lessons where slug = 'css-keyframes-motion';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'interactive_demo'::public.block_type, 'Compositor properties versus layout properties', 'Both move the box the same distance.',
+       NULL, NULL, NULL, '{"variants":[{"label":"transform (cheap)","code":"<style>\n  @keyframes slide-t { from { transform: translateX(0); } to { transform: translateX(120px); } }\n  .box { width: 60px; height: 60px; background: teal; animation: slide-t 1.2s ease-in-out infinite alternate; }\n</style>\n<div class=\"box\"></div>","note":"The browser moves an existing layer. No layout, no repaint."},{"label":"left (expensive)","code":"<style>\n  @keyframes slide-l { from { left: 0; } to { left: 120px; } }\n  .box { position: relative; width: 60px; height: 60px; background: crimson; animation: slide-l 1.2s ease-in-out infinite alternate; }\n</style>\n<div class=\"box\"></div>","note":"Identical to look at here, and a layout recalculation on every frame. On a slow device this is where the stutter comes from."},{"label":"Reduced motion respected","code":"<style>\n  @keyframes slide-t { from { transform: translateX(0); } to { transform: translateX(120px); } }\n  .box { width: 60px; height: 60px; background: teal; animation: slide-t 1.2s ease-in-out infinite alternate; }\n  @media (prefers-reduced-motion: reduce) { .box { animation: none; } }\n</style>\n<div class=\"box\"></div>","note":"If your system is set to reduce motion, this box is still. If not, it moves. Either way the reader got what they asked for."}]}'::jsonb
+from public.lessons where slug = 'css-keyframes-motion';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'callout'::public.block_type, 'Reduced motion is a medical setting for some readers', 'Vestibular disorders affect a meaningful share of adults, and large parallax or sliding motion can cause real nausea, dizziness and migraine. `prefers-reduced-motion: reduce` is how those readers have already told every site on the web. Ignoring it is not a missed nicety; it is overriding an explicit request that took effort to make.',
+       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
+from public.lessons where slug = 'css-keyframes-motion';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'self_explain'::public.block_type, 'Explain it in your own words', 'Reduced motion is set. Should every animation stop, or is that too blunt?',
+       NULL, NULL, NULL, '{"modelAnswer":"Too blunt in principle, though blunt is far better than nothing. The preference means \"reduce\", not \"eliminate\": what causes trouble is large-scale movement — parallax, big slides across the viewport, spinning, zooming, anything suggesting the page itself is moving. A short opacity fade is usually fine and often still helpful, because it preserves the sense that something changed. The good pattern is to replace motion with a fade rather than remove the feedback entirely, and to keep animations that convey state — a loading spinner still needs to indicate that work is happening. Where a distinction is too fiddly to make, the global override is the right default: a still interface is usable, and a nauseating one is not."}'::jsonb
+from public.lessons where slug = 'css-keyframes-motion';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'checklist'::public.block_type, 'Motion review', NULL,
+       NULL, NULL, NULL, '{"items":["Animating `transform` and `opacity` wherever the effect allows","No animation of `width`, `height`, `top`, `left` or `margin` in a loop","User-triggered transitions in the 150–300ms range","A `prefers-reduced-motion: reduce` block present","Large movement removed under reduced motion; short fades may remain","State-conveying animation such as a loading indicator kept"]}'::jsonb
+from public.lessons where slug = 'css-keyframes-motion';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["`transform` and `opacity` are the compositor-friendly properties.","Animating layout properties costs a layout pass on every frame.","`prefers-reduced-motion: reduce` reports a setting the reader already made.","Reduce means replace large motion with a fade — not necessarily remove all feedback."],"nextUp":"Next: the Level 9 milestone."}'::jsonb
+from public.lessons where slug = 'css-keyframes-motion';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Which two properties are cheap to animate, and why?","What does animating `left` cost that animating `translateX` does not?","Does reduced motion mean no animation at all?"],"points":["`transform` and `opacity`, because the compositor can move or fade an already-painted layer without redoing layout or paint.","A layout recalculation on every frame, for the element and often its surroundings — which is where stutter on mid-range devices comes from.","No. It means reduce: remove large movement, keep short fades and anything that conveys state, such as a loading indicator. A global kill-switch is a reasonable default when finer judgement is impractical."]}'::jsonb
+from public.lessons where slug = 'css-keyframes-motion';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-motion-guided', 1, 'guided'::public.exercise_kind, 'Animate cheaply, and ask first',
+       'Define a `@keyframes fade-up` going from `opacity: 0; transform: translateY(8px)` to `opacity: 1; transform: none`. Apply it to `.panel` as `fade-up 250ms ease-out`. Then add a `@media (prefers-reduced-motion: reduce)` block setting `animation: none` on `.panel`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Motion</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .panel {
+        background: #f4f4f4;
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="panel">The starter doubles in about six hours.</div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Motion</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      @keyframes fade-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: none; }
+      }
+
+      .panel {
+        background: #f4f4f4;
+        padding: 1rem;
+        animation: fade-up 250ms ease-out;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .panel { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="panel">The starter doubles in about six hours.</div>
+  </body>
+</html>', ARRAY['@keyframes takes a name, then from and to blocks.', 'Only opacity and transform belong in the keyframes.', 'The media query goes after the rule it overrides.']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'animation'), false
+from public.lessons l where l.slug = 'css-keyframes-motion'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value_matches'::public.requirement_kind, '.panel', 'animation',
+       'fade-up', NULL, NULL, NULL,
+       'The panel runs the named animation', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-motion-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_media_rule'::public.requirement_kind, NULL, NULL,
+       '(prefers-reduced-motion: reduce)', NULL, NULL, NULL,
+       'A reduced-motion block is present', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-motion-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.panel', 'animation',
+       'none', NULL, NULL, NULL,
+       'Motion is removed when reduced motion is requested', NULL, 1, true, '(prefers-reduced-motion: reduce)'
+from public.exercises e where e.slug = 'css-motion-guided';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-motion-debug', 2, 'debug'::public.exercise_kind, 'Expensive, and unasked for',
+       'Two faults. The animation moves the box with `left`, which forces layout on every frame — rewrite the keyframes to use `transform: translateX()` for the same 120px movement, and remove `position: relative` since it is no longer needed. And there is no reduced-motion block; add one setting `animation: none` on `.box`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Motion</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      @keyframes slide {
+        from { left: 0; }
+        to   { left: 120px; }
+      }
+
+      .box {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        background: teal;
+        animation: slide 1.2s ease-in-out infinite alternate;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box"></div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Motion</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      @keyframes slide {
+        from { transform: translateX(0); }
+        to   { transform: translateX(120px); }
+      }
+
+      .box {
+        width: 60px;
+        height: 60px;
+        background: teal;
+        animation: slide 1.2s ease-in-out infinite alternate;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .box { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box"></div>
+  </body>
+</html>', ARRAY['translateX moves an element without touching layout.', 'Once nothing uses left, the element does not need positioning.', 'The reduced-motion block goes last so it wins on source order.']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'animation'), false
+from public.lessons l where l.slug = 'css-keyframes-motion'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_media_rule'::public.requirement_kind, NULL, NULL,
+       '(prefers-reduced-motion: reduce)', NULL, NULL, NULL,
+       'A reduced-motion block is present', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-motion-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.box', 'animation',
+       'none', NULL, NULL, NULL,
+       'Motion stops when reduced motion is requested', NULL, 1, true, '(prefers-reduced-motion: reduce)'
+from public.exercises e where e.slug = 'css-motion-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_property_absent'::public.requirement_kind, '.box', 'position',
+       NULL, NULL, NULL, NULL,
+       'The redundant positioning is gone', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-motion-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-keyframes-motion'), NULL, 'q-css-cheap-props', 1, 'single'::public.question_kind,
+        'Which two properties can the compositor animate without a layout pass?', '`transform` and `opacity`.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`transform` and `opacity`', true, NULL
+from public.quiz_questions where slug = 'q-css-cheap-props';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`width` and `height`', false, NULL
+from public.quiz_questions where slug = 'q-css-cheap-props';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`top` and `left`', false, NULL
+from public.quiz_questions where slug = 'q-css-cheap-props';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`margin` and `padding`', false, NULL
+from public.quiz_questions where slug = 'q-css-cheap-props';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-keyframes-motion'), NULL, 'q-css-reduced-motion', 2, 'single'::public.question_kind,
+        'What does `prefers-reduced-motion: reduce` tell you?', 'That the reader has asked their operating system for less motion.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Animations are unsupported', false, NULL
+from public.quiz_questions where slug = 'q-css-reduced-motion';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The reader has set a system-level preference for less motion', true, NULL
+from public.quiz_questions where slug = 'q-css-reduced-motion';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The device is low-powered', false, NULL
+from public.quiz_questions where slug = 'q-css-reduced-motion';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The battery is low', false, NULL
+from public.quiz_questions where slug = 'q-css-reduced-motion';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-keyframes-motion'), NULL, 'q-css-keyframes-name', 3, 'single'::public.question_kind,
+        'What connects a `@keyframes` block to an element?', 'The animation name, referenced by the `animation` property.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The selector inside the keyframes block', false, NULL
+from public.quiz_questions where slug = 'q-css-keyframes-name';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Source order', false, NULL
+from public.quiz_questions where slug = 'q-css-keyframes-name';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'A data attribute', false, NULL
+from public.quiz_questions where slug = 'q-css-keyframes-name';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The name, referenced in the `animation` property', true, NULL
+from public.quiz_questions where slug = 'q-css-keyframes-name';
+
+-- lesson: Milestone: motion with consent
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-motion-milestone', 3, 'Milestone: motion with consent', 'A transition, an animation and a preference honoured', 'Everything from this level on one component.',
+       ARRAY['Transition a hover state explicitly', 'Animate an entrance with compositor properties', 'Honour reduced motion globally']::text[], 18, 40, (select id from public.skills where slug = 'animation'), 0.8
+from public.modules m where m.slug = 'css-motion-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Combine transitions, keyframes and a reduced-motion override into one component"]}'::jsonb
+from public.lessons where slug = 'css-motion-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'code_example'::public.block_type, 'The whole level', NULL,
+       'transition: <prop> 200ms ease-out     name the property
+@keyframes … transform / opacity      cheap to animate
+animation: <name> 250ms ease-out      short entrance
+@media (prefers-reduced-motion: reduce)
+  → animation-duration: 0.01ms !important
+
+The last one is the only !important in this course
+that is not a mistake.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-motion-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'recall'::public.block_type, 'From memory', 'From memory: what is each of these for?',
+       NULL, NULL, NULL, '{"points":["`transition` on the resting state — smooth in both directions when a value changes.","`@keyframes` — a named sequence of states, applied with `animation`.","`transform` / `opacity` — the properties the compositor can animate without a layout pass.","`ease-out` — the default easing for anything the user triggered.","`prefers-reduced-motion: reduce` — the reader has asked for less motion; comply."]}'::jsonb
+from public.lessons where slug = 'css-motion-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Motion has a cost model and a consent model, and both are non-negotiable.","Name transition properties; animate transform and opacity.","A global reduced-motion block catches what you forget."],"nextUp":"Next: architecture and naming."}'::jsonb
+from public.lessons where slug = 'css-motion-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why is `!important` defensible in the reduced-motion override and almost nowhere else?"],"points":["Because it is not an author winning an argument with another author — it is a deliberate override applied on the reader''s behalf, against every animation in the stylesheet including ones added later by someone who did not think about it. It has to win, it is scoped to one media query, and there is no other mechanism that reaches rules you have not written yet."]}'::jsonb
+from public.lessons where slug = 'css-motion-milestone';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-motion-milestone-challenge', 1, 'challenge'::public.exercise_kind, 'A card that moves considerately',
+       'Give `.card` a `transition` of `transform 200ms ease-out` and a `:hover` that sets `transform: translateY(-4px)`. Define `@keyframes fade-up` from `opacity: 0; transform: translateY(8px)` to `opacity: 1; transform: none`, and apply it to `.card` as part of the same rule using the `animation` property with `fade-up 250ms ease-out`. Then add a `@media (prefers-reduced-motion: reduce)` block that sets `animation: none` and `transition: none` on `.card`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Motion milestone</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .card {
+        background: #f4f4f4;
+        padding: 1rem;
+        border-radius: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">Sourdough workshop</div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Motion milestone</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      @keyframes fade-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: none; }
+      }
+
+      .card {
+        background: #f4f4f4;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        animation: fade-up 250ms ease-out;
+        transition: transform 200ms ease-out;
+      }
+
+      .card:hover { transform: translateY(-4px); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .card {
+          animation: none;
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">Sourdough workshop</div>
+  </body>
+</html>', ARRAY['Both the animation and the transition go on .card itself.', 'The hover rule only needs the transform.', 'The reduced-motion block turns both off.', 'Keep the keyframes to opacity and transform.']::text[],
+       70, 4,
+       (select id from public.skills where slug = 'animation'), false
+from public.lessons l where l.slug = 'css-motion-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.card', 'transition',
+       'transform 200ms ease-out', NULL, NULL, NULL,
+       'The transition names its property', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-motion-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value_matches'::public.requirement_kind, '.card:hover', 'transform',
+       'translateY', NULL, NULL, NULL,
+       'The hover state moves with transform', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-motion-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value_matches'::public.requirement_kind, '.card', 'animation',
+       'fade-up', NULL, NULL, NULL,
+       'The entrance animation is applied', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-motion-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_media_rule'::public.requirement_kind, NULL, NULL,
+       '(prefers-reduced-motion: reduce)', NULL, NULL, NULL,
+       'A reduced-motion block is present', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-motion-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value'::public.requirement_kind, '.card', 'animation',
+       'none', NULL, NULL, NULL,
+       'The animation stops under reduced motion', NULL, 1, true, '(prefers-reduced-motion: reduce)'
+from public.exercises e where e.slug = 'css-motion-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'css_value'::public.requirement_kind, '.card', 'transition',
+       'none', NULL, NULL, NULL,
+       'The transition stops under reduced motion', NULL, 1, true, '(prefers-reduced-motion: reduce)'
+from public.exercises e where e.slug = 'css-motion-milestone-challenge';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-motion-milestone'), NULL, 'q-css-motion-both', 1, 'single'::public.question_kind,
+        'A card has both an entrance animation and a hover transition. What must the reduced-motion block do?', 'Turn off both — the preference covers all motion, not just keyframes.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Disable the transition only', false, NULL
+from public.quiz_questions where slug = 'q-css-motion-both';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Halve both durations', false, NULL
+from public.quiz_questions where slug = 'q-css-motion-both';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Disable both', true, NULL
+from public.quiz_questions where slug = 'q-css-motion-both';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Disable the animation only', false, NULL
+from public.quiz_questions where slug = 'q-css-motion-both';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-motion-milestone'), NULL, 'q-css-motion-important', 2, 'single'::public.question_kind,
+        'Why is `!important` acceptable inside a global reduced-motion override?', 'It is applied on the reader’s behalf and has to beat every author rule, including ones written later.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`!important` is required inside media queries', false, NULL
+from public.quiz_questions where slug = 'q-css-motion-important';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Media queries have no specificity otherwise', false, NULL
+from public.quiz_questions where slug = 'q-css-motion-important';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It makes the override faster', false, NULL
+from public.quiz_questions where slug = 'q-css-motion-important';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It must beat every author rule, including ones not yet written', true, NULL
+from public.quiz_questions where slug = 'q-css-motion-important';
+
+-- Level 9 milestone: Transitions and Motion questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-9-milestone'), 'a-css-9-transition-place', 1, 'single'::public.question_kind,
+        'A hover effect fades in but snaps back out. What is wrong?', 'The transition was declared inside `:hover`, so it disappears when the pointer leaves.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The duration is too short', false, NULL
+from public.quiz_questions where slug = 'a-css-9-transition-place';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The easing is wrong', false, NULL
+from public.quiz_questions where slug = 'a-css-9-transition-place';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`:hover` cannot be transitioned', false, NULL
+from public.quiz_questions where slug = 'a-css-9-transition-place';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The transition is declared on `:hover` instead of the resting state', true, NULL
+from public.quiz_questions where slug = 'a-css-9-transition-place';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-9-milestone'), 'a-css-9-compositor', 2, 'single'::public.question_kind,
+        'Why is animating `transform` cheaper than animating `left`?', 'The compositor can move an existing layer; `left` forces layout on every frame.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Transforms are cached by the server', false, NULL
+from public.quiz_questions where slug = 'a-css-9-compositor';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It avoids a layout recalculation on every frame', true, NULL
+from public.quiz_questions where slug = 'a-css-9-compositor';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It uses fewer keyframes', false, NULL
+from public.quiz_questions where slug = 'a-css-9-compositor';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`left` is deprecated', false, NULL
+from public.quiz_questions where slug = 'a-css-9-compositor';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-9-milestone'), 'a-css-9-all', 3, 'single'::public.question_kind,
+        'What is the risk of `transition: all`?', 'Properties added later animate silently, including expensive ones.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It is ignored by browsers', false, NULL
+from public.quiz_questions where slug = 'a-css-9-all';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Properties added later start animating without being asked to', true, NULL
+from public.quiz_questions where slug = 'a-css-9-all';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It applies only to the first property', false, NULL
+from public.quiz_questions where slug = 'a-css-9-all';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It disables the easing function', false, NULL
+from public.quiz_questions where slug = 'a-css-9-all';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-9-milestone'), 'a-css-9-preference-meaning', 4, 'single'::public.question_kind,
+        'Reduced motion is set. What is the right response?', 'Remove large movement; short fades and state indicators may remain.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Ignore it unless the device is slow', false, NULL
+from public.quiz_questions where slug = 'a-css-9-preference-meaning';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Remove all visual feedback of any kind', false, NULL
+from public.quiz_questions where slug = 'a-css-9-preference-meaning';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Show a prompt asking the reader to confirm', false, NULL
+from public.quiz_questions where slug = 'a-css-9-preference-meaning';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Remove large movement, keeping fades and state indicators', true, NULL
+from public.quiz_questions where slug = 'a-css-9-preference-meaning';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-9-milestone'), 'a-css-9-why-preference', 5, 'single'::public.question_kind,
+        'Why does reduced motion matter beyond preference?', 'Large motion can cause nausea, dizziness and migraine for people with vestibular disorders.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It affects search ranking', false, NULL
+from public.quiz_questions where slug = 'a-css-9-why-preference';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Older browsers cannot animate', false, NULL
+from public.quiz_questions where slug = 'a-css-9-why-preference';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Motion can make some readers physically unwell', true, NULL
+from public.quiz_questions where slug = 'a-css-9-why-preference';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Animation drains the battery', false, NULL
+from public.quiz_questions where slug = 'a-css-9-why-preference';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-9-milestone'), 'a-css-9-easing-default', 6, 'single'::public.question_kind,
+        'Which easing suits something the user just triggered?', '`ease-out` — fast at first, so the response feels immediate.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`ease-in`', false, NULL
+from public.quiz_questions where slug = 'a-css-9-easing-default';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`linear`', false, NULL
+from public.quiz_questions where slug = 'a-css-9-easing-default';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`steps(4)`', false, NULL
+from public.quiz_questions where slug = 'a-css-9-easing-default';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`ease-out`', true, NULL
+from public.quiz_questions where slug = 'a-css-9-easing-default';
+
+-- --------------------------------------------------------------------------
+-- CSS Architect — Level 10: Architecture and Scale
+-- --------------------------------------------------------------------------
+
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'css-architecture-level', 10, 'Architecture and Scale', 'Stylesheets that survive being worked on',
+       'Two things destroy stylesheets over time: specificity that only ever climbs, and rules nobody can prove are unused. Both are prevented by conventions that cost nothing on day one.', 'You can structure a stylesheet so that deleting a component deletes its CSS, and no rule needs `!important` to win.', 'violet'
+from public.courses c where c.slug = 'css-architect'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, NULL, 'css-level-10-milestone', 'milestone'::public.assessment_kind, 'Level 10 milestone: Architecture and Scale', 'Six questions on naming, specificity, layers and deletability. Pass mark 75%.',
+       0.75, 190, 10
+from public.levels l where l.slug = 'css-architecture-level'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+
+-- module: Naming, layering and scale
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'css-architecture-module', 1, 'Naming, layering and scale', 'Flat specificity, honest names, and the discipline that makes CSS deletable.',
+       52, false
+from public.levels l where l.slug = 'css-architecture-level'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'css-architecture-module' and p.slug = 'css-motion-module';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'css-architecture-module' and s.slug = 'css-architecture';
+
+-- lesson: Naming and flat specificity
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-naming', 1, 'Naming and flat specificity', 'Why one class is usually the right answer', 'A convention that keeps almost every selector at one class removes the entire category of bug where a rule cannot be overridden without escalating.',
+       ARRAY['Name components by what they are', 'Keep selectors to a single class', 'Explain why `!important` makes things worse']::text[], 17, 40, (select id from public.skills where slug = 'css-architecture'), 0.7
+from public.modules m where m.slug = 'css-architecture-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A rule will not override. Adding `!important` fixes it. What has actually happened?',
+       NULL, NULL, NULL, '{"options":["The next override now needs `!important` too — the problem was moved, not solved","The rule became faster","The specificity was reset to zero","Nothing; `!important` is the intended tool for this"],"answer":"The problem moved. `!important` beats everything below it, so the next person who needs to override that rule has no option left but another `!important` — and after that, nothing. Every escalation removes a rung from the ladder you are standing on. The actual fix is almost always to lower the specificity of the rule that was too strong."}'::jsonb
+from public.lessons where slug = 'css-naming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Apply a naming convention consistently","Keep selectors flat","Diagnose a specificity war"]}'::jsonb
+from public.lessons where slug = 'css-naming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'term'::public.block_type, 'Specificity war', 'A stylesheet where each override needs to be stronger than the last, ending in `!important` and then in nothing.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-naming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'code_example'::public.block_type, 'A naming convention', NULL,
+       '.card                 the component
+.card__title          a part of it
+.card--featured       a variant of it
+
+One class of specificity, whatever the nesting depth.
+The name says what it is, so the markup and the
+stylesheet can be read against each other.', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-naming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'comparison'::public.block_type, 'Flat versus nested', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"Flat — one class","code":".card { }\n.card__title { }\n.card--featured { }","why":"Every rule is the same weight, so source order decides and any of them can be overridden by any other. The selector also does not care where the element sits, so the component can be moved."},"bad":{"label":"Nested and specific","code":"#main .content .card h2 { }","why":"Needs an equally deep selector to override, and breaks the moment the component is used outside `#main`. The specificity is 1-2-1 and there is no way down from there except `!important`."}}'::jsonb
+from public.lessons where slug = 'css-naming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'interactive_demo'::public.block_type, 'Escalation, and the way out', 'The same override, done twice.',
+       NULL, NULL, NULL, '{"variants":[{"label":"The war","code":"<style>\n  #main .card p { color: crimson; }\n  .note { color: teal; }\n</style>\n<div id=\"main\"><div class=\"card\"><p class=\"note\">Meant to be teal, and is not.</p></div></div>","note":"The `.note` class cannot win: 1-2-1 against 0-1-0. The tempting fix is `!important`."},{"label":"Escalated","code":"<style>\n  #main .card p { color: crimson; }\n  .note { color: teal !important; }\n</style>\n<div id=\"main\"><div class=\"card\"><p class=\"note\">Teal now — at a price.</p></div></div>","note":"It works, and the next override of `.note` has nowhere left to go."},{"label":"Fixed properly","code":"<style>\n  .card p { color: crimson; }\n  .note { color: teal; }\n</style>\n<div id=\"main\"><div class=\"card\"><p class=\"note\">Teal, and still overridable.</p></div></div>","note":"Lower the rule that was too strong. Now source order decides, and everything stays adjustable."}]}'::jsonb
+from public.lessons where slug = 'css-naming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'callout'::public.block_type, 'A budget makes this checkable', 'Adopt a rule such as "no selector above one class" and it stops being a matter of judgement. Anything that needs to be stronger is a sign the component wants a variant class rather than a deeper selector — which is also the change that makes it reusable.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-naming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'predict_check'::public.block_type, 'Predict, then check', 'Both rules target the same element and the class rule comes first. Before you check: what colour is it?',
+       '<style>
+  .button { background: teal; }
+  a.button { background: crimson; }
+</style>
+<a href="#" class="button">Link button</a>', 'html', NULL, '{"outcome":"Crimson. `a.button` is 0-1-1 against `.button` at 0-1-0, so it wins regardless of order. This is how specificity creeps in without anyone deciding to escalate: adding the element name feels like a clarification rather than an escalation, but it permanently outranks the plain class and every later `.button` override has to account for it."}'::jsonb
+from public.lessons where slug = 'css-naming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'progressive_detail'::public.block_type, 'Why names beat appearances', '`.card--featured` still makes sense when the design changes; `.card--yellow` becomes a lie the first time the highlight turns blue, and you are left with `class="card--yellow"` on a blue box. The same reasoning as `--surface` over `--white` in the tokens level, applied to class names: name the role or the meaning, and the name survives redesigns. Utility classes such as `.mt-4` are a deliberate exception — they name exactly what they do and are read as such.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-naming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Keep almost every selector at one class.","Name components after what they are, not what they look like.","`!important` moves a problem rather than solving it.","The real fix for \"will not override\" is lowering the rule that was too strong."],"nextUp":"Next: scale, layering and deletability."}'::jsonb
+from public.lessons where slug = 'css-naming';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 11, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What does `!important` cost, beyond the immediate fix?","Why does `a.button` beat `.button` even when it comes first?","Why is `.card--featured` a better name than `.card--yellow`?"],"points":["It removes the last rung of the ladder. Anything that needs to override it must also use `!important`, and after that there is nothing left — so the next override cannot be made at all without editing the original rule.","Specificity is compared before source order. `a.button` is one element plus one class, which outranks one class, so order never gets consulted.","Because the name has to stay true after a redesign. The variant is \"featured\" whatever colour it ends up being; a name that describes the colour becomes actively misleading the moment the colour changes."]}'::jsonb
+from public.lessons where slug = 'css-naming';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-naming-debug', 1, 'debug'::public.exercise_kind, 'End the specificity war',
+       'The `.note` rule cannot win, so someone reached for `!important`. Fix it properly: replace `#main .card p` with a single class on the card itself — `.card { color: crimson }`, letting the colour inherit down to the paragraph — and remove the `!important` from `.note`. Both rules are then one class, so source order decides and `.note` wins on its own.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Specificity</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      #main .card p { color: crimson; }
+      .note { color: teal !important; }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <div class="card">
+        <p class="note">This should be teal.</p>
+      </div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Specificity</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .card { color: crimson; }
+      .note { color: teal; }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <div class="card">
+        <p class="note">This should be teal.</p>
+      </div>
+    </div>
+  </body>
+</html>', ARRAY['The id selector is what made the first rule unbeatable.', 'Colour inherits, so the card can set it for everything inside.', 'Once both rules are one class, source order decides — and .note is second.']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'css-architecture'), false
+from public.lessons l where l.slug = 'css-naming'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_no_important'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'No declaration needs !important any more', 'Raising specificity with !important wins this argument and loses the next one — the only way to override it later is another !important.', 1, true, NULL
+from public.exercises e where e.slug = 'css-naming-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_max_specificity'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, 256,
+       'Every selector is back within a one-class budget', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-naming-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.note', 'color',
+       'teal', NULL, NULL, NULL,
+       'The note rule now wins on its own', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-naming-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-naming'), NULL, 'q-css-important-escalation', 1, 'single'::public.question_kind,
+        'What does adding `!important` cost?', 'The next override needs one too, and after that there is nothing left.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Nothing at all', false, NULL
+from public.quiz_questions where slug = 'q-css-important-escalation';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It disables inheritance', false, NULL
+from public.quiz_questions where slug = 'q-css-important-escalation';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The next override has nowhere left to escalate to', true, NULL
+from public.quiz_questions where slug = 'q-css-important-escalation';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Rendering performance', false, NULL
+from public.quiz_questions where slug = 'q-css-important-escalation';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-naming'), NULL, 'q-css-flat-selectors', 2, 'single'::public.question_kind,
+        'Why keep selectors to a single class?', 'Equal weight means source order decides, so anything can override anything.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Browsers ignore deeper selectors', false, NULL
+from public.quiz_questions where slug = 'q-css-flat-selectors';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It makes rules inherit', false, NULL
+from public.quiz_questions where slug = 'q-css-flat-selectors';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Equal weight lets source order decide, so overriding stays possible', true, NULL
+from public.quiz_questions where slug = 'q-css-flat-selectors';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Shorter selectors parse faster', false, NULL
+from public.quiz_questions where slug = 'q-css-flat-selectors';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-naming'), NULL, 'q-css-name-meaning', 3, 'single'::public.question_kind,
+        'Which class name will still be true after a redesign?', 'A name describing the role, not the appearance.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`.card--yellow`', false, NULL
+from public.quiz_questions where slug = 'q-css-name-meaning';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`.card--big-text`', false, NULL
+from public.quiz_questions where slug = 'q-css-name-meaning';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`.card--rounded`', false, NULL
+from public.quiz_questions where slug = 'q-css-name-meaning';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`.card--featured`', true, NULL
+from public.quiz_questions where slug = 'q-css-name-meaning';
+
+-- lesson: Scale and deletability
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-scale', 2, 'Scale and deletability', 'CSS nobody is afraid to remove', 'The second thing that kills a stylesheet is uncertainty: rules nobody can prove are unused, so nobody removes them, so the file only grows.',
+       ARRAY['Structure a stylesheet so components are self-contained', 'Use `@layer` to order concerns without specificity', 'Explain what makes a rule safe to delete']::text[], 18, 40, (select id from public.skills where slug = 'css-architecture'), 0.7
+from public.modules m where m.slug = 'css-architecture-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A stylesheet has grown to 6,000 lines and nobody deletes anything. What is the underlying cause?',
+       NULL, NULL, NULL, '{"options":["No one can prove a rule is unused, so removing it feels risky","CSS files cannot be split","Deleting CSS breaks the cascade","The file is too large to edit"],"answer":"Nobody can prove a rule is unused. If a selector might match something, somewhere, in a template nobody has read, then deleting it is a gamble and leaving it is free — so it stays. Every convention in this lesson exists to make that proof easy: if a component owns its own file and its own class prefix, deleting the component deletes its CSS with certainty."}'::jsonb
+from public.lessons where slug = 'css-scale';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Give each component its own scope","Order concerns with `@layer`","Recognise what makes CSS safe to remove"]}'::jsonb
+from public.lessons where slug = 'css-scale';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'term'::public.block_type, 'Cascade layer', 'A named group declared with `@layer`. Every rule in an earlier layer loses to every rule in a later one, whatever their specificity.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-scale';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'worked_example'::public.block_type, 'A stylesheet you can still work on in a year', 'Four conventions, each preventing a specific failure.',
+       NULL, NULL, NULL, '{"steps":[{"title":"One component, one prefix, one place","code":"/* card.css — everything .card, nothing else */\n.card { }\n.card__title { }\n.card--featured { }","reasoning":"The proof of deletability: remove the component from the markup, delete this file, and nothing else can possibly be affected — because nothing else uses the prefix. That certainty is the whole point."},{"title":"Order concerns with layers, not with strength","code":"@layer reset, base, components, utilities;\n\n@layer components { .card { padding: 1rem; } }\n@layer utilities  { .p-0 { padding: 0; } }","reasoning":"A utility beats a component because `utilities` is declared later, not because it is more specific. This is the mechanism that lets a zero-specificity utility win without `!important` — the one honest way to make a weak selector beat a strong one."},{"title":"Keep the reset at zero specificity","code":"@layer reset {\n  :where(h1, h2, h3) { margin-block: 0; }\n}","reasoning":"`:where()` always contributes zero specificity, so nothing ever has to fight the reset. A reset that needs overriding is a reset that was written too strongly."},{"title":"Let the tokens be the shared surface","code":":root { --space: 1rem; }\n.card { padding: var(--space); }\n.panel { padding: var(--space); }","reasoning":"Components share values rather than sharing rules. Nothing couples `.card` to `.panel`, so either can be deleted alone — which would not be true if they shared a `.card, .panel` selector."}]}'::jsonb
+from public.lessons where slug = 'css-scale';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'interactive_demo'::public.block_type, 'Layers beat specificity', 'The utility is weaker and still wins.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Without layers","code":"<style>\n  .card { padding: 2rem; }\n  .p-0 { padding: 0; }\n</style>\n<div class=\"card p-0\">Both are one class, so source order decides — the utility happens to win.</div>","note":"It works here only because the utility was written second. Move it and it silently loses."},{"label":"With layers","code":"<style>\n  @layer components, utilities;\n  @layer utilities { .p-0 { padding: 0; } }\n  @layer components { .card { padding: 2rem; } }\n</style>\n<div class=\"card p-0\">The utility wins even though it is written first.</div>","note":"The layer order decides, so the file order no longer matters. This is the guarantee `!important` was being misused to provide."}]}'::jsonb
+from public.lessons where slug = 'css-scale';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'callout'::public.block_type, 'Layers invert what you expect from specificity', 'A one-class rule in a later layer beats an id selector in an earlier one. That is the point — but it does mean the first question when a rule mysteriously loses is "which layer is it in", not "how specific is it". Declare the layer order once, at the top, so the answer is always visible.',
+       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
+from public.lessons where slug = 'css-scale';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'self_explain'::public.block_type, 'Explain it in your own words', 'What makes a rule safe to delete? Answer as if writing the team convention.',
+       NULL, NULL, NULL, '{"modelAnswer":"A rule is safe to delete when you can prove nothing uses it, and that proof has to be cheap or nobody will do it. Three things make it cheap. First, a unique prefix: if every selector in the file starts `.card`, then searching the templates for `card` finds every use, and no other component can be relying on it accidentally. Second, no shared selectors — the moment a rule reads `.card, .panel`, deleting the card means reading the panel too, and the coupling is invisible from either side. Third, no reliance on ambient context: a rule written `#main .card p` might be depended on by anything that ever appears inside `#main`, so its blast radius is the whole page. Flat, prefixed, self-contained rules make deletion a local decision, and a stylesheet where deletion is local is one that stops growing."}'::jsonb
+from public.lessons where slug = 'css-scale';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'checklist'::public.block_type, 'Architecture review', NULL,
+       NULL, NULL, NULL, '{"items":["Almost every selector is one class","No `!important` outside a reduced-motion or print override","Component names describe what they are, not how they look","Each component owns a prefix and a place","Layer order declared once, near the top","Reset written with `:where()` so it never needs overriding","Shared values live in tokens, not in shared selectors"]}'::jsonb
+from public.lessons where slug = 'css-scale';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["A stylesheet stops growing when deleting from it is provably safe.","Prefix and isolate components so deletion is a local decision.","`@layer` orders concerns without touching specificity.","`:where()` keeps a reset at zero specificity."],"nextUp":"Next: the Level 10 milestone."}'::jsonb
+from public.lessons where slug = 'css-scale';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What does `@layer` let you do that specificity cannot?","Why does `:where()` suit a reset?","Why is a shared `.card, .panel` selector a liability?"],"points":["Make a weak selector beat a strong one deliberately and predictably. A later layer beats an earlier one whatever the specificity, which is the guarantee people reach for `!important` to get.","It contributes zero specificity, so every author rule outranks it automatically and nobody ever has to fight the reset.","Because it couples two components invisibly. Deleting one means auditing the other, so deletion stops being a local decision — and that is exactly the uncertainty that makes stylesheets grow forever."]}'::jsonb
+from public.lessons where slug = 'css-scale';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-layers-guided', 1, 'guided'::public.exercise_kind, 'Order concerns with layers',
+       'Declare `@layer components, utilities;` at the top. Put the existing `.card` rule inside a `@layer components` block, and the `.p-0` rule inside a `@layer utilities` block — with the utilities block written *first* in the file, to prove the layer order rather than source order is deciding.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Layers</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .p-0 { padding: 0; }
+      .card { padding: 2rem; background: #f4f4f4; }
+    </style>
+  </head>
+  <body>
+    <div class="card p-0">No padding, despite the card rule.</div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Layers</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      @layer components, utilities;
+
+      @layer utilities {
+        .p-0 { padding: 0; }
+      }
+
+      @layer components {
+        .card { padding: 2rem; background: #f4f4f4; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card p-0">No padding, despite the card rule.</div>
+  </body>
+</html>', ARRAY['The @layer declaration lists the order once, before the blocks.', 'Later in the list means it wins.', 'Wrap each existing rule in its layer block without changing the rule itself.']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'css-architecture'), false
+from public.lessons l where l.slug = 'css-scale'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.card', 'padding',
+       '0', NULL, NULL, NULL,
+       'The utility wins on layer order, not source order', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-layers-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.card', 'background',
+       '#f4f4f4', NULL, NULL, NULL,
+       'The component rule still applies', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-layers-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_no_important'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'The layer order does the work, not !important', 'Raising specificity with !important wins this argument and loses the next one — the only way to override it later is another !important.', 1, true, NULL
+from public.exercises e where e.slug = 'css-layers-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_max_specificity'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, 256,
+       'No selector needed to be made stronger', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-layers-guided';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-scale'), NULL, 'q-css-layer-order', 1, 'single'::public.question_kind,
+        'A rule in an earlier layer versus a rule in a later layer — which wins?', 'The later layer, whatever the specificity of either rule.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The later layer, regardless of specificity', true, NULL
+from public.quiz_questions where slug = 'q-css-layer-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The more specific rule', false, NULL
+from public.quiz_questions where slug = 'q-css-layer-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Whichever comes later in the file', false, NULL
+from public.quiz_questions where slug = 'q-css-layer-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The earlier layer', false, NULL
+from public.quiz_questions where slug = 'q-css-layer-order';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-scale'), NULL, 'q-css-where-reset', 2, 'single'::public.question_kind,
+        'Why write a reset with `:where()`?', 'It contributes zero specificity, so nothing ever has to fight it.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It creates a new layer', false, NULL
+from public.quiz_questions where slug = 'q-css-where-reset';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It contributes zero specificity', true, NULL
+from public.quiz_questions where slug = 'q-css-where-reset';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It is faster to match', false, NULL
+from public.quiz_questions where slug = 'q-css-where-reset';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It applies only to the first match', false, NULL
+from public.quiz_questions where slug = 'q-css-where-reset';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-scale'), NULL, 'q-css-deletable', 3, 'single'::public.question_kind,
+        'What makes a rule safe to delete?', 'A unique prefix and no shared selectors, so its use can be proved.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It has low specificity', false, NULL
+from public.quiz_questions where slug = 'q-css-deletable';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It is at the end of the file', false, NULL
+from public.quiz_questions where slug = 'q-css-deletable';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'You can prove nothing else uses it', true, NULL
+from public.quiz_questions where slug = 'q-css-deletable';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It is short', false, NULL
+from public.quiz_questions where slug = 'q-css-deletable';
+
+-- lesson: Milestone: a stylesheet built to last
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-architecture-milestone', 3, 'Milestone: a stylesheet built to last', 'Flat, layered, named and deletable', 'The conventions from this level applied together.',
+       ARRAY['Keep every selector within a one-class budget', 'Order concerns with layers', 'Name components honestly']::text[], 18, 40, (select id from public.skills where slug = 'css-architecture'), 0.8
+from public.modules m where m.slug = 'css-architecture-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Apply the whole convention set to one small stylesheet"]}'::jsonb
+from public.lessons where slug = 'css-architecture-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'code_example'::public.block_type, 'The convention, in full', NULL,
+       '@layer reset, base, components, utilities;
+
+:where(...)        reset, zero specificity
+.card              one class, always
+.card__title       a part
+.card--featured    a variant
+--space            shared values live here
+!important         only for a reader-facing override', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-architecture-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'recall'::public.block_type, 'From memory', 'From memory: what does each convention prevent?',
+       NULL, NULL, NULL, '{"points":["One class per selector — prevents specificity wars, because equal weight means order decides.","A prefix per component — prevents undeletable CSS, because use can be proved by searching.","`@layer` — prevents `!important`, by letting a weak rule beat a strong one deliberately.","`:where()` in the reset — prevents fighting your own baseline.","Role-based names — prevents names that lie after a redesign.","Tokens rather than shared selectors — prevents invisible coupling between components."]}'::jsonb
+from public.lessons where slug = 'css-architecture-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Every convention here buys back a specific future problem.","Flat specificity keeps overriding possible.","Provable deletability keeps the file from growing forever."],"nextUp":"Next: the developer tools."}'::jsonb
+from public.lessons where slug = 'css-architecture-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Which single convention would you keep if you could only have one, and why?"],"points":["Flat specificity — almost every selector at one class. It is the one that keeps every other decision reversible: as long as nothing has escalated, any rule can be overridden by any other and mistakes stay cheap to fix. Deletability is the more valuable property in the long run, but it is unachievable in a stylesheet that has already gone to war with itself."]}'::jsonb
+from public.lessons where slug = 'css-architecture-milestone';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-architecture-milestone-challenge', 1, 'challenge'::public.exercise_kind, 'Restructure a small stylesheet',
+       'Rewrite this to the convention. Declare `@layer components, utilities;`. Replace `#main .card h2` with a `.card__title` class — adding the class to the markup — and `.card.yellow` with `.card--featured`. Put component rules in the components layer and `.p-0` in the utilities layer. Remove every `!important`, and keep every selector within a one-class budget.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Architecture</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      #main .card h2 { font-size: 1.5rem; }
+      .card.yellow { border-left: 4px solid crimson; }
+      .p-0 { padding: 0 !important; }
+      .card { padding: 1rem; background: #f4f4f4; }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <div class="card yellow">
+        <h2>Sourdough</h2>
+      </div>
+      <div class="card p-0">Flush</div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Architecture</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      @layer components, utilities;
+
+      @layer components {
+        .card { padding: 1rem; background: #f4f4f4; }
+        .card__title { font-size: 1.5rem; }
+        .card--featured { border-left: 4px solid crimson; }
+      }
+
+      @layer utilities {
+        .p-0 { padding: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <div class="card card--featured">
+        <h2 class="card__title">Sourdough</h2>
+      </div>
+      <div class="card p-0">Flush</div>
+    </div>
+  </body>
+</html>', ARRAY['The heading needs a class in the markup before the selector can use one.', 'A variant is a class on the same element, not a second class chained in the selector.', 'Once .p-0 is in the utilities layer it no longer needs !important.', 'Declare the layer order once, before the blocks.']::text[],
+       75, 4,
+       (select id from public.skills where slug = 'css-architecture'), false
+from public.lessons l where l.slug = 'css-architecture-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_no_important'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Nothing needs !important once the layers are in place', 'Raising specificity with !important wins this argument and loses the next one — the only way to override it later is another !important.', 1, true, NULL
+from public.exercises e where e.slug = 'css-architecture-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_max_specificity'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, 256,
+       'Every selector is within the one-class budget', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-architecture-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_rule_exists'::public.requirement_kind, NULL, NULL,
+       '.card__title', NULL, NULL, NULL,
+       'The heading is targeted by its own class', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-architecture-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_rule_exists'::public.requirement_kind, NULL, NULL,
+       '.card--featured', NULL, NULL, NULL,
+       'The variant is named after what it is', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-architecture-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value'::public.requirement_kind, '.card__title', 'font-size',
+       '1.5rem', NULL, NULL, NULL,
+       'The title rule still applies', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-architecture-milestone-challenge';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'css_value'::public.requirement_kind, '.p-0', 'padding',
+       '0', NULL, NULL, NULL,
+       'The utility still wins, now by layer order', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-architecture-milestone-challenge';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-architecture-milestone'), NULL, 'q-css-variant-class', 1, 'single'::public.question_kind,
+        'How is a variant applied, in this convention?', 'As a second class on the same element — `.card .card--featured` in the markup.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'An id on the element', false, NULL
+from public.quiz_questions where slug = 'q-css-variant-class';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'An `!important` override', false, NULL
+from public.quiz_questions where slug = 'q-css-variant-class';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'A second class on the element, styled by its own one-class rule', true, NULL
+from public.quiz_questions where slug = 'q-css-variant-class';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A chained selector such as `.card.featured`', false, NULL
+from public.quiz_questions where slug = 'q-css-variant-class';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-architecture-milestone'), NULL, 'q-css-arch-goal', 2, 'single'::public.question_kind,
+        'What is the practical goal of a CSS architecture?', 'That overriding stays possible and deleting stays provably safe — the two things that fail at scale.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Overriding stays possible and deleting stays provably safe', true, NULL
+from public.quiz_questions where slug = 'q-css-arch-goal';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The smallest possible file', false, NULL
+from public.quiz_questions where slug = 'q-css-arch-goal';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The fewest possible classes', false, NULL
+from public.quiz_questions where slug = 'q-css-arch-goal';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Matching the designer’s folder structure', false, NULL
+from public.quiz_questions where slug = 'q-css-arch-goal';
+
+-- Level 10 milestone: Architecture and Scale questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-10-milestone'), 'a-css-10-important', 1, 'single'::public.question_kind,
+        'A rule will not override. What is usually the right fix?', 'Lower the specificity of the rule that was too strong.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Add an id to the selector', false, NULL
+from public.quiz_questions where slug = 'a-css-10-important';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Move the rule to the end of the file', false, NULL
+from public.quiz_questions where slug = 'a-css-10-important';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Lower the specificity of the rule that was too strong', true, NULL
+from public.quiz_questions where slug = 'a-css-10-important';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Add `!important`', false, NULL
+from public.quiz_questions where slug = 'a-css-10-important';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-10-milestone'), 'a-css-10-layer-beats', 2, 'single'::public.question_kind,
+        'A one-class rule in `utilities` versus an id rule in `components`, with utilities declared last. Which wins?', 'The utility. Layer order is consulted before specificity.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The id rule, because ids are stronger', false, NULL
+from public.quiz_questions where slug = 'a-css-10-layer-beats';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Whichever appears later in the file', false, NULL
+from public.quiz_questions where slug = 'a-css-10-layer-beats';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Neither; the conflict is an error', false, NULL
+from public.quiz_questions where slug = 'a-css-10-layer-beats';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The one-class rule in `utilities`', true, NULL
+from public.quiz_questions where slug = 'a-css-10-layer-beats';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-10-milestone'), 'a-css-10-where', 3, 'single'::public.question_kind,
+        'What does `:where()` contribute to specificity?', 'Zero, always.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The same as its most specific argument', false, NULL
+from public.quiz_questions where slug = 'a-css-10-where';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Zero', true, NULL
+from public.quiz_questions where slug = 'a-css-10-where';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'One class', false, NULL
+from public.quiz_questions where slug = 'a-css-10-where';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'One id', false, NULL
+from public.quiz_questions where slug = 'a-css-10-where';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-10-milestone'), 'a-css-10-prefix', 4, 'single'::public.question_kind,
+        'Why give each component a unique class prefix?', 'So its use can be proved by searching, which makes deletion safe.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'To raise its specificity', false, NULL
+from public.quiz_questions where slug = 'a-css-10-prefix';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Because CSS requires unique names', false, NULL
+from public.quiz_questions where slug = 'a-css-10-prefix';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'So you can prove where it is used, and delete it safely', true, NULL
+from public.quiz_questions where slug = 'a-css-10-prefix';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'To reduce file size', false, NULL
+from public.quiz_questions where slug = 'a-css-10-prefix';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-10-milestone'), 'a-css-10-shared-selector', 5, 'single'::public.question_kind,
+        'What is the problem with a shared `.card, .panel` selector?', 'It couples two components invisibly, so neither can be deleted locally.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Only one of the two will match', false, NULL
+from public.quiz_questions where slug = 'a-css-10-shared-selector';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It couples the two components, so neither can be changed alone', true, NULL
+from public.quiz_questions where slug = 'a-css-10-shared-selector';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Comma selectors are slower', false, NULL
+from public.quiz_questions where slug = 'a-css-10-shared-selector';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It doubles the specificity', false, NULL
+from public.quiz_questions where slug = 'a-css-10-shared-selector';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-10-milestone'), 'a-css-10-name-role', 6, 'single'::public.question_kind,
+        'Why name a modifier after its role rather than its appearance?', 'The name has to stay true after a redesign.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The name stays true when the design changes', true, NULL
+from public.quiz_questions where slug = 'a-css-10-name-role';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Role names are shorter', false, NULL
+from public.quiz_questions where slug = 'a-css-10-name-role';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Appearance names are invalid', false, NULL
+from public.quiz_questions where slug = 'a-css-10-name-role';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It changes the specificity', false, NULL
+from public.quiz_questions where slug = 'a-css-10-name-role';
+
+-- --------------------------------------------------------------------------
+-- CSS Architect — Level 11: Debugging CSS
+-- --------------------------------------------------------------------------
+
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'css-debugging-level', 11, 'Debugging CSS', 'Why it is not working, in order of likelihood',
+       'Almost every "my CSS is not working" is one of a short list of causes. Checking them in order — with the inspector rather than by rereading the file — turns an hour of guessing into a couple of minutes.', 'You can diagnose a rule that did not apply by reading computed values rather than by guessing.', 'violet'
+from public.courses c where c.slug = 'css-architect'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, NULL, 'css-level-11-milestone', 'milestone'::public.assessment_kind, 'Level 11 milestone: Debugging CSS', 'Six questions on the inspector and the diagnostic order. Pass mark 75%.',
+       0.75, 190, 11
+from public.levels l where l.slug = 'css-debugging-level'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+
+-- module: Finding out why
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'css-debugging-module', 1, 'Finding out why', 'The inspector, computed values, and the six usual causes.',
+       52, false
+from public.levels l where l.slug = 'css-debugging-level'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'css-debugging-module' and p.slug = 'css-architecture-module';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0
+from public.modules m, public.skills s
+where m.slug = 'css-debugging-module' and s.slug = 'css-debugging';
+
+-- lesson: Reading the inspector
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-inspector', 1, 'Reading the inspector', 'Computed values answer the question the file cannot', 'The styles panel shows what you wrote. The computed panel shows what the browser decided. When those disagree, the second one is the fact.',
+       ARRAY['Read the computed value of a property', 'Recognise a struck-through declaration and say why', 'Use the box model diagram to explain a size']::text[], 16, 40, (select id from public.skills where slug = 'css-debugging'), 0.7
+from public.modules m where m.slug = 'css-debugging-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'A declaration appears struck through in the styles panel. What does that mean?',
+       NULL, NULL, NULL, '{"options":["It did not win — something overrode it, or the value is invalid","It is a comment","It has not loaded yet","It applies only on hover"],"answer":"It lost, or it was never valid. The browser is telling you the exact thing you would otherwise spend twenty minutes guessing at: this declaration is not in effect. Hovering the rule above it shows what beat it, and if nothing did, the value itself was rejected — a misspelled property, a missing unit, or a `var()` that resolved to nothing."}'::jsonb
+from public.lessons where slug = 'css-inspector';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Find the computed value of any property","Explain a struck-through declaration","Read the box model diagram"]}'::jsonb
+from public.lessons where slug = 'css-inspector';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'term'::public.block_type, 'Computed value', 'What the browser actually resolved a property to for this element, after the cascade, inheritance and every relative unit.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-inspector';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'code_example'::public.block_type, 'What each part is for', NULL,
+       'Styles panel     what you wrote, in cascade order
+                 struck through = did not win, or invalid
+Computed panel   what the browser decided — the fact
+Box model        content, padding, border, margin, measured
+:hov             force a state so you can inspect it
+Filter box       type a property name to find who set it', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-inspector';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'comparison'::public.block_type, 'Two ways to answer "why is this not red"', NULL,
+       NULL, NULL, NULL, '{"good":{"label":"Read the computed value","code":"Computed → color: rgb(0, 128, 128)\nClick the arrow → set by .card, line 12","why":"One answer, with the winning rule named. There is nothing left to guess at."},"bad":{"label":"Reread the stylesheet","code":"/* scrolling through 400 lines\n   looking for something that might\n   be overriding it */","why":"Slow, and it cannot find the causes that are not in the file at all — an inherited value, a browser default, or a rule from a stylesheet you forgot was loaded."}}'::jsonb
+from public.lessons where slug = 'css-inspector';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'progressive_detail'::public.block_type, 'Force a state to inspect it', 'A hover or focus style cannot be inspected while you are moving the pointer to the panel. The `:hov` toggle pins the state on, so `:hover`, `:focus`, `:focus-visible` and `:active` styles can be read like any other. This is the only practical way to debug a focus ring, and it is the reason focus styles are so often broken — people cannot see them while they work.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-inspector';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'interactive_demo'::public.block_type, 'What the computed value tells you', 'Three cases, one method.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Overridden","code":"<style>\n  .note { color: crimson; }\n  .card p { color: teal; }\n</style>\n<div class=\"card\"><p class=\"note\">Computed colour is teal — `.card p` is 0-1-1 and beats `.note` at 0-1-0.</p></div>","note":"The styles panel would show `color: crimson` struck through."},{"label":"Invalid value","code":"<style>\n  .note { color: teal; padding: 10; }\n</style>\n<p class=\"note\">The padding is dropped entirely — 10 has no unit, so the declaration is invalid.</p>","note":"Struck through with no override anywhere. That combination always means the value was rejected."},{"label":"Never matched","code":"<style>\n  .notes { color: crimson; }\n</style>\n<p class=\"note\">The rule says `.notes`; the element is `.note`. Nothing is struck through, because the rule was never in the running.</p>","note":"The tell is the rule not appearing in the styles panel at all — the most commonly missed diagnosis, because there is nothing to see."}]}'::jsonb
+from public.lessons where slug = 'css-inspector';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'predict_check'::public.block_type, 'Predict, then check', 'No `box-sizing` is set here. Before you check: what total width does the box model diagram report?',
+       '<style>
+  .box { width: 200px; padding: 20px; border: 5px solid teal; }
+</style>
+<div class="box">Measured</div>', 'html', NULL, '{"outcome":"250px — 200 of content, plus 20 of padding and 5 of border on each side. Under the default `content-box`, `width` sizes the content alone and everything else is added on top. The box model diagram in the inspector shows all four rings with their measured numbers, which settles this in a glance rather than by arithmetic."}'::jsonb
+from public.lessons where slug = 'css-inspector';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["The styles panel shows what you wrote; the computed panel shows what won.","Struck through means overridden, or invalid.","A rule that is missing entirely never matched at all.","Force a state with `:hov` to inspect hover and focus styles."],"nextUp":"Next: the six usual causes."}'::jsonb
+from public.lessons where slug = 'css-inspector';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 10, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["A declaration is struck through and nothing above it sets that property. What happened?","What does it mean when a rule you expected does not appear in the styles panel?","Why is the computed panel more trustworthy than the file?"],"points":["The value was invalid, so the browser dropped the declaration. A missing unit, a misspelled property, or a `var()` that resolved to nothing.","It never matched the element — usually a typo in the selector, or the element does not have the class you think it does. Nothing is struck through because the rule was never a candidate.","Because it reports what the browser decided after the cascade, inheritance, relative units and defaults. The file only shows what you wrote, and cannot show the causes that are not in it."]}'::jsonb
+from public.lessons where slug = 'css-inspector';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-invalid-debug', 1, 'debug'::public.exercise_kind, 'Three declarations that never applied',
+       'Each fault is one the inspector would show you. `padding: 10` has no unit, so it is invalid — make it `10px`. `colour` is not a CSS property — it is spelled `color`. And the rule targets `.notes` while the element is `.note` — fix the selector.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Invalid</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .note { padding: 10; }
+      .note { colour: teal; }
+      .notes { border-left: 3px solid teal; }
+    </style>
+  </head>
+  <body>
+    <p class="note">Nothing here applies.</p>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Invalid</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .note { padding: 10px; }
+      .note { color: teal; }
+      .note { border-left: 3px solid teal; }
+    </style>
+  </head>
+  <body>
+    <p class="note">Nothing here applies.</p>
+  </body>
+</html>', ARRAY['A length needs a unit — a bare number is invalid except for zero.', 'CSS uses the American spelling.', 'Check the class in the markup against the class in the selector.']::text[],
+       50, 2,
+       (select id from public.skills where slug = 'css-debugging'), false
+from public.lessons l where l.slug = 'css-inspector'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.note', 'padding',
+       '10px', NULL, NULL, NULL,
+       'The padding now has a unit and applies', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-invalid-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.note', 'color',
+       'teal', NULL, NULL, NULL,
+       'The property name is spelled as CSS spells it', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-invalid-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.note', 'border-left',
+       '3px solid teal', NULL, NULL, NULL,
+       'The selector matches the element', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-invalid-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-inspector'), NULL, 'q-css-struck-through', 1, 'single'::public.question_kind,
+        'A declaration is struck through in the styles panel. What are the two possible causes?', 'Something overrode it, or the value was invalid.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The file has not loaded', false, NULL
+from public.quiz_questions where slug = 'q-css-struck-through';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It applies only in print', false, NULL
+from public.quiz_questions where slug = 'q-css-struck-through';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It was overridden, or the value is invalid', true, NULL
+from public.quiz_questions where slug = 'q-css-struck-through';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It is commented out or misspelled', false, NULL
+from public.quiz_questions where slug = 'q-css-struck-through';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-inspector'), NULL, 'q-css-computed-panel', 2, 'single'::public.question_kind,
+        'What does the computed panel show?', 'What the browser resolved, after cascade, inheritance and units.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The most specific selector', false, NULL
+from public.quiz_questions where slug = 'q-css-computed-panel';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The browser default', false, NULL
+from public.quiz_questions where slug = 'q-css-computed-panel';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The value the browser actually resolved', true, NULL
+from public.quiz_questions where slug = 'q-css-computed-panel';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The last declaration in the file', false, NULL
+from public.quiz_questions where slug = 'q-css-computed-panel';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-inspector'), NULL, 'q-css-missing-rule', 3, 'single'::public.question_kind,
+        'Your rule does not appear in the styles panel at all. What does that indicate?', 'It never matched the element.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It was overridden', false, NULL
+from public.quiz_questions where slug = 'q-css-missing-rule';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The value was invalid', false, NULL
+from public.quiz_questions where slug = 'q-css-missing-rule';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It is inside a media query', false, NULL
+from public.quiz_questions where slug = 'q-css-missing-rule';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The selector never matched', true, NULL
+from public.quiz_questions where slug = 'q-css-missing-rule';
+
+-- lesson: The six usual causes
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-diagnosis', 2, 'The six usual causes', 'A checklist that beats staring at the file', 'Working through the list in order finds the cause faster than any amount of rereading, because each step rules out a whole category.',
+       ARRAY['Apply the diagnostic list in order', 'Distinguish "did not match" from "did not win"', 'Recognise the causes that are not in the file']::text[], 18, 40, (select id from public.skills where slug = 'css-debugging'), 0.7
+from public.modules m where m.slug = 'css-debugging-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'What is the first thing to check when a rule seems not to apply?',
+       NULL, NULL, NULL, '{"options":["Whether it matched the element at all","Whether the browser supports the property","Whether the file is cached","Whether the value needs a prefix"],"answer":"Whether it matched. It costs one glance at the styles panel and eliminates the largest category outright — typos in the selector, a class that is not on the element, a rule in the wrong block. Checking support or caching first means investigating rare causes before common ones, which is how debugging sessions turn into afternoons."}'::jsonb
+from public.lessons where slug = 'css-diagnosis';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Work the list in order","Name the six causes","Explain why order matters in diagnosis"]}'::jsonb
+from public.lessons where slug = 'css-diagnosis';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'worked_example'::public.block_type, 'The list, in order', 'Each step eliminates a category, so the order is the method.',
+       NULL, NULL, NULL, '{"steps":[{"title":"1. Did it match?","code":"/* Rule absent from the styles panel entirely. */\n.notes { color: teal }   /* element is class=\"note\" */","reasoning":"The biggest category and the cheapest to check. A typo in the selector, a class that is not on the element, or a rule that ended up inside a media query that is not active."},{"title":"2. Did it win?","code":"/* Struck through, with a stronger rule above it. */\n.note { color: crimson }\n.card p { color: teal }   /* 0-1-1 beats 0-1-0 */","reasoning":"Specificity or source order. The panel names the winner, so this is a read rather than a deduction."},{"title":"3. Was the value valid?","code":"padding: 10;        /* no unit */\ncolour: teal;       /* not a property */\ncolor: var(--nope); /* resolves to nothing */","reasoning":"Struck through with nothing overriding it. The browser dropped the declaration and said nothing — the third case is the nastiest, because the syntax is perfect."},{"title":"4. Does the property apply to that element?","code":"span { width: 200px }   /* inline: ignored */\n.parent { gap: 1rem }   /* not flex or grid: ignored */","reasoning":"A valid declaration on an element it means nothing for. `width` on an inline element and `gap` without a flex or grid container are the two that catch nearly everyone."},{"title":"5. Is something else in play?","code":"/* inherited value, browser default,\n   a reset, or a rule from another sheet */","reasoning":"The causes that are not in your file. The computed panel finds them because it reports the source of the winning value wherever it came from."},{"title":"6. Is it the element you think it is?","code":"/* the padding is on the wrapper,\n   the border is on the child */","reasoning":"Last because it is the least common and the hardest to see. Select the element in the inspector rather than assuming, and the box model diagram settles it."}]}'::jsonb
+from public.lessons where slug = 'css-diagnosis';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'interactive_demo'::public.block_type, 'Causes four and six, seen', 'Both look like the CSS is being ignored.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Property does not apply","code":"<style>\n  .tag { width: 200px; background: #eee; }\n</style>\n<span class=\"tag\">width does nothing on an inline element</span>","note":"Perfectly valid CSS, silently doing nothing. `display: inline-block` would make it take effect."},{"label":"Fixed","code":"<style>\n  .tag { display: inline-block; width: 200px; background: #eee; }\n</style>\n<span class=\"tag\">Now it is 200px</span>","note":"The declaration was never the problem — the display type was."},{"label":"Wrong element","code":"<style>\n  .wrapper { padding: 2rem; background: #eee; }\n  .card { background: #fff; }\n</style>\n<div class=\"wrapper\"><div class=\"card\">The padding people go looking for on .card is on .wrapper</div></div>","note":"Selecting the element in the inspector rather than assuming which one it is takes a second and settles it."}]}'::jsonb
+from public.lessons where slug = 'css-diagnosis';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, 'When you are truly stuck, bisect', 'Comment out half the stylesheet. If the problem disappears, it was in that half; if not, it was in the other. Six or seven halvings locate the cause in a 400-line file with certainty, and it works even when you have no theory at all — which is exactly the situation where rereading is least effective.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-diagnosis';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'self_explain'::public.block_type, 'Explain it in your own words', 'Why does working the list in order beat checking whatever you suspect first?',
+       NULL, NULL, NULL, '{"modelAnswer":"Because your suspicion is shaped by what you were last working on, not by what is actually most likely — so it sends you to a rare cause while the common one goes unchecked. The order is not arbitrary either: each step eliminates a whole category, and the early steps are the cheapest to perform as well as the most likely to hit. Checking \"did it match\" costs one glance and rules out more cases than everything below it combined. There is also a discipline benefit: a fixed order means you cannot check the same thing three times and skip the step that would have found it, which is the actual shape of most long debugging sessions."}'::jsonb
+from public.lessons where slug = 'css-diagnosis';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'checklist'::public.block_type, 'When a rule is not applying', NULL,
+       NULL, NULL, NULL, '{"items":["Did it match? — the rule appears in the styles panel","Did it win? — not struck through","Was the value valid? — struck through with nothing overriding it","Does the property apply to this element? — inline, or not a flex container","Is something else in play? — inheritance, a default, another sheet","Is it the element you think it is? — select it and read the box model"]}'::jsonb
+from public.lessons where slug = 'css-diagnosis';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Six causes account for nearly every case.","Check them in order; each step eliminates a category.","Valid CSS on the wrong kind of element does nothing, silently.","Bisect when you have no theory at all."],"nextUp":"Next: the Level 11 milestone."}'::jsonb
+from public.lessons where slug = 'css-diagnosis';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What is the difference between \"did not match\" and \"did not win\", and how do you tell them apart?","Which two properties most often fail because they do not apply to the element?","When is bisecting the right tool?"],"points":["A rule that did not match was never a candidate, so it is absent from the styles panel entirely. One that did not win is present but struck through, with the winner shown above it. The panel distinguishes them at a glance — absent versus struck through.","`width` and `height` on an inline element, and `gap` on a container that is not flex or grid. Both are valid CSS that silently does nothing.","When you have no theory. Halving the stylesheet finds the cause by elimination rather than by insight, which is exactly what you lack at that point."]}'::jsonb
+from public.lessons where slug = 'css-diagnosis';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-applies-debug', 1, 'debug'::public.exercise_kind, 'Valid CSS that does nothing',
+       'Two faults from cause four. `.tag` sets a width on an inline element — add `display: inline-block` so the width takes effect. And `.row` sets `gap` without being a flex container — add `display: flex`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Applies</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .tag { width: 200px; background: #eee; }
+      .row { gap: 1rem; }
+    </style>
+  </head>
+  <body>
+    <span class="tag">Tag</span>
+    <div class="row"><div>One</div><div>Two</div></div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Applies</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .tag { display: inline-block; width: 200px; background: #eee; }
+      .row { display: flex; gap: 1rem; }
+    </style>
+  </head>
+  <body>
+    <span class="tag">Tag</span>
+    <div class="row"><div>One</div><div>Two</div></div>
+  </body>
+</html>', ARRAY['An inline element ignores width and height.', 'gap only means something inside a flex or grid container.', 'Neither declaration was wrong — the display type was.']::text[],
+       55, 3,
+       (select id from public.skills where slug = 'css-debugging'), false
+from public.lessons l where l.slug = 'css-diagnosis'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.tag', 'display',
+       'inline-block', NULL, NULL, NULL,
+       'The tag can now take a width', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-applies-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.tag', 'width',
+       '200px', NULL, NULL, NULL,
+       'The width is kept', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-applies-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.row', 'display',
+       'flex', NULL, NULL, NULL,
+       'The row is a flex container, so gap applies', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-applies-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, '.row', 'gap',
+       '1rem', NULL, NULL, NULL,
+       'The gap is kept', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-applies-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-diagnosis'), NULL, 'q-css-first-check', 1, 'single'::public.question_kind,
+        'What is the first check when a rule seems not to apply?', 'Whether it matched at all — the largest and cheapest category to eliminate.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Whether the browser supports it', false, NULL
+from public.quiz_questions where slug = 'q-css-first-check';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Whether the file is cached', false, NULL
+from public.quiz_questions where slug = 'q-css-first-check';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Whether it needs a vendor prefix', false, NULL
+from public.quiz_questions where slug = 'q-css-first-check';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Whether it matched the element', true, NULL
+from public.quiz_questions where slug = 'q-css-first-check';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-diagnosis'), NULL, 'q-css-inline-width', 2, 'single'::public.question_kind,
+        'Why does `width` do nothing on a `<span>`?', 'An inline element ignores width and height.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Inline elements ignore width and height', true, NULL
+from public.quiz_questions where slug = 'q-css-inline-width';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The value is invalid', false, NULL
+from public.quiz_questions where slug = 'q-css-inline-width';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Spans cannot be styled', false, NULL
+from public.quiz_questions where slug = 'q-css-inline-width';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It needs `!important`', false, NULL
+from public.quiz_questions where slug = 'q-css-inline-width';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-diagnosis'), NULL, 'q-css-bisect', 3, 'single'::public.question_kind,
+        'When is bisecting the stylesheet the right approach?', 'When you have no theory — it finds the cause by elimination.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'When you have no theory about the cause', true, NULL
+from public.quiz_questions where slug = 'q-css-bisect';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'When the file is small', false, NULL
+from public.quiz_questions where slug = 'q-css-bisect';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Before checking anything else', false, NULL
+from public.quiz_questions where slug = 'q-css-bisect';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Only for specificity problems', false, NULL
+from public.quiz_questions where slug = 'q-css-bisect';
+
+-- lesson: Milestone: diagnose and repair
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-debugging-milestone', 3, 'Milestone: diagnose and repair', 'Every cause on the list, in one file', 'A stylesheet with one instance of each common fault.',
+       ARRAY['Diagnose each fault by its signature', 'Repair without escalating specificity', 'Leave the stylesheet within the conventions']::text[], 18, 40, (select id from public.skills where slug = 'css-debugging'), 0.8
+from public.modules m where m.slug = 'css-debugging-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Find and fix one instance of each common cause, without escalating anything"]}'::jsonb
+from public.lessons where slug = 'css-debugging-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'code_example'::public.block_type, 'Signature → cause', NULL,
+       'Absent from the panel     → never matched
+Struck through, overridden → lost the cascade
+Struck through, alone      → invalid value
+Present, no visible effect → does not apply here
+Value from nowhere         → inherited or a default
+Right rule, wrong box      → not that element', 'text', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-debugging-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'recall'::public.block_type, 'From memory', 'From memory: what is the signature of each cause?',
+       NULL, NULL, NULL, '{"points":["Never matched — the rule is absent from the styles panel entirely.","Lost the cascade — present but struck through, with the winner shown above.","Invalid value — struck through with nothing overriding it.","Does not apply — present, winning, and visibly doing nothing.","Something else in play — a computed value whose source is not your rule.","Wrong element — the rule is fine; it is on a different box than you assumed."]}'::jsonb
+from public.lessons where slug = 'css-debugging-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Diagnosis is a read, not a guess.","Each signature points at exactly one cause.","Repair by lowering, not by escalating."],"nextUp":"Next: the capstone."}'::jsonb
+from public.lessons where slug = 'css-debugging-milestone';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why does repairing by escalation make the next bug harder to diagnose?"],"points":["Because it adds a rule whose only reason for existing is to beat another one, and that reason is invisible six months later. The next person sees an `!important` or a deep selector, cannot tell what it was defending against, and dares not remove it — so it stays, and the next fix has to beat that too. Lowering the over-strong rule instead leaves a stylesheet where the winner is always the obvious one."]}'::jsonb
+from public.lessons where slug = 'css-debugging-milestone';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-debugging-milestone-debug', 1, 'debug'::public.exercise_kind, 'Four faults, four causes',
+       'One of each. `.titel` is a typo for `.title`. `#main .note` is over-specific and beats `.warning` — lower it to `.note` so the later `.warning` rule wins. `margin: 8` is missing its unit. And `.row` sets `gap` without `display: flex`. Fix all four, and leave nothing using `!important`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Diagnose</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .titel { font-size: 1.5rem; }
+      #main .note { color: teal; }
+      .warning { color: crimson; }
+      .card { margin: 8; }
+      .row { gap: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <h2 class="title">Sourdough</h2>
+      <p class="note warning">A warning, which should be crimson.</p>
+      <div class="card">Card</div>
+      <div class="row"><div>One</div><div>Two</div></div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Diagnose</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .title { font-size: 1.5rem; }
+      .note { color: teal; }
+      .warning { color: crimson; }
+      .card { margin: 8px; }
+      .row { display: flex; gap: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <h2 class="title">Sourdough</h2>
+      <p class="note warning">A warning, which should be crimson.</p>
+      <div class="card">Card</div>
+      <div class="row"><div>One</div><div>Two</div></div>
+    </div>
+  </body>
+</html>', ARRAY['Compare each selector against the class actually in the markup.', 'Removing the id brings both colour rules to one class, so source order decides.', 'A bare number is not a length.', 'gap needs a flex or grid container to mean anything.']::text[],
+       75, 4,
+       (select id from public.skills where slug = 'css-debugging'), false
+from public.lessons l where l.slug = 'css-debugging-milestone'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.title', 'font-size',
+       '1.5rem', NULL, NULL, NULL,
+       'The heading rule matches the markup', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-debugging-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.warning', 'color',
+       'crimson', NULL, NULL, NULL,
+       'The warning colour wins without escalation', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-debugging-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.card', 'margin',
+       '8px', NULL, NULL, NULL,
+       'The margin has a unit and applies', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-debugging-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, '.row', 'display',
+       'flex', NULL, NULL, NULL,
+       'The row is a flex container', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-debugging-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_no_important'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Nothing was repaired by escalating', 'Raising specificity with !important wins this argument and loses the next one — the only way to override it later is another !important.', 1, true, NULL
+from public.exercises e where e.slug = 'css-debugging-milestone-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'css_property_absent'::public.requirement_kind, '.title', 'color',
+       NULL, NULL, NULL, NULL,
+       'The heading was not given styles it never needed', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-debugging-milestone-debug';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-debugging-milestone'), NULL, 'q-css-signature-invalid', 1, 'single'::public.question_kind,
+        'Struck through, with nothing above it setting that property. Which cause?', 'The value was invalid, so the browser dropped the declaration.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'An invalid value', true, NULL
+from public.quiz_questions where slug = 'q-css-signature-invalid';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It was overridden', false, NULL
+from public.quiz_questions where slug = 'q-css-signature-invalid';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It never matched', false, NULL
+from public.quiz_questions where slug = 'q-css-signature-invalid';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It does not apply to that element', false, NULL
+from public.quiz_questions where slug = 'q-css-signature-invalid';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-debugging-milestone'), NULL, 'q-css-repair-by-lowering', 2, 'single'::public.question_kind,
+        'A rule is being beaten by an over-specific one. What is the right repair?', 'Lower the over-specific rule rather than escalating the one that lost.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Add `!important` to the loser', false, NULL
+from public.quiz_questions where slug = 'q-css-repair-by-lowering';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Add an id to the loser', false, NULL
+from public.quiz_questions where slug = 'q-css-repair-by-lowering';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Move the loser to the end of the file', false, NULL
+from public.quiz_questions where slug = 'q-css-repair-by-lowering';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Lower the over-specific rule', true, NULL
+from public.quiz_questions where slug = 'q-css-repair-by-lowering';
+
+-- Level 11 milestone: Debugging CSS questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-11-milestone'), 'a-css-11-computed', 1, 'single'::public.question_kind,
+        'Which panel tells you what the browser actually decided?', 'The computed panel — the styles panel shows what you wrote.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The computed panel', true, NULL
+from public.quiz_questions where slug = 'a-css-11-computed';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The styles panel', false, NULL
+from public.quiz_questions where slug = 'a-css-11-computed';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The network panel', false, NULL
+from public.quiz_questions where slug = 'a-css-11-computed';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The console', false, NULL
+from public.quiz_questions where slug = 'a-css-11-computed';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-11-milestone'), 'a-css-11-absent', 2, 'single'::public.question_kind,
+        'The rule is absent from the styles panel. What does that mean?', 'It never matched the element.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It never matched', true, NULL
+from public.quiz_questions where slug = 'a-css-11-absent';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It was overridden', false, NULL
+from public.quiz_questions where slug = 'a-css-11-absent';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Its value was invalid', false, NULL
+from public.quiz_questions where slug = 'a-css-11-absent';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It is in a later layer', false, NULL
+from public.quiz_questions where slug = 'a-css-11-absent';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-11-milestone'), 'a-css-11-order', 3, 'single'::public.question_kind,
+        'Why check the causes in a fixed order?', 'Each step eliminates a category, cheapest and most likely first.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It avoids caching problems', false, NULL
+from public.quiz_questions where slug = 'a-css-11-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Each step eliminates a category, most likely first', true, NULL
+from public.quiz_questions where slug = 'a-css-11-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The browser requires it', false, NULL
+from public.quiz_questions where slug = 'a-css-11-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It makes the file smaller', false, NULL
+from public.quiz_questions where slug = 'a-css-11-order';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-11-milestone'), 'a-css-11-gap', 4, 'single'::public.question_kind,
+        '`gap: 1rem` has no effect. What is the most likely cause?', 'The container is neither flex nor grid.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`gap` needs a prefix', false, NULL
+from public.quiz_questions where slug = 'a-css-11-gap';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The container is not flex or grid', true, NULL
+from public.quiz_questions where slug = 'a-css-11-gap';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The value is invalid', false, NULL
+from public.quiz_questions where slug = 'a-css-11-gap';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It was overridden', false, NULL
+from public.quiz_questions where slug = 'a-css-11-gap';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-11-milestone'), 'a-css-11-hov', 5, 'single'::public.question_kind,
+        'What is the `:hov` toggle in the inspector for?', 'Pinning a state on so hover and focus styles can be inspected.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Forcing a state so its styles can be read', true, NULL
+from public.quiz_questions where slug = 'a-css-11-hov';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Hiding hover styles', false, NULL
+from public.quiz_questions where slug = 'a-css-11-hov';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Showing the box model', false, NULL
+from public.quiz_questions where slug = 'a-css-11-hov';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Disabling transitions', false, NULL
+from public.quiz_questions where slug = 'a-css-11-hov';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-level-11-milestone'), 'a-css-11-bisect', 6, 'single'::public.question_kind,
+        'What makes bisecting effective when you have no theory?', 'It locates the cause by elimination rather than by insight.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It is faster to type', false, NULL
+from public.quiz_questions where slug = 'a-css-11-bisect';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It fixes the bug directly', false, NULL
+from public.quiz_questions where slug = 'a-css-11-bisect';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It only works on small files', false, NULL
+from public.quiz_questions where slug = 'a-css-11-bisect';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'It finds the cause by elimination, needing no theory', true, NULL
+from public.quiz_questions where slug = 'a-css-11-bisect';
+
+-- --------------------------------------------------------------------------
+-- CSS Architect — Level 12: Capstone: Styling Your Site
+-- --------------------------------------------------------------------------
+
+insert into public.levels (course_id, slug, ordinal, title, subtitle, summary, outcome, accent)
+select c.id, 'css-capstone', 12, 'Capstone: Styling Your Site', 'Everything, applied to the site you already built',
+       'The site from the HTML course is valid, semantic and accessible, and entirely unstyled. Styling it is the capstone — real markup, real constraints, and every technique from this course used together.', 'You have styled a complete multi-page site with a token system, responsive layout and no specificity escalation anywhere.', 'violet'
+from public.courses c where c.slug = 'css-architect'
+on conflict (course_id, slug) do update set
+  ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, outcome = excluded.outcome,
+  accent = excluded.accent;
+insert into public.assessments (level_id, course_id, slug, kind, title, description, pass_score, xp_award, ordinal)
+select l.id, (select id from public.courses where slug = 'css-architect'), 'css-architect-final', 'final'::public.assessment_kind, 'CSS Architect final assessment', 'Ten questions drawn from the whole course. Pass mark 80%. Passing this, plus your styled capstone site, completes the course.',
+       0.8, 500, 12
+from public.levels l where l.slug = 'css-capstone'
+on conflict (slug) do update set
+  level_id = excluded.level_id, course_id = excluded.course_id, kind = excluded.kind,
+  title = excluded.title, description = excluded.description, pass_score = excluded.pass_score,
+  xp_award = excluded.xp_award, ordinal = excluded.ordinal;
+
+-- module: Styling the site
+insert into public.modules (level_id, slug, ordinal, title, summary, estimated_minutes, is_milestone)
+select l.id, 'css-capstone-module', 1, 'Styling the site', 'Tokens, layout, responsiveness and a final review, on real pages.',
+       70, false
+from public.levels l where l.slug = 'css-capstone'
+on conflict (slug) do update set
+  level_id = excluded.level_id, ordinal = excluded.ordinal, title = excluded.title,
+  summary = excluded.summary, estimated_minutes = excluded.estimated_minutes,
+  is_milestone = excluded.is_milestone;
+insert into public.module_prerequisites (module_id, prerequisite_module_id)
+select m.id, p.id from public.modules m, public.modules p
+where m.slug = 'css-capstone-module' and p.slug = 'css-debugging-module';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0.75
+from public.modules m, public.skills s
+where m.slug = 'css-capstone-module' and s.slug = 'custom-properties';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0.75
+from public.modules m, public.skills s
+where m.slug = 'css-capstone-module' and s.slug = 'typography';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0.75
+from public.modules m, public.skills s
+where m.slug = 'css-capstone-module' and s.slug = 'grid';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0.75
+from public.modules m, public.skills s
+where m.slug = 'css-capstone-module' and s.slug = 'responsive';
+insert into public.module_skills (module_id, skill_id, mastery_required)
+select m.id, s.id, 0.75
+from public.modules m, public.skills s
+where m.slug = 'css-capstone-module' and s.slug = 'css-architecture';
+
+-- lesson: The foundation
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-capstone-foundation', 1, 'The foundation', 'Tokens and type before anything else', 'The order matters. Tokens and typography first, because every later decision reads from them — and because a site with good type and no layout still looks considered, while the reverse never does.',
+       ARRAY['Establish a token set for the whole site', 'Set the typographic baseline', 'Explain why this order is the efficient one']::text[], 20, 40, (select id from public.skills where slug = 'custom-properties'), 0.7
+from public.modules m where m.slug = 'css-capstone-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'You are styling an unstyled site from scratch. What goes first?',
+       NULL, NULL, NULL, '{"options":["Tokens and typography, because everything later reads from them","The navigation, because it appears on every page","The homepage hero, because it is the most visible","The responsive breakpoints, to get them out of the way"],"answer":"Tokens and typography. Every later rule reads from the tokens, so establishing them first means no rule ever has to be revisited to replace a hard-coded value — and typography is the single change that most improves an unstyled page. Starting with the hero means making colour and spacing decisions ad hoc, then either living with them or going back to normalise them, which is the same work done twice."}'::jsonb
+from public.lessons where slug = 'css-capstone-foundation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Define a site-wide token set","Set measure, leading and scale","Sequence the work so nothing is done twice"]}'::jsonb
+from public.lessons where slug = 'css-capstone-foundation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'prose'::public.block_type, 'What you are starting from', 'Your site from the HTML course has five pages and no styling at all. That is a better starting point than it sounds: the markup is semantic, so `header`, `nav`, `main`, `article` and `footer` are all available as styling hooks that already mean something, and every heading level is correct. Nothing has to be restructured before it can be styled.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-capstone-foundation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'worked_example'::public.block_type, 'The order to work in', 'Four passes, each depending only on the ones before it.',
+       NULL, NULL, NULL, '{"steps":[{"title":"Pass one — tokens","code":":root {\n  --surface: #fff;\n  --text: #1a1a1a;\n  --muted: #595959;\n  --accent: teal;\n  --border: #ddd;\n  --space: 1rem;\n  --measure: 65ch;\n  --radius: 0.5rem;\n}","reasoning":"Roles, not appearances, so a dark theme costs one block later. Everything after this pass reads values by name, and no rule ever contains a literal colour."},{"title":"Pass two — typography","code":"body { font-size: 1rem; line-height: 1.6; color: var(--text); }\nmain { max-width: var(--measure); }\nh1 { font-size: 2rem; line-height: 1.1; }\nh2 { font-size: 1.5rem; line-height: 1.2; }","reasoning":"The highest-value pass by a distance. An unstyled page with a constrained measure and comfortable leading already reads well, before a single layout decision has been made."},{"title":"Pass three — layout","code":".page { display: grid; gap: var(--space); }\n.cards { display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }","reasoning":"Now, and not before. Layout decisions made after the type is set are made against real line lengths rather than against placeholder text, which is where most awkward column widths come from."},{"title":"Pass four — states and refinement","code":"a:hover, a:focus-visible { text-decoration: underline; }\n.card { transition: transform 200ms ease-out; }\n@media (prefers-reduced-motion: reduce) { * { transition: none; } }","reasoning":"Last, because states and motion are refinements of something that must already work without them. A site with no hover styles is plain; a site with no layout is broken."}]}'::jsonb
+from public.lessons where slug = 'css-capstone-foundation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'callout'::public.block_type, 'Style the smallest page first', 'The contact page or the about page, not the homepage. They contain the same components with fewer of them, so the token set and the typography get exercised without the homepage''s complexity obscuring what is going wrong. By the time you reach the homepage most of its parts already exist.',
+       NULL, NULL, NULL, '{"tone":"tip"}'::jsonb
+from public.lessons where slug = 'css-capstone-foundation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'interactive_demo'::public.block_type, 'Typography alone', 'The same unstyled markup, one pass applied.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Unstyled","code":"<article><h1>Sourdough, slowly</h1><p>The starter is a live culture of wild yeast and bacteria, and it works on its own schedule rather than yours. A loaf that would take three hours with commercial yeast takes a day or more.</p></article>","note":"Valid, semantic, and hard to read — full-width lines and default leading."},{"label":"After the typography pass","code":"<style>\n  :root { --text: #1a1a1a; --measure: 65ch; }\n  article { max-width: var(--measure); line-height: 1.6; color: var(--text); }\n  h1 { font-size: 2rem; line-height: 1.1; }\n</style>\n<article><h1>Sourdough, slowly</h1><p>The starter is a live culture of wild yeast and bacteria, and it works on its own schedule rather than yours. A loaf that would take three hours with commercial yeast takes a day or more.</p></article>","note":"Four declarations. No layout work at all, and the page already reads as designed rather than as unfinished."}]}'::jsonb
+from public.lessons where slug = 'css-capstone-foundation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["Tokens first, so no rule ever holds a literal value.","Typography second — the highest-value pass on an unstyled site.","Layout third, against real type rather than placeholders.","States and motion last; they refine something that already works."],"nextUp":"Next: layout and the responsive pass."}'::jsonb
+from public.lessons where slug = 'css-capstone-foundation';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Why do tokens come before everything else?","Why is typography a better second pass than layout?","Why start with the smallest page?"],"points":["Because every later rule reads values by name. Establishing them first means no rule is ever revisited to replace a hard-coded colour or spacing, and a theme later costs one block instead of an audit.","Because it is the change that most improves an unstyled page, and because layout decisions made afterwards are made against real line lengths instead of guesses.","Because it contains the same components with fewer of them, so the foundations get exercised without the homepage''s complexity hiding what is wrong."]}'::jsonb
+from public.lessons where slug = 'css-capstone-foundation';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-capstone-foundation-guided', 1, 'guided'::public.exercise_kind, 'Lay the foundation',
+       'On `:root` define `--text: #1a1a1a`, `--accent: teal`, `--space: 1rem` and `--measure: 65ch`. Then set `body` to `line-height: 1.6` and `color: var(--text)`, give `main` a `max-width: var(--measure)`, and give `h1` `font-size: 2rem` with `line-height: 1.1`. No literal colours outside `:root`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>About — Sourdough</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>About the workshop</h1>
+      <p>The starter is a live culture of wild yeast and bacteria, and it works on its own schedule rather than yours.</p>
+    </main>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>About — Sourdough</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --text: #1a1a1a;
+        --accent: teal;
+        --space: 1rem;
+        --measure: 65ch;
+      }
+
+      body {
+        line-height: 1.6;
+        color: var(--text);
+      }
+
+      main { max-width: var(--measure); }
+
+      h1 {
+        font-size: 2rem;
+        line-height: 1.1;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>About the workshop</h1>
+      <p>The starter is a live culture of wild yeast and bacteria, and it works on its own schedule rather than yours.</p>
+    </main>
+  </body>
+</html>', ARRAY['All four tokens go on :root.', 'Read them back with var() — no literal colours below.', 'Line height stays unitless so it inherits as a ratio.']::text[],
+       60, 3,
+       (select id from public.skills where slug = 'custom-properties'), false
+from public.lessons l where l.slug = 'css-capstone-foundation'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_custom_property'::public.requirement_kind, 'main', '--measure',
+       NULL, NULL, NULL, NULL,
+       'The measure token reaches the page', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-foundation-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_custom_property'::public.requirement_kind, 'main', '--accent',
+       NULL, NULL, NULL, NULL,
+       'The accent token is defined', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-foundation-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, 'body', 'color',
+       '#1a1a1a', NULL, NULL, NULL,
+       'The text colour resolves from the token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-foundation-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, 'body', 'line-height',
+       '1.6', NULL, NULL, NULL,
+       'Body leading is comfortable and unitless', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-foundation-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value'::public.requirement_kind, 'main', 'max-width',
+       '65ch', NULL, NULL, NULL,
+       'The measure resolves from the token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-foundation-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'css_value'::public.requirement_kind, 'h1', 'font-size',
+       '2rem', NULL, NULL, NULL,
+       'The heading is on the scale', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-foundation-guided';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-capstone-foundation'), NULL, 'q-css-capstone-order', 1, 'single'::public.question_kind,
+        'What is the first pass when styling an unstyled site?', 'Tokens, so every later rule reads values by name.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Breakpoints', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The homepage hero', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Tokens', true, NULL
+from public.quiz_questions where slug = 'q-css-capstone-order';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The navigation', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-order';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-capstone-foundation'), NULL, 'q-css-capstone-typography', 2, 'single'::public.question_kind,
+        'Why is typography the second pass rather than the fourth?', 'It is the highest-value change on an unstyled page, and layout decisions afterwards are made against real line lengths.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It is required before media queries', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-typography';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It improves the page most, and layout then follows real type', true, NULL
+from public.quiz_questions where slug = 'q-css-capstone-typography';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Fonts take longest to load', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-typography';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Layout cannot be changed later', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-typography';
+
+-- lesson: Layout and the responsive pass
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-capstone-layout', 2, 'Layout and the responsive pass', 'One grid, no device breakpoints', 'The site layout needs one grid and, at most, one or two breakpoints chosen from where the content stops working.',
+       ARRAY['Lay out the page shell with grid', 'Make card lists responsive without media queries', 'Choose breakpoints from content']::text[], 22, 40, (select id from public.skills where slug = 'responsive'), 0.7
+from public.modules m where m.slug = 'css-capstone-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'pretest'::public.block_type, 'Before we start — have a guess', 'Your card list needs to reflow from one column to three. What is the least code that does it?',
+       NULL, NULL, NULL, '{"options":["`repeat(auto-fit, minmax(16rem, 1fr))` — no media queries at all","Three media queries, one per column count","Float the cards and clear them","A media query per device width"],"answer":"`repeat(auto-fit, minmax(16rem, 1fr))`. The grid fits as many 16rem-minimum columns as the space allows and stretches them to fill, so the column count follows the available width by itself. Media queries are for the cases this cannot express — the page shell changing shape, not a list changing its column count."}'::jsonb
+from public.lessons where slug = 'css-capstone-layout';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Build the page shell","Use intrinsic sizing for lists","Add a breakpoint only where the content demands one"]}'::jsonb
+from public.lessons where slug = 'css-capstone-layout';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'code_example'::public.block_type, 'The whole site layout', NULL,
+       '.page {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space);
+}
+
+.cards {
+  display: grid;
+  gap: var(--space);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+@media (min-width: 48rem) {
+  .page { grid-template-columns: 16rem 1fr; }
+}', 'html', NULL, '{}'::jsonb
+from public.lessons where slug = 'css-capstone-layout';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'progressive_detail'::public.block_type, 'Why so few breakpoints', 'Every breakpoint is a second layout to maintain, test and keep consistent. Intrinsic sizing — `auto-fit`, `minmax`, `clamp` and `min-content` — handles most reflow without any, so the breakpoints that remain are the genuine structural changes: a sidebar appearing, a navigation collapsing. Two or three per site is normal for work done this way. A dozen usually means device widths were used instead of content.',
+       NULL, NULL, NULL, '{}'::jsonb
+from public.lessons where slug = 'css-capstone-layout';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'interactive_demo'::public.block_type, 'One rule, every width', 'Resize the preview to see the column count change.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Intrinsic","code":"<style>\n  .cards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }\n  .card { background: #f4f4f4; padding: 1rem; }\n</style>\n<div class=\"cards\"><div class=\"card\">Sourdough</div><div class=\"card\">Rye</div><div class=\"card\">Seeded</div><div class=\"card\">Spelt</div></div>","note":"No media queries. The column count follows the space available."},{"label":"The shell","code":"<style>\n  .page { display: grid; grid-template-columns: 1fr; gap: 1rem; }\n  @media (min-width: 48rem) { .page { grid-template-columns: 16rem 1fr; } }\n  .side, .body { background: #f4f4f4; padding: 1rem; }\n</style>\n<div class=\"page\"><div class=\"side\">Navigation</div><div class=\"body\">Main content</div></div>","note":"One breakpoint, for a genuine structural change — the sidebar moving beside the content rather than above it."}]}'::jsonb
+from public.lessons where slug = 'css-capstone-layout';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'self_explain'::public.block_type, 'Explain it in your own words', 'Your site has eleven media queries. What has probably gone wrong, and how would you reduce it?',
+       NULL, NULL, NULL, '{"modelAnswer":"Almost certainly the breakpoints were taken from device widths rather than from where the content stops working, and each component got its own. The reduction is mechanical: replace every query whose only job is changing a column count with `repeat(auto-fit, minmax(…, 1fr))`, which removes most of them outright; replace fixed font-size steps with `clamp()`; and replace fixed widths with `min()` or `max-width` in `ch`. What survives is the small number of genuine structural changes — a sidebar appearing, a navigation collapsing — and those should be shared across components rather than declared separately in each. Eleven typically becomes two or three, and the layout gets more robust in the process, because intrinsic sizing works at every width rather than only at the ones you thought to test."}'::jsonb
+from public.lessons where slug = 'css-capstone-layout';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'checklist'::public.block_type, 'Layout pass review', NULL,
+       NULL, NULL, NULL, '{"items":["The page shell is one grid","Card and item lists use intrinsic sizing, not media queries","Breakpoints chosen from content, in `rem`","The layout is mobile-first — `min-width` queries add complexity","Nothing overflows horizontally at 320px","Spacing comes from the token, not from ad-hoc values"]}'::jsonb
+from public.lessons where slug = 'css-capstone-layout';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 8, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["One grid for the shell, one for each list.","Intrinsic sizing removes most media queries.","Breakpoints come from content, and there should be few.","Mobile-first means each query adds rather than undoes."],"nextUp":"Next: the final review and the capstone mission."}'::jsonb
+from public.lessons where slug = 'css-capstone-layout';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 9, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["What replaces most media queries in a modern layout?","How do you know a breakpoint is in the right place?","Why does each extra breakpoint cost more than it looks?"],"points":["Intrinsic sizing — `auto-fit` with `minmax`, `clamp`, `min()` and sizing in `ch`. The layout responds to the space available rather than to a width you predicted.","You found it by narrowing the window until the content stopped working, not by looking up a device width. Content-derived breakpoints keep working when the device landscape changes.","Because it is another complete layout to maintain, test and keep consistent with the others — and the bugs it creates only appear in one width range, which is where they are least likely to be noticed."]}'::jsonb
+from public.lessons where slug = 'css-capstone-layout';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-capstone-layout-guided', 1, 'guided'::public.exercise_kind, 'Lay out the page',
+       'Make `.cards` a grid with `gap: var(--space)` and `grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr))`. Make `.page` a single-column grid with the same gap, and add one `@media (min-width: 48rem)` block giving `.page` two columns of `16rem 1fr`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Home — Sourdough</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root { --space: 1rem; }
+
+      .card { background: #f4f4f4; padding: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <nav>Navigation</nav>
+      <main>
+        <div class="cards">
+          <div class="card">Sourdough</div>
+          <div class="card">Rye</div>
+          <div class="card">Seeded</div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Home — Sourdough</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root { --space: 1rem; }
+
+      .page {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space);
+      }
+
+      .cards {
+        display: grid;
+        gap: var(--space);
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+      }
+
+      .card { background: #f4f4f4; padding: 1rem; }
+
+      @media (min-width: 48rem) {
+        .page { grid-template-columns: 16rem 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <nav>Navigation</nav>
+      <main>
+        <div class="cards">
+          <div class="card">Sourdough</div>
+          <div class="card">Rye</div>
+          <div class="card">Seeded</div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>', ARRAY['auto-fit with minmax needs no media query to change column count.', 'The gap reads from the spacing token.', 'Mobile-first: the single column is the base, the query adds the sidebar.']::text[],
+       70, 4,
+       (select id from public.skills where slug = 'responsive'), false
+from public.lessons l where l.slug = 'css-capstone-layout'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.cards', 'display',
+       'grid', NULL, NULL, NULL,
+       'The card list is a grid', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-layout-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.cards', 'gap',
+       '1rem', NULL, NULL, NULL,
+       'The gap resolves from the spacing token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-layout-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, '.cards', 'grid-template-columns',
+       'repeat(auto-fit,minmax(16rem,1fr))', NULL, NULL, NULL,
+       'The columns are intrinsic, needing no media query', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-layout-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, '.page', 'display',
+       'grid', NULL, NULL, NULL,
+       'The page shell is a grid', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-layout-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_media_rule'::public.requirement_kind, NULL, NULL,
+       '(min-width: 48rem)', NULL, NULL, NULL,
+       'There is one content-derived breakpoint', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-layout-guided';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'css_value'::public.requirement_kind, '.page', 'grid-template-columns',
+       '16rem 1fr', NULL, NULL, NULL,
+       'The sidebar appears at the breakpoint', NULL, 1, true, '(min-width: 48rem)'
+from public.exercises e where e.slug = 'css-capstone-layout-guided';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-capstone-layout'), NULL, 'q-css-capstone-autofit', 1, 'single'::public.question_kind,
+        'What does `repeat(auto-fit, minmax(16rem, 1fr))` remove the need for?', 'Media queries whose only job is changing a column count.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'A grid container', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-autofit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Box sizing', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-autofit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Media queries that only change the column count', true, NULL
+from public.quiz_questions where slug = 'q-css-capstone-autofit';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The gap property', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-autofit';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-capstone-layout'), NULL, 'q-css-capstone-breakpoint-source', 2, 'single'::public.question_kind,
+        'Where should a breakpoint come from?', 'From where the content stops working, not from a device width.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The designer’s artboard widths', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-breakpoint-source';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Where the content stops working', true, NULL
+from public.quiz_questions where slug = 'q-css-capstone-breakpoint-source';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The most popular phone width', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-breakpoint-source';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A standard set of device sizes', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-breakpoint-source';
+
+-- lesson: Final review and mission
+insert into public.lessons
+  (module_id, slug, ordinal, title, subtitle, summary, objectives, estimated_minutes, xp_award, primary_skill_id, mastery_threshold)
+select m.id, 'css-capstone-review', 3, 'Final review and mission', 'Six checks, then the site is done', 'The same review every professional stylesheet gets before it ships: contrast, motion, specificity, breakpoints, tokens and focus.',
+       ARRAY['Review a stylesheet against the whole course', 'Fix what the review finds without escalating', 'Complete the capstone']::text[], 25, 40, (select id from public.skills where slug = 'css-architecture'), 0.8
+from public.modules m where m.slug = 'css-capstone-module'
+on conflict (slug) do update set
+  module_id = excluded.module_id, ordinal = excluded.ordinal, title = excluded.title,
+  subtitle = excluded.subtitle, summary = excluded.summary, objectives = excluded.objectives,
+  estimated_minutes = excluded.estimated_minutes, xp_award = excluded.xp_award,
+  primary_skill_id = excluded.primary_skill_id, mastery_threshold = excluded.mastery_threshold;
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 1, 'objectives'::public.block_type, 'What you will be able to do', NULL,
+       NULL, NULL, NULL, '{"items":["Apply the six-point review","Repair by lowering rather than escalating","Finish and export the styled site"]}'::jsonb
+from public.lessons where slug = 'css-capstone-review';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 2, 'checklist'::public.block_type, 'The final review', NULL,
+       NULL, NULL, NULL, '{"items":["Contrast — body text at least 4.5:1, large text and UI at least 3:1, in every theme","Focus — every interactive element has a visible focus style, at 3:1 or better","Motion — a `prefers-reduced-motion: reduce` block exists and covers transitions as well as animations","Specificity — nothing above one class, and no `!important` outside the reduced-motion override","Tokens — no literal colours or spacing values outside `:root`","Breakpoints — few, in `rem`, and derived from content"]}'::jsonb
+from public.lessons where slug = 'css-capstone-review';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 3, 'interactive_demo'::public.block_type, 'Before and after the review', 'The same page, reviewed.',
+       NULL, NULL, NULL, '{"variants":[{"label":"Before","code":"<style>\n  .note { color: #aaa; }\n  #main .card { padding: 12px; }\n  a:focus { outline: none; }\n</style>\n<div id=\"main\"><div class=\"card\"><p class=\"note\">Low contrast, an id selector, hard-coded spacing, and focus removed.</p><a href=\"#\">A link</a></div></div>","note":"Four review failures, each of which passed unnoticed while the page was being built."},{"label":"After","code":"<style>\n  :root { --muted: #595959; --space: 0.75rem; --accent: teal; }\n  .note { color: var(--muted); }\n  .card { padding: var(--space); }\n  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }\n</style>\n<div id=\"main\"><div class=\"card\"><p class=\"note\">Contrast met, one class, tokens used, focus visible.</p><a href=\"#\">A link</a></div></div>","note":"No rule got stronger. Two got weaker, and the hard-coded values became tokens."}]}'::jsonb
+from public.lessons where slug = 'css-capstone-review';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 4, 'callout'::public.block_type, '`outline: none` without a replacement is the one to look for', 'Removing the focus ring makes a site unusable by keyboard, and it is nearly always done because the default outline looked wrong rather than because anyone decided keyboard users did not matter. If you remove it, replace it in the same declaration block — and check the replacement against 3:1, because a subtle focus ring is the same failure in a more considerate tone.',
+       NULL, NULL, NULL, '{"tone":"warning"}'::jsonb
+from public.lessons where slug = 'css-capstone-review';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 5, 'recall'::public.block_type, 'From memory', 'From memory: what does each review point protect?',
+       NULL, NULL, NULL, '{"points":["Contrast — readers with low vision, and anyone in bright light.","Focus — everyone navigating by keyboard, including people who cannot use a pointer.","Reduced motion — readers for whom motion causes nausea or migraine.","Specificity — your own ability to change the site next month.","Tokens — themeability, and the ability to change a value in one place.","Breakpoints — the number of separate layouts anyone has to maintain."]}'::jsonb
+from public.lessons where slug = 'css-capstone-review';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 6, 'summary'::public.block_type, 'Lesson summary', NULL,
+       NULL, NULL, NULL, '{"points":["The review is six checks and takes minutes.","Four of the six are accessibility requirements, not preferences.","Repair by lowering; the review should never make a stylesheet stronger."],"nextUp":"Then the site is finished — and it is yours."}'::jsonb
+from public.lessons where slug = 'css-capstone-review';
+insert into public.lesson_blocks (lesson_id, ordinal, block_type, title, body, code, language, media_slug, data)
+select id, 7, 'recap'::public.block_type, 'Close the book', NULL,
+       NULL, NULL, NULL, '{"prompts":["Which review points are requirements rather than preferences, and why does the distinction matter?"],"points":["Contrast, focus visibility and reduced motion are requirements — they are WCAG success criteria, and each one corresponds to readers who cannot use the site without it. Specificity, tokens and breakpoint count are engineering judgement: they protect your ability to keep working on the site rather than anyone''s ability to use it. The distinction matters because the first three are not negotiable against a deadline or a design opinion, and the second three legitimately are."]}'::jsonb
+from public.lessons where slug = 'css-capstone-review';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-capstone-review-debug', 1, 'debug'::public.exercise_kind, 'Fix what the review found',
+       'Four failures. `.note` is `#aaa` on white — change it to `var(--muted)`, which is `#595959`. `#main .card` is over-specific — lower it to `.card` and use `var(--space)` for the padding instead of `12px`. `a:focus` removes the outline — replace it with `a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }`. And add a `@media (prefers-reduced-motion: reduce)` block setting `transition: none` on `.card`.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Review</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root { --muted: #595959; --space: 0.75rem; --accent: teal; }
+
+      .note { color: #aaa; }
+      #main .card { padding: 12px; transition: transform 200ms ease-out; }
+      a:focus { outline: none; }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <div class="card">
+        <p class="note">A note.</p>
+        <a href="#">A link</a>
+      </div>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Review</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root { --muted: #595959; --space: 0.75rem; --accent: teal; }
+
+      .note { color: var(--muted); }
+
+      .card {
+        padding: var(--space);
+        transition: transform 200ms ease-out;
+      }
+
+      a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .card { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <div class="card">
+        <p class="note">A note.</p>
+        <a href="#">A link</a>
+      </div>
+    </div>
+  </body>
+</html>', ARRAY['Every value you need is already a token — read them with var().', 'Removing the id brings the card rule to one class.', 'A removed outline must be replaced, not just deleted.', 'The reduced-motion block covers transitions as well as animations.']::text[],
+       80, 4,
+       (select id from public.skills where slug = 'css-architecture'), false
+from public.lessons l where l.slug = 'css-capstone-review'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_value'::public.requirement_kind, '.note', 'color',
+       '#595959', NULL, NULL, NULL,
+       'The note meets the contrast requirement', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-review-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, '.card', 'padding',
+       '0.75rem', NULL, NULL, NULL,
+       'Spacing comes from the token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-review-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_max_specificity'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, 257,
+       'Nothing is above a one-class budget', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-review-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, 'a:focus-visible', 'outline',
+       '2px solid teal', NULL, NULL, NULL,
+       'Focus is visible again', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-review-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_media_rule'::public.requirement_kind, NULL, NULL,
+       '(prefers-reduced-motion: reduce)', NULL, NULL, NULL,
+       'A reduced-motion block is present', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-review-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'css_value'::public.requirement_kind, '.card', 'transition',
+       'none', NULL, NULL, NULL,
+       'Motion stops when reduced motion is requested', NULL, 1, true, '(prefers-reduced-motion: reduce)'
+from public.exercises e where e.slug = 'css-capstone-review-debug';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 7, 'css_no_important'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Nothing was repaired by escalating', 'Raising specificity with !important wins this argument and loses the next one — the only way to override it later is another !important.', 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-review-debug';
+
+insert into public.exercises
+  (lesson_id, slug, ordinal, kind, title, brief, starter_code, reference_solution, hints, xp_award, difficulty, skill_id, is_optional)
+select l.id, 'css-capstone-mission', 2, 'project_mission'::public.exercise_kind, 'Capstone mission: style your site',
+       'Style every page of the site you built in the HTML course. Work in the four passes — tokens, typography, layout, then states — and finish by running the six-point review over the whole stylesheet. When it passes, export the project: the CSS is yours, and it works anywhere.', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Page — your site</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      /* Pass one — tokens. Roles, not appearances. */
+      :root {
+        --surface: #fff;
+        --text: #1a1a1a;
+        --accent: teal;
+        --space: 1rem;
+        --measure: 65ch;
+      }
+
+      /* Pass two — typography. */
+
+      /* Pass three — layout. */
+
+      /* Pass four — states and motion. */
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header><nav>Your navigation</nav></header>
+      <main>
+        <h1>Your page heading</h1>
+        <p>Your content, with <a href="index.html">a link</a> in it.</p>
+      </main>
+      <footer>Your footer</footer>
+    </div>
+  </body>
+</html>', '<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Page — your site</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      /* Pass one — tokens. Roles, not appearances. */
+      :root {
+        --surface: #fff;
+        --text: #1a1a1a;
+        --accent: teal;
+        --space: 1rem;
+        --measure: 65ch;
+      }
+
+      /* Pass two — typography. */
+      body {
+        background: var(--surface);
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      main { max-width: var(--measure); }
+
+      h1 {
+        font-size: 2rem;
+        line-height: 1.1;
+      }
+
+      /* Pass three — layout. */
+      .page {
+        display: grid;
+        gap: var(--space);
+      }
+
+      /* Pass four — states and motion. */
+      a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .page { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header><nav>Your navigation</nav></header>
+      <main>
+        <h1>Your page heading</h1>
+        <p>Your content, with <a href="index.html">a link</a> in it.</p>
+      </main>
+      <footer>Your footer</footer>
+    </div>
+  </body>
+</html>', ARRAY['Work the passes in order — each one depends only on the ones before it.', 'Start with your smallest page, not the homepage.', 'Every colour below :root should be a var().', 'Run the six-point review before you call it finished.']::text[],
+       150, 5,
+       (select id from public.skills where slug = 'css-architecture'), false
+from public.lessons l where l.slug = 'css-capstone-review'
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, ordinal = excluded.ordinal, kind = excluded.kind,
+  title = excluded.title, brief = excluded.brief, starter_code = excluded.starter_code,
+  reference_solution = excluded.reference_solution, hints = excluded.hints,
+  xp_award = excluded.xp_award, difficulty = excluded.difficulty,
+  skill_id = excluded.skill_id, is_optional = excluded.is_optional;
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 1, 'css_custom_property'::public.requirement_kind, 'main', '--measure',
+       NULL, NULL, NULL, NULL,
+       'The token set reaches the page', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 2, 'css_value'::public.requirement_kind, 'body', 'color',
+       '#1a1a1a', NULL, NULL, NULL,
+       'Text colour resolves from a token', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 3, 'css_value'::public.requirement_kind, 'main', 'max-width',
+       '65ch', NULL, NULL, NULL,
+       'The measure is constrained', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 4, 'css_value'::public.requirement_kind, '.page', 'display',
+       'grid', NULL, NULL, NULL,
+       'The page shell is laid out', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 5, 'css_value'::public.requirement_kind, 'a:focus-visible', 'outline',
+       '2px solid teal', NULL, NULL, NULL,
+       'Focus is visible', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 6, 'css_max_specificity'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, 257,
+       'The stylesheet stays within a one-class budget', NULL, 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-mission';
+insert into public.exercise_requirements
+  (exercise_id, ordinal, kind, selector, attribute, expected_value, ancestor_selector, min_count, max_count, message, hint, weight, is_critical, condition)
+select e.id, 7, 'css_no_important'::public.requirement_kind, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       'Nothing needed `!important`', 'Raising specificity with !important wins this argument and loses the next one — the only way to override it later is another !important.', 1, true, NULL
+from public.exercises e where e.slug = 'css-capstone-mission';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-capstone-review'), NULL, 'q-css-capstone-outline', 1, 'single'::public.question_kind,
+        'What must accompany `outline: none` on a focus style?', 'A visible replacement, checked against 3:1.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'An `!important` flag', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-outline';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Nothing; the default is decorative', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-outline';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'A visible replacement focus indicator', true, NULL
+from public.quiz_questions where slug = 'q-css-capstone-outline';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'A hover style', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-outline';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values ((select id from public.lessons where slug = 'css-capstone-review'), NULL, 'q-css-capstone-review-direction', 2, 'single'::public.question_kind,
+        'What should the final review never do to a stylesheet?', 'Make it stronger — repairs come from lowering, not escalating.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Add a token', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-review-direction';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Reduce a breakpoint count', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-review-direction';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Make any rule stronger', true, NULL
+from public.quiz_questions where slug = 'q-css-capstone-review-direction';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Remove a rule', false, NULL
+from public.quiz_questions where slug = 'q-css-capstone-review-direction';
+
+-- CSS Architect final assessment questions
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-architect-final'), 'css-final-q1', 1, 'single'::public.question_kind,
+        'Two rules of equal specificity set the same property. Which wins?', 'The later one. Source order is the final tie-break.', (select id from public.skills where slug = 'cascade'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The one written first', false, NULL
+from public.quiz_questions where slug = 'css-final-q1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Neither; the property is dropped', false, NULL
+from public.quiz_questions where slug = 'css-final-q1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The one with more declarations', false, NULL
+from public.quiz_questions where slug = 'css-final-q1';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'The one written later', true, NULL
+from public.quiz_questions where slug = 'css-final-q1';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-architect-final'), 'css-final-q2', 2, 'single'::public.question_kind,
+        'What does `box-sizing: border-box` change?', '`width` then includes padding and border rather than excluding them.', (select id from public.skills where slug = 'box-model'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'The element becomes a flex container', false, NULL
+from public.quiz_questions where slug = 'css-final-q2';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Borders are drawn outside the element', false, NULL
+from public.quiz_questions where slug = 'css-final-q2';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`width` includes padding and border', true, NULL
+from public.quiz_questions where slug = 'css-final-q2';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Margins stop collapsing', false, NULL
+from public.quiz_questions where slug = 'css-final-q2';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-architect-final'), 'css-final-q3', 3, 'single'::public.question_kind,
+        'Which axis does `justify-content` work on in a flex container?', 'The main axis — the one `flex-direction` sets.', (select id from public.skills where slug = 'flexbox'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Both axes', false, NULL
+from public.quiz_questions where slug = 'css-final-q3';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The main axis', true, NULL
+from public.quiz_questions where slug = 'css-final-q3';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The cross axis', false, NULL
+from public.quiz_questions where slug = 'css-final-q3';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Always the horizontal axis', false, NULL
+from public.quiz_questions where slug = 'css-final-q3';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-architect-final'), 'css-final-q4', 4, 'single'::public.question_kind,
+        'What does `repeat(auto-fit, minmax(16rem, 1fr))` do?', 'Fits as many columns of at least 16rem as the space allows, stretching them to fill.', (select id from public.skills where slug = 'grid'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Fits as many 16rem-minimum columns as the space allows', true, NULL
+from public.quiz_questions where slug = 'css-final-q4';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Creates exactly 16 columns', false, NULL
+from public.quiz_questions where slug = 'css-final-q4';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Sets every column to 16rem', false, NULL
+from public.quiz_questions where slug = 'css-final-q4';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Requires a media query to reflow', false, NULL
+from public.quiz_questions where slug = 'css-final-q4';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-architect-final'), 'css-final-q5', 5, 'single'::public.question_kind,
+        'Where should a breakpoint come from?', 'From where the content stops working.', (select id from public.skills where slug = 'responsive'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'A list of device widths', false, NULL
+from public.quiz_questions where slug = 'css-final-q5';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'The most common screen size', false, NULL
+from public.quiz_questions where slug = 'css-final-q5';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'The design tool’s artboards', false, NULL
+from public.quiz_questions where slug = 'css-final-q5';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Where the content stops working', true, NULL
+from public.quiz_questions where slug = 'css-final-q5';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-architect-final'), 'css-final-q6', 6, 'single'::public.question_kind,
+        'A token is declared on `.panel`. Which elements can read it?', '`.panel` and its descendants — custom properties inherit.', (select id from public.skills where slug = 'custom-properties'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Only `.panel`', false, NULL
+from public.quiz_questions where slug = 'css-final-q6';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Its siblings too', false, NULL
+from public.quiz_questions where slug = 'css-final-q6';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`.panel` and its descendants', true, NULL
+from public.quiz_questions where slug = 'css-final-q6';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Every element on the page', false, NULL
+from public.quiz_questions where slug = 'css-final-q6';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-architect-final'), 'css-final-q7', 7, 'single'::public.question_kind,
+        'What contrast ratio does normal body text require?', '4.5:1 against its actual background.', (select id from public.skills where slug = 'typography'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '7:1', false, NULL
+from public.quiz_questions where slug = 'css-final-q7';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '4.5:1', true, NULL
+from public.quiz_questions where slug = 'css-final-q7';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '3:1', false, NULL
+from public.quiz_questions where slug = 'css-final-q7';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '2:1', false, NULL
+from public.quiz_questions where slug = 'css-final-q7';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-architect-final'), 'css-final-q8', 8, 'single'::public.question_kind,
+        'Which two properties can be animated without forcing layout?', '`transform` and `opacity` — the compositor handles both.', (select id from public.skills where slug = 'animation'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, '`transform` and `opacity`', true, NULL
+from public.quiz_questions where slug = 'css-final-q8';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, '`width` and `height`', false, NULL
+from public.quiz_questions where slug = 'css-final-q8';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, '`top` and `left`', false, NULL
+from public.quiz_questions where slug = 'css-final-q8';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, '`margin` and `padding`', false, NULL
+from public.quiz_questions where slug = 'css-final-q8';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-architect-final'), 'css-final-q9', 9, 'single'::public.question_kind,
+        'What does `@layer` let a weak selector do?', 'Beat a stronger one, because layer order is compared before specificity.', (select id from public.skills where slug = 'css-architecture'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'Raise its own specificity', false, NULL
+from public.quiz_questions where slug = 'css-final-q9';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'Apply only inside a media query', false, NULL
+from public.quiz_questions where slug = 'css-final-q9';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'Inherit from its parent', false, NULL
+from public.quiz_questions where slug = 'css-final-q9';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Beat a stronger selector in an earlier layer', true, NULL
+from public.quiz_questions where slug = 'css-final-q9';
+insert into public.quiz_questions (lesson_id, assessment_id, slug, ordinal, kind, prompt, explanation, skill_id, xp_award)
+values (NULL, (select id from public.assessments where slug = 'css-architect-final'), 'css-final-q10', 10, 'single'::public.question_kind,
+        'A rule is absent from the styles panel entirely. What happened?', 'It never matched the element.', (select id from public.skills where slug = 'css-debugging'), 10)
+on conflict (slug) do update set
+  lesson_id = excluded.lesson_id, assessment_id = excluded.assessment_id,
+  ordinal = excluded.ordinal, kind = excluded.kind, prompt = excluded.prompt,
+  explanation = excluded.explanation, skill_id = excluded.skill_id,
+  xp_award = excluded.xp_award;
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 1, 'It is in an earlier layer', false, NULL
+from public.quiz_questions where slug = 'css-final-q10';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 2, 'It never matched', true, NULL
+from public.quiz_questions where slug = 'css-final-q10';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 3, 'It was overridden', false, NULL
+from public.quiz_questions where slug = 'css-final-q10';
+insert into public.quiz_options (question_id, ordinal, label, is_correct, feedback)
+select id, 4, 'Its value was invalid', false, NULL
+from public.quiz_questions where slug = 'css-final-q10';
+
+-- --------------------------------------------------------------------------
 -- Remove content deleted from the curriculum
 -- --------------------------------------------------------------------------
 
-delete from public.quiz_questions where slug not in ('a1-q1', 'a1-q2', 'a1-q3', 'a1-q4', 'a1-q5', 'a1-q6', 'a1-q7', 'a1-q8', 'a1-q9', 'a1-q10', 'q-what-is-html', 'q-html-purpose', 'q-tag-vs-element', 'q-attribute-syntax', 'q-void-elements', 'q-nesting-order', 'q-dom-meaning', 'q-comments', 'q-doctype-purpose', 'q-head-vs-body', 'q-viewport', 'q-charset', 'q-index-html', 'q-one-h1', 'a2-q1', 'a2-q2', 'a2-q3', 'a2-q4', 'a2-q5', 'a2-q6', 'a2-q7', 'a2-q8', 'q-heading-skip', 'q-heading-purpose', 'q-whitespace', 'q-br-use', 'q-hr-meaning', 'q-strong-vs-em', 'q-small-meaning', 'q-cite-meaning', 'q-datetime-format', 'q-q-quotes', 'q-entity-lt', 'q-list-choice', 'q-nested-list', 'q-semantic-choice', 'a3-q1', 'a3-q2', 'a3-q3', 'a3-q4', 'a3-q5', 'a3-q6', 'a3-q7', 'a3-q8', 'q-link-text', 'q-noopener', 'q-dotdot', 'q-leading-slash', 'q-fragment-case', 'q-tel-format', 'q-download-attr', 'q-nav-list', 'q-skip-link-position', 'q-aria-current', 'q-filenames', 'q-nav-consistency', 'a4-q1', 'a4-q2', 'a4-q3', 'a4-q4', 'a4-q5', 'a4-q6', 'a4-q7', 'a4-q8', 'a4-q9', 'q-img-dimensions', 'q-hotlinking', 'q-empty-alt', 'q-alt-vs-caption', 'q-missing-alt', 'q-srcset-w', 'q-sizes-purpose', 'q-picture-img', 'q-lazy-hero', 'q-picture-vs-srcset', 'q-video-controls', 'q-track-kind', 'q-fallback-placement', 'q-iframe-title', 'q-sandbox', 'a5-q1', 'a5-q2', 'a5-q3', 'a5-q4', 'a5-q5', 'a5-q6', 'a5-q7', 'a5-q8', 'q-semantic-meaning', 'q-main-count', 'q-article-test', 'q-section-heading', 'q-outline-algorithm', 'q-case-sensitivity', 'q-comments-value', 'q-footer-placement', 'a6-q1', 'a6-q2', 'a6-q3', 'a6-q4', 'a6-q5', 'a6-q6', 'a6-q7', 'a6-q8', 'a6-q9', 'a6-q10', 'q-scope-col', 'q-caption-position', 'q-layout-tables', 'q-label-for', 'q-placeholder', 'q-number-type', 'q-name-attribute', 'q-radio-group', 'q-button-type', 'q-legend-position', 'q-client-validation', 'q-get-vs-post', 'q-aria-describedby', 'a7-q1', 'a7-q2', 'a7-q3', 'a7-q4', 'a7-q5', 'a7-q6', 'a7-q7', 'q-summary-position', 'q-details-name', 'q-dialog-close', 'q-popover-js', 'q-modal-content', 'q-progress-vs-meter', 'q-datalist-restrict', 'a8-q1', 'a8-q2', 'a8-q3', 'a8-q4', 'a8-q5', 'a8-q6', 'a8-q7', 'a8-q8', 'a8-q9', 'q-a11y-tree', 'q-keyboard-test', 'q-div-button', 'q-focusable-defaults', 'q-tabindex-negative', 'q-positive-tabindex', 'q-name-order', 'q-alt-empty-vs-missing', 'q-link-text-alone', 'q-aria-first-rule', 'q-aria-behaviour', 'q-labelledby-vs-label', 'q-aria-current-page', 'q-live-region-timing', 'q-assertive-vs-polite', 'q-placeholder-not-label', 'q-fieldset-legend', 'q-autocomplete-requirement', 'q-audit-order', 'q-duplicate-id-impact', 'a9-q1', 'a9-q2', 'a9-q3', 'a9-q4', 'a9-q5', 'a9-q6', 'a9-q7', 'a9-q8', 'q-title-length', 'q-canonical', 'q-noindex-security', 'q-og-property', 'q-structured-data-ranking', 'q-og-image-url', 'q-lang-missing-effect', 'q-wrong-lang-worse', 'q-dir-auto', 'q-metadata-order', 'a10-q1', 'a10-q2', 'a10-q3', 'a10-q4', 'a10-q5', 'a10-q6', 'a10-q7', 'a10-q8', 'q-layout-shift', 'q-defer-async', 'q-preload-overuse', 'q-noopener-why', 'q-hidden-input', 'q-csp-header', 'q-iframe-cost', 'q-sandbox-combination', 'q-defer-vs-async', 'q-preload-auto', 'a11-q1', 'a11-q2', 'a11-q3', 'a11-q4', 'a11-q5', 'a11-q6', 'a11-q7', 'q-validator-order', 'q-validator-limits', 'q-duplicate-id-effect', 'q-elements-panel', 'q-network-404', 'q-one-change', 'q-bisection-steps', 'q-minimal-repro-value', 'q-one-change-at-a-time', 'q-repair-order', 'final-q1', 'final-q2', 'final-q3', 'final-q4', 'final-q5', 'final-q6', 'final-q7', 'final-q8', 'final-q9', 'final-q10', 'final-q11', 'final-q12', 'q-shell-difference', 'q-capstone-media', 'q-review-order', 'q-publishing', 'a-css-1-specificity-order', 'a-css-1-inheritance-loses', 'a-css-1-invalid-silent', 'a-css-1-inline-beats', 'a-css-1-does-not-inherit', 'a-css-1-where-zero', 'a-css-1-tie-break', 'a-css-1-button-inherit', 'q-css-rule-parts', 'q-css-invalid-declaration', 'q-css-where-it-lives', 'q-css-id-vs-classes', 'q-css-source-order', 'q-css-important-cost', 'q-css-what-inherits', 'q-css-inheritance-vs-specificity', 'q-css-button-font', 'q-css-diagnose-order', 'q-css-repair-direction', 'a-css-2-width-default', 'a-css-2-border-box', 'a-css-2-collapse', 'a-css-2-combinator', 'a-css-2-attribute', 'a-css-2-specificity-cost', 'q-css-width-measures', 'q-css-border-box-selector', 'q-css-margin-collapse', 'q-css-child-combinator', 'q-css-where-zero-specificity', 'q-css-focus-visible', 'q-css-padding-vs-margin', 'q-css-border-needs-style');
-delete from public.exercises where slug not in ('first-markup-guided', 'first-markup-debug', 'attributes-guided', 'attributes-challenge', 'attributes-debug', 'nesting-guided', 'nesting-debug', 'skeleton-guided', 'skeleton-debug', 'first-page-milestone', 'first-page-mission', 'headings-guided', 'headings-debug', 'paragraphs-guided', 'paragraphs-debug', 'emphasis-guided', 'emphasis-challenge', 'quotes-guided', 'quotes-debug', 'lists-guided', 'entities-debug', 'article-milestone-build', 'article-mission', 'links-guided', 'links-debug', 'paths-guided', 'fragments-challenge', 'paths-debug', 'special-links-guided', 'nav-guided', 'skip-link-challenge', 'nav-debug', 'multipage-milestone-build', 'navigation-mission', 'img-guided', 'img-debug', 'alt-guided', 'figure-challenge', 'srcset-guided', 'srcset-debug', 'picture-guided', 'lazy-challenge', 'video-guided', 'video-debug', 'iframe-guided', 'media-milestone', 'media-mission', 'landmarks-guided', 'section-article-guided', 'section-debug', 'patterns-guided', 'semantic-rebuild', 'semantic-mission', 'table-guided', 'table-debug', 'labels-guided', 'input-types-debug', 'fieldset-guided', 'controls-challenge', 'validation-guided', 'form-milestone', 'form-mission', 'details-guided', 'popover-guided', 'dialog-debug', 'datalist-guided', 'native-milestone', 'native-mission', 'keyboard-debug', 'keyboard-skip-link-guided', 'keyboard-operability-debug', 'accessible-names-challenge', 'accessible-names-debug', 'aria-guided', 'aria-debug', 'aria-state-guided', 'aria-state-debug', 'accessible-form-challenge', 'accessible-form-debug', 'a11y-audit-milestone', 'a11y-mission', 'metadata-guided', 'metadata-debug', 'og-guided', 'jsonld-challenge', 'lang-guided', 'lang-debug', 'seo-milestone-build', 'seo-mission', 'perf-guided', 'security-debug', 'embed-hardening-guided', 'third-party-debug', 'performance-milestone-build', 'performance-mission', 'validation-debug', 'devtools-debug', 'bisection-debug', 'minimal-reproduction-challenge', 'repair-milestone', 'validation-mission', 'shell-guided', 'capstone-main-build', 'final-review-exercise', 'capstone-final-mission', 'css-first-rule-guided', 'css-first-rule-debug', 'css-specificity-guided', 'css-specificity-debug', 'css-inheritance-guided', 'css-inheritance-debug', 'css-cascade-milestone-debug', 'css-border-box-guided', 'css-box-debug', 'css-selectors-guided', 'css-box-milestone-challenge', 'css-box-milestone-debug');
-delete from public.lessons where slug not in ('what-happens-when-you-open-a-page', 'tags-elements-attributes', 'nesting-and-the-document-tree', 'doctype-html-head-body', 'your-first-complete-page', 'heading-hierarchy', 'paragraphs-breaks-rules', 'emphasis-and-importance', 'quotes-abbreviations-dates', 'code-entities-and-lists', 'article-milestone', 'anchors-and-link-text', 'relative-and-absolute-paths', 'special-links', 'navigation-menus', 'multi-page-milestone', 'the-img-element', 'writing-alt-text', 'srcset-and-sizes', 'picture-and-formats', 'video-and-audio', 'iframes-and-media-milestone', 'semantic-vs-non-semantic', 'section-article-aside', 'file-organisation-and-patterns', 'semantic-rebuild-milestone', 'building-a-table', 'labels-and-inputs', 'grouping-and-controls', 'validation-and-form-milestone', 'details-and-summary', 'dialog-and-popover', 'progress-meter-datalist-milestone', 'how-assistive-tech-reads-a-page', 'keyboard-and-focus-management', 'accessible-names-in-depth', 'aria-fundamentals', 'aria-live-and-state', 'accessible-forms-in-depth', 'accessibility-audit-milestone', 'titles-descriptions-canonicals', 'social-and-structured-data', 'language-and-internationalisation', 'seo-milestone', 'loading-strategy', 'html-security', 'third-party-and-embeds', 'performance-milestone', 'reading-validation-output', 'developer-tools', 'a-method-for-debugging', 'debugging-milestone', 'assembling-the-site', 'capstone-build', 'final-review', 'css-what-a-rule-is', 'css-specificity', 'css-inheritance', 'css-cascade-milestone', 'css-the-four-layers', 'css-selectors', 'css-box-milestone');
-delete from public.assessments where slug not in ('level-1-milestone', 'level-2-milestone', 'level-3-milestone', 'level-4-milestone', 'level-5-milestone', 'level-6-milestone', 'level-7-milestone', 'level-8-milestone', 'level-9-milestone', 'level-10-milestone', 'level-11-milestone', 'html-hero-final', 'css-level-1-milestone', 'css-level-2-milestone');
-delete from public.modules where slug not in ('how-the-web-works', 'the-html-skeleton', 'headings-and-paragraphs', 'text-level-semantics', 'links-and-paths', 'site-navigation', 'images-and-alt-text', 'responsive-images', 'video-audio-embeds', 'semantic-landmarks', 'organising-a-project', 'data-tables', 'form-foundations', 'disclosure-and-dialog', 'accessibility-foundations', 'aria-and-accessible-forms', 'page-metadata', 'html-performance', 'validation-and-tools', 'completing-the-site', 'review-and-publish', 'css-first-rules', 'css-boxes');
-delete from public.levels where slug not in ('html-explorer', 'content-builder', 'navigation-architect', 'media-specialist', 'structure-professional', 'data-and-forms', 'native-interaction', 'accessibility-champion', 'metadata-and-seo', 'performance-and-security', 'debugging-and-validation', 'html-hero-capstone', 'css-cascade', 'css-box-model');
+delete from public.quiz_questions where slug not in ('a1-q1', 'a1-q2', 'a1-q3', 'a1-q4', 'a1-q5', 'a1-q6', 'a1-q7', 'a1-q8', 'a1-q9', 'a1-q10', 'q-what-is-html', 'q-html-purpose', 'q-tag-vs-element', 'q-attribute-syntax', 'q-void-elements', 'q-nesting-order', 'q-dom-meaning', 'q-comments', 'q-doctype-purpose', 'q-head-vs-body', 'q-viewport', 'q-charset', 'q-index-html', 'q-one-h1', 'a2-q1', 'a2-q2', 'a2-q3', 'a2-q4', 'a2-q5', 'a2-q6', 'a2-q7', 'a2-q8', 'q-heading-skip', 'q-heading-purpose', 'q-whitespace', 'q-br-use', 'q-hr-meaning', 'q-strong-vs-em', 'q-small-meaning', 'q-cite-meaning', 'q-datetime-format', 'q-q-quotes', 'q-entity-lt', 'q-list-choice', 'q-nested-list', 'q-semantic-choice', 'a3-q1', 'a3-q2', 'a3-q3', 'a3-q4', 'a3-q5', 'a3-q6', 'a3-q7', 'a3-q8', 'q-link-text', 'q-noopener', 'q-dotdot', 'q-leading-slash', 'q-fragment-case', 'q-tel-format', 'q-download-attr', 'q-nav-list', 'q-skip-link-position', 'q-aria-current', 'q-filenames', 'q-nav-consistency', 'a4-q1', 'a4-q2', 'a4-q3', 'a4-q4', 'a4-q5', 'a4-q6', 'a4-q7', 'a4-q8', 'a4-q9', 'q-img-dimensions', 'q-hotlinking', 'q-empty-alt', 'q-alt-vs-caption', 'q-missing-alt', 'q-srcset-w', 'q-sizes-purpose', 'q-picture-img', 'q-lazy-hero', 'q-picture-vs-srcset', 'q-video-controls', 'q-track-kind', 'q-fallback-placement', 'q-iframe-title', 'q-sandbox', 'a5-q1', 'a5-q2', 'a5-q3', 'a5-q4', 'a5-q5', 'a5-q6', 'a5-q7', 'a5-q8', 'q-semantic-meaning', 'q-main-count', 'q-article-test', 'q-section-heading', 'q-outline-algorithm', 'q-case-sensitivity', 'q-comments-value', 'q-footer-placement', 'a6-q1', 'a6-q2', 'a6-q3', 'a6-q4', 'a6-q5', 'a6-q6', 'a6-q7', 'a6-q8', 'a6-q9', 'a6-q10', 'q-scope-col', 'q-caption-position', 'q-layout-tables', 'q-label-for', 'q-placeholder', 'q-number-type', 'q-name-attribute', 'q-radio-group', 'q-button-type', 'q-legend-position', 'q-client-validation', 'q-get-vs-post', 'q-aria-describedby', 'a7-q1', 'a7-q2', 'a7-q3', 'a7-q4', 'a7-q5', 'a7-q6', 'a7-q7', 'q-summary-position', 'q-details-name', 'q-dialog-close', 'q-popover-js', 'q-modal-content', 'q-progress-vs-meter', 'q-datalist-restrict', 'a8-q1', 'a8-q2', 'a8-q3', 'a8-q4', 'a8-q5', 'a8-q6', 'a8-q7', 'a8-q8', 'a8-q9', 'q-a11y-tree', 'q-keyboard-test', 'q-div-button', 'q-focusable-defaults', 'q-tabindex-negative', 'q-positive-tabindex', 'q-name-order', 'q-alt-empty-vs-missing', 'q-link-text-alone', 'q-aria-first-rule', 'q-aria-behaviour', 'q-labelledby-vs-label', 'q-aria-current-page', 'q-live-region-timing', 'q-assertive-vs-polite', 'q-placeholder-not-label', 'q-fieldset-legend', 'q-autocomplete-requirement', 'q-audit-order', 'q-duplicate-id-impact', 'a9-q1', 'a9-q2', 'a9-q3', 'a9-q4', 'a9-q5', 'a9-q6', 'a9-q7', 'a9-q8', 'q-title-length', 'q-canonical', 'q-noindex-security', 'q-og-property', 'q-structured-data-ranking', 'q-og-image-url', 'q-lang-missing-effect', 'q-wrong-lang-worse', 'q-dir-auto', 'q-metadata-order', 'a10-q1', 'a10-q2', 'a10-q3', 'a10-q4', 'a10-q5', 'a10-q6', 'a10-q7', 'a10-q8', 'q-layout-shift', 'q-defer-async', 'q-preload-overuse', 'q-noopener-why', 'q-hidden-input', 'q-csp-header', 'q-iframe-cost', 'q-sandbox-combination', 'q-defer-vs-async', 'q-preload-auto', 'a11-q1', 'a11-q2', 'a11-q3', 'a11-q4', 'a11-q5', 'a11-q6', 'a11-q7', 'q-validator-order', 'q-validator-limits', 'q-duplicate-id-effect', 'q-elements-panel', 'q-network-404', 'q-one-change', 'q-bisection-steps', 'q-minimal-repro-value', 'q-one-change-at-a-time', 'q-repair-order', 'final-q1', 'final-q2', 'final-q3', 'final-q4', 'final-q5', 'final-q6', 'final-q7', 'final-q8', 'final-q9', 'final-q10', 'final-q11', 'final-q12', 'q-shell-difference', 'q-capstone-media', 'q-review-order', 'q-publishing', 'a-css-1-specificity-order', 'a-css-1-inheritance-loses', 'a-css-1-invalid-silent', 'a-css-1-inline-beats', 'a-css-1-does-not-inherit', 'a-css-1-where-zero', 'a-css-1-tie-break', 'a-css-1-button-inherit', 'q-css-rule-parts', 'q-css-invalid-declaration', 'q-css-where-it-lives', 'q-css-id-vs-classes', 'q-css-source-order', 'q-css-important-cost', 'q-css-what-inherits', 'q-css-inheritance-vs-specificity', 'q-css-button-font', 'q-css-diagnose-order', 'q-css-repair-direction', 'a-css-2-width-default', 'a-css-2-border-box', 'a-css-2-collapse', 'a-css-2-combinator', 'a-css-2-attribute', 'a-css-2-specificity-cost', 'q-css-width-measures', 'q-css-border-box-selector', 'q-css-margin-collapse', 'q-css-child-combinator', 'q-css-where-zero-specificity', 'q-css-focus-visible', 'q-css-padding-vs-margin', 'q-css-border-needs-style', 'a-css-3-inline-width', 'a-css-3-inline-block', 'a-css-3-abs-reference', 'a-css-3-sticky', 'a-css-3-context-trap', 'a-css-3-display-none-a11y', 'q-css-inline-ignores', 'q-css-display-none-cost', 'q-css-replaced-elements', 'q-css-absolute-against', 'q-css-stacking-context-cause', 'q-css-zindex-static', 'q-css-out-of-flow-space', 'q-css-relative-no-offsets', 'a-css-4-axes-swap', 'a-css-4-equal-columns', 'a-css-4-fixed-item', 'a-css-4-wrap-default', 'a-css-4-equal-heights', 'a-css-4-overflow-cause', 'q-css-justify-axis', 'q-css-align-items-default', 'q-css-gap-benefit', 'q-css-flex-1-expands', 'q-css-flex-auto-vs-1', 'q-css-min-width-zero', 'q-css-space-between', 'q-css-nested-flex', 'a-css-5-fr-leftover', 'a-css-5-repeat', 'a-css-5-implicit', 'a-css-5-minmax', 'a-css-5-empty-cell', 'a-css-5-container-vs-viewport', 'q-css-fr-meaning', 'q-css-implicit-rows', 'q-css-fr-vs-percent', 'q-css-auto-fit', 'q-css-auto-fit-vs-fill', 'q-css-grid-vs-flex', 'q-css-area-span', 'q-css-nested-grid-why', 'a-css-6-max-width', 'a-css-6-clamp', 'a-css-6-min-max-naming', 'a-css-6-mobile-first-order', 'a-css-6-container-type', 'a-css-6-device-breakpoints', 'q-css-max-width', 'q-css-clamp-parts', 'q-css-ch-unit', 'q-css-mobile-first', 'q-css-breakpoint-source', 'q-css-container-query-why', 'q-css-query-last-resort', 'q-css-rem-breakpoints', 'a-css-7-syntax', 'a-css-7-resolved-when', 'a-css-7-sibling-scope', 'a-css-7-missing-var', 'a-css-7-theme-cost', 'a-css-7-root-why', 'q-css-token-inherits', 'q-css-var-fallback', 'q-css-token-scope', 'q-css-theme-approach', 'q-css-token-naming', 'q-css-prefers-scheme', 'q-css-variant-vs-theme', 'q-css-no-literal-colours', 'a-css-8-measure', 'a-css-8-lineheight', 'a-css-8-rem', 'a-css-8-contrast-large', 'a-css-8-second-signal', 'a-css-8-currentcolor-use', 'q-css-measure', 'q-css-lineheight-unit', 'q-css-rem-type', 'q-css-contrast-body', 'q-css-colour-alone', 'q-css-currentcolor', 'q-css-scale-benefit', 'q-css-heading-leading', 'a-css-9-transition-place', 'a-css-9-compositor', 'a-css-9-all', 'a-css-9-preference-meaning', 'a-css-9-why-preference', 'a-css-9-easing-default', 'q-css-transition-where', 'q-css-transition-all', 'q-css-duration', 'q-css-cheap-props', 'q-css-reduced-motion', 'q-css-keyframes-name', 'q-css-motion-both', 'q-css-motion-important', 'a-css-10-important', 'a-css-10-layer-beats', 'a-css-10-where', 'a-css-10-prefix', 'a-css-10-shared-selector', 'a-css-10-name-role', 'q-css-important-escalation', 'q-css-flat-selectors', 'q-css-name-meaning', 'q-css-layer-order', 'q-css-where-reset', 'q-css-deletable', 'q-css-variant-class', 'q-css-arch-goal', 'a-css-11-computed', 'a-css-11-absent', 'a-css-11-order', 'a-css-11-gap', 'a-css-11-hov', 'a-css-11-bisect', 'q-css-struck-through', 'q-css-computed-panel', 'q-css-missing-rule', 'q-css-first-check', 'q-css-inline-width', 'q-css-bisect', 'q-css-signature-invalid', 'q-css-repair-by-lowering', 'css-final-q1', 'css-final-q2', 'css-final-q3', 'css-final-q4', 'css-final-q5', 'css-final-q6', 'css-final-q7', 'css-final-q8', 'css-final-q9', 'css-final-q10', 'q-css-capstone-order', 'q-css-capstone-typography', 'q-css-capstone-autofit', 'q-css-capstone-breakpoint-source', 'q-css-capstone-outline', 'q-css-capstone-review-direction');
+delete from public.exercises where slug not in ('first-markup-guided', 'first-markup-debug', 'attributes-guided', 'attributes-challenge', 'attributes-debug', 'nesting-guided', 'nesting-debug', 'skeleton-guided', 'skeleton-debug', 'first-page-milestone', 'first-page-mission', 'headings-guided', 'headings-debug', 'paragraphs-guided', 'paragraphs-debug', 'emphasis-guided', 'emphasis-challenge', 'quotes-guided', 'quotes-debug', 'lists-guided', 'entities-debug', 'article-milestone-build', 'article-mission', 'links-guided', 'links-debug', 'paths-guided', 'fragments-challenge', 'paths-debug', 'special-links-guided', 'nav-guided', 'skip-link-challenge', 'nav-debug', 'multipage-milestone-build', 'navigation-mission', 'img-guided', 'img-debug', 'alt-guided', 'figure-challenge', 'srcset-guided', 'srcset-debug', 'picture-guided', 'lazy-challenge', 'video-guided', 'video-debug', 'iframe-guided', 'media-milestone', 'media-mission', 'landmarks-guided', 'section-article-guided', 'section-debug', 'patterns-guided', 'semantic-rebuild', 'semantic-mission', 'table-guided', 'table-debug', 'labels-guided', 'input-types-debug', 'fieldset-guided', 'controls-challenge', 'validation-guided', 'form-milestone', 'form-mission', 'details-guided', 'popover-guided', 'dialog-debug', 'datalist-guided', 'native-milestone', 'native-mission', 'keyboard-debug', 'keyboard-skip-link-guided', 'keyboard-operability-debug', 'accessible-names-challenge', 'accessible-names-debug', 'aria-guided', 'aria-debug', 'aria-state-guided', 'aria-state-debug', 'accessible-form-challenge', 'accessible-form-debug', 'a11y-audit-milestone', 'a11y-mission', 'metadata-guided', 'metadata-debug', 'og-guided', 'jsonld-challenge', 'lang-guided', 'lang-debug', 'seo-milestone-build', 'seo-mission', 'perf-guided', 'security-debug', 'embed-hardening-guided', 'third-party-debug', 'performance-milestone-build', 'performance-mission', 'validation-debug', 'devtools-debug', 'bisection-debug', 'minimal-reproduction-challenge', 'repair-milestone', 'validation-mission', 'shell-guided', 'capstone-main-build', 'final-review-exercise', 'capstone-final-mission', 'css-first-rule-guided', 'css-first-rule-debug', 'css-specificity-guided', 'css-specificity-debug', 'css-inheritance-guided', 'css-inheritance-debug', 'css-cascade-milestone-debug', 'css-border-box-guided', 'css-box-debug', 'css-selectors-guided', 'css-box-milestone-challenge', 'css-box-milestone-debug', 'css-flow-guided', 'css-position-guided', 'css-stacking-debug', 'css-flow-milestone-debug', 'css-flex-centre-guided', 'css-flex-axis-debug', 'css-flex-sidebar-guided', 'css-flex-wrap-debug', 'css-flex-milestone-challenge', 'css-grid-tracks-guided', 'css-grid-responsive-guided', 'css-grid-areas-debug', 'css-grid-milestone-challenge', 'css-fluid-guided', 'css-mobile-first-guided', 'css-responsive-debug', 'css-responsive-milestone-challenge', 'css-tokens-guided', 'css-theme-guided', 'css-tokens-debug', 'css-tokens-milestone-challenge', 'css-type-guided', 'css-contrast-debug', 'css-type-milestone-challenge', 'css-transition-guided', 'css-motion-guided', 'css-motion-debug', 'css-motion-milestone-challenge', 'css-naming-debug', 'css-layers-guided', 'css-architecture-milestone-challenge', 'css-invalid-debug', 'css-applies-debug', 'css-debugging-milestone-debug', 'css-capstone-foundation-guided', 'css-capstone-layout-guided', 'css-capstone-review-debug', 'css-capstone-mission');
+delete from public.lessons where slug not in ('what-happens-when-you-open-a-page', 'tags-elements-attributes', 'nesting-and-the-document-tree', 'doctype-html-head-body', 'your-first-complete-page', 'heading-hierarchy', 'paragraphs-breaks-rules', 'emphasis-and-importance', 'quotes-abbreviations-dates', 'code-entities-and-lists', 'article-milestone', 'anchors-and-link-text', 'relative-and-absolute-paths', 'special-links', 'navigation-menus', 'multi-page-milestone', 'the-img-element', 'writing-alt-text', 'srcset-and-sizes', 'picture-and-formats', 'video-and-audio', 'iframes-and-media-milestone', 'semantic-vs-non-semantic', 'section-article-aside', 'file-organisation-and-patterns', 'semantic-rebuild-milestone', 'building-a-table', 'labels-and-inputs', 'grouping-and-controls', 'validation-and-form-milestone', 'details-and-summary', 'dialog-and-popover', 'progress-meter-datalist-milestone', 'how-assistive-tech-reads-a-page', 'keyboard-and-focus-management', 'accessible-names-in-depth', 'aria-fundamentals', 'aria-live-and-state', 'accessible-forms-in-depth', 'accessibility-audit-milestone', 'titles-descriptions-canonicals', 'social-and-structured-data', 'language-and-internationalisation', 'seo-milestone', 'loading-strategy', 'html-security', 'third-party-and-embeds', 'performance-milestone', 'reading-validation-output', 'developer-tools', 'a-method-for-debugging', 'debugging-milestone', 'assembling-the-site', 'capstone-build', 'final-review', 'css-what-a-rule-is', 'css-specificity', 'css-inheritance', 'css-cascade-milestone', 'css-the-four-layers', 'css-selectors', 'css-box-milestone', 'css-normal-flow', 'css-position-and-stacking', 'css-flow-milestone', 'css-flex-axes', 'css-flex-sizing', 'css-flex-milestone', 'css-grid-tracks', 'css-grid-areas-and-auto-fit', 'css-grid-milestone', 'css-fluid-first', 'css-queries', 'css-responsive-milestone', 'css-declaring-tokens', 'css-theming', 'css-tokens-milestone', 'css-readable-type', 'css-colour-contrast', 'css-type-milestone', 'css-transitions', 'css-keyframes-motion', 'css-motion-milestone', 'css-naming', 'css-scale', 'css-architecture-milestone', 'css-inspector', 'css-diagnosis', 'css-debugging-milestone', 'css-capstone-foundation', 'css-capstone-layout', 'css-capstone-review');
+delete from public.assessments where slug not in ('level-1-milestone', 'level-2-milestone', 'level-3-milestone', 'level-4-milestone', 'level-5-milestone', 'level-6-milestone', 'level-7-milestone', 'level-8-milestone', 'level-9-milestone', 'level-10-milestone', 'level-11-milestone', 'html-hero-final', 'css-level-1-milestone', 'css-level-2-milestone', 'css-level-3-milestone', 'css-level-4-milestone', 'css-level-5-milestone', 'css-level-6-milestone', 'css-level-7-milestone', 'css-level-8-milestone', 'css-level-9-milestone', 'css-level-10-milestone', 'css-level-11-milestone', 'css-architect-final');
+delete from public.modules where slug not in ('how-the-web-works', 'the-html-skeleton', 'headings-and-paragraphs', 'text-level-semantics', 'links-and-paths', 'site-navigation', 'images-and-alt-text', 'responsive-images', 'video-audio-embeds', 'semantic-landmarks', 'organising-a-project', 'data-tables', 'form-foundations', 'disclosure-and-dialog', 'accessibility-foundations', 'aria-and-accessible-forms', 'page-metadata', 'html-performance', 'validation-and-tools', 'completing-the-site', 'review-and-publish', 'css-first-rules', 'css-boxes', 'css-flow', 'css-flex', 'css-grid-module', 'css-responsive-module', 'css-tokens', 'css-type-colour', 'css-motion-module', 'css-architecture-module', 'css-debugging-module', 'css-capstone-module');
+delete from public.levels where slug not in ('html-explorer', 'content-builder', 'navigation-architect', 'media-specialist', 'structure-professional', 'data-and-forms', 'native-interaction', 'accessibility-champion', 'metadata-and-seo', 'performance-and-security', 'debugging-and-validation', 'html-hero-capstone', 'css-cascade', 'css-box-model', 'css-flow-and-position', 'css-flexbox', 'css-grid', 'css-responsive', 'css-custom-properties', 'css-typography', 'css-motion', 'css-architecture-level', 'css-debugging-level', 'css-capstone');
 
 -- --------------------------------------------------------------------------
 -- Reviewable items (spaced repetition)
@@ -24277,8 +32637,1043 @@ where l.slug = 'css-box-milestone' and e.slug = 'css-box-milestone-debug'
 on conflict (slug) do update set
   skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
   exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-inline-ignores', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'layout-flow'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-normal-flow' and qq.slug = 'q-css-inline-ignores'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-display-none-cost', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'layout-flow'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-normal-flow' and qq.slug = 'q-css-display-none-cost'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-replaced-elements', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'layout-flow'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-normal-flow' and qq.slug = 'q-css-replaced-elements'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-flow-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'layout-flow'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'css-normal-flow' and e.slug = 'css-flow-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-absolute-against', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'layout-flow'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-position-and-stacking' and qq.slug = 'q-css-absolute-against'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-stacking-context-cause', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'layout-flow'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-position-and-stacking' and qq.slug = 'q-css-stacking-context-cause'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-zindex-static', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'layout-flow'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-position-and-stacking' and qq.slug = 'q-css-zindex-static'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-position-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'layout-flow'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-position-and-stacking' and e.slug = 'css-position-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-stacking-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'layout-flow'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-position-and-stacking' and e.slug = 'css-stacking-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-out-of-flow-space', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'layout-flow'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-flow-milestone' and qq.slug = 'q-css-out-of-flow-space'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-relative-no-offsets', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'layout-flow'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-flow-milestone' and qq.slug = 'q-css-relative-no-offsets'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-flow-milestone-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'layout-flow'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-flow-milestone' and e.slug = 'css-flow-milestone-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-justify-axis', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-flex-axes' and qq.slug = 'q-css-justify-axis'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-align-items-default', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-flex-axes' and qq.slug = 'q-css-align-items-default'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-gap-benefit', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-flex-axes' and qq.slug = 'q-css-gap-benefit'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-flex-centre-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'css-flex-axes' and e.slug = 'css-flex-centre-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-flex-axis-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-flex-axes' and e.slug = 'css-flex-axis-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-flex-1-expands', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-flex-sizing' and qq.slug = 'q-css-flex-1-expands'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-flex-auto-vs-1', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-flex-sizing' and qq.slug = 'q-css-flex-auto-vs-1'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-min-width-zero', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-flex-sizing' and qq.slug = 'q-css-min-width-zero'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-flex-sidebar-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-flex-sizing' and e.slug = 'css-flex-sidebar-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-flex-wrap-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-flex-sizing' and e.slug = 'css-flex-wrap-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-space-between', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-flex-milestone' and qq.slug = 'q-css-space-between'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-nested-flex', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-flex-milestone' and qq.slug = 'q-css-nested-flex'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-flex-milestone-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'flexbox'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-flex-milestone' and e.slug = 'css-flex-milestone-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-fr-meaning', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'grid'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-grid-tracks' and qq.slug = 'q-css-fr-meaning'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-implicit-rows', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'grid'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-grid-tracks' and qq.slug = 'q-css-implicit-rows'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-fr-vs-percent', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'grid'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-grid-tracks' and qq.slug = 'q-css-fr-vs-percent'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-grid-tracks-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'grid'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'css-grid-tracks' and e.slug = 'css-grid-tracks-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-auto-fit', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'grid'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-grid-areas-and-auto-fit' and qq.slug = 'q-css-auto-fit'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-auto-fit-vs-fill', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'grid'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-grid-areas-and-auto-fit' and qq.slug = 'q-css-auto-fit-vs-fill'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-grid-vs-flex', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'grid'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-grid-areas-and-auto-fit' and qq.slug = 'q-css-grid-vs-flex'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-grid-responsive-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'grid'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-grid-areas-and-auto-fit' and e.slug = 'css-grid-responsive-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-grid-areas-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'grid'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-grid-areas-and-auto-fit' and e.slug = 'css-grid-areas-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-area-span', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'grid'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-grid-milestone' and qq.slug = 'q-css-area-span'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-nested-grid-why', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'grid'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-grid-milestone' and qq.slug = 'q-css-nested-grid-why'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-grid-milestone-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'grid'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-grid-milestone' and e.slug = 'css-grid-milestone-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-max-width', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-fluid-first' and qq.slug = 'q-css-max-width'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-clamp-parts', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-fluid-first' and qq.slug = 'q-css-clamp-parts'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-ch-unit', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-fluid-first' and qq.slug = 'q-css-ch-unit'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-fluid-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'css-fluid-first' and e.slug = 'css-fluid-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-mobile-first', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-queries' and qq.slug = 'q-css-mobile-first'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-breakpoint-source', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-queries' and qq.slug = 'q-css-breakpoint-source'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-container-query-why', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-queries' and qq.slug = 'q-css-container-query-why'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-mobile-first-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-queries' and e.slug = 'css-mobile-first-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-responsive-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-queries' and e.slug = 'css-responsive-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-query-last-resort', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-responsive-milestone' and qq.slug = 'q-css-query-last-resort'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-rem-breakpoints', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-responsive-milestone' and qq.slug = 'q-css-rem-breakpoints'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-responsive-milestone-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-responsive-milestone' and e.slug = 'css-responsive-milestone-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-token-inherits', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-declaring-tokens' and qq.slug = 'q-css-token-inherits'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-var-fallback', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-declaring-tokens' and qq.slug = 'q-css-var-fallback'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-token-scope', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-declaring-tokens' and qq.slug = 'q-css-token-scope'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-tokens-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'css-declaring-tokens' and e.slug = 'css-tokens-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-theme-approach', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-theming' and qq.slug = 'q-css-theme-approach'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-token-naming', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-theming' and qq.slug = 'q-css-token-naming'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-prefers-scheme', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-theming' and qq.slug = 'q-css-prefers-scheme'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-theme-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-theming' and e.slug = 'css-theme-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-tokens-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-theming' and e.slug = 'css-tokens-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-variant-vs-theme', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-tokens-milestone' and qq.slug = 'q-css-variant-vs-theme'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-no-literal-colours', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-tokens-milestone' and qq.slug = 'q-css-no-literal-colours'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-tokens-milestone-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-tokens-milestone' and e.slug = 'css-tokens-milestone-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-measure', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'typography'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-readable-type' and qq.slug = 'q-css-measure'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-lineheight-unit', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'typography'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-readable-type' and qq.slug = 'q-css-lineheight-unit'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-rem-type', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'typography'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-readable-type' and qq.slug = 'q-css-rem-type'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-type-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'typography'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'css-readable-type' and e.slug = 'css-type-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-contrast-body', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'typography'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-colour-contrast' and qq.slug = 'q-css-contrast-body'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-colour-alone', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'typography'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-colour-contrast' and qq.slug = 'q-css-colour-alone'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-currentcolor', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'typography'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-colour-contrast' and qq.slug = 'q-css-currentcolor'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-contrast-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'typography'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-colour-contrast' and e.slug = 'css-contrast-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-scale-benefit', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'typography'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-type-milestone' and qq.slug = 'q-css-scale-benefit'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-heading-leading', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'typography'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-type-milestone' and qq.slug = 'q-css-heading-leading'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-type-milestone-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'typography'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-type-milestone' and e.slug = 'css-type-milestone-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-transition-where', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'animation'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-transitions' and qq.slug = 'q-css-transition-where'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-transition-all', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'animation'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-transitions' and qq.slug = 'q-css-transition-all'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-duration', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'animation'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-transitions' and qq.slug = 'q-css-duration'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-transition-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'animation'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'css-transitions' and e.slug = 'css-transition-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-cheap-props', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'animation'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-keyframes-motion' and qq.slug = 'q-css-cheap-props'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-reduced-motion', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'animation'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-keyframes-motion' and qq.slug = 'q-css-reduced-motion'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-keyframes-name', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'animation'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-keyframes-motion' and qq.slug = 'q-css-keyframes-name'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-motion-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'animation'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-keyframes-motion' and e.slug = 'css-motion-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-motion-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'animation'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-keyframes-motion' and e.slug = 'css-motion-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-motion-both', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'animation'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-motion-milestone' and qq.slug = 'q-css-motion-both'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-motion-important', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'animation'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-motion-milestone' and qq.slug = 'q-css-motion-important'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-motion-milestone-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'animation'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-motion-milestone' and e.slug = 'css-motion-milestone-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-important-escalation', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-naming' and qq.slug = 'q-css-important-escalation'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-flat-selectors', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-naming' and qq.slug = 'q-css-flat-selectors'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-name-meaning', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-naming' and qq.slug = 'q-css-name-meaning'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-naming-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-naming' and e.slug = 'css-naming-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-layer-order', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-scale' and qq.slug = 'q-css-layer-order'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-where-reset', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-scale' and qq.slug = 'q-css-where-reset'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-deletable', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-scale' and qq.slug = 'q-css-deletable'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-layers-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-scale' and e.slug = 'css-layers-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-variant-class', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-architecture-milestone' and qq.slug = 'q-css-variant-class'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-arch-goal', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-architecture-milestone' and qq.slug = 'q-css-arch-goal'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-architecture-milestone-challenge', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-architecture-milestone' and e.slug = 'css-architecture-milestone-challenge'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-struck-through', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-debugging'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-inspector' and qq.slug = 'q-css-struck-through'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-computed-panel', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-debugging'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-inspector' and qq.slug = 'q-css-computed-panel'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-missing-rule', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-debugging'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-inspector' and qq.slug = 'q-css-missing-rule'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-invalid-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-debugging'),
+       l.id, e.id, 2
+from public.lessons l, public.exercises e
+where l.slug = 'css-inspector' and e.slug = 'css-invalid-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-first-check', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-debugging'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-diagnosis' and qq.slug = 'q-css-first-check'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-inline-width', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-debugging'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-diagnosis' and qq.slug = 'q-css-inline-width'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-bisect', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-debugging'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-diagnosis' and qq.slug = 'q-css-bisect'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-applies-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-debugging'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-diagnosis' and e.slug = 'css-applies-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-signature-invalid', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-debugging'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-debugging-milestone' and qq.slug = 'q-css-signature-invalid'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-repair-by-lowering', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-debugging'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-debugging-milestone' and qq.slug = 'q-css-repair-by-lowering'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-debugging-milestone-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-debugging'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-debugging-milestone' and e.slug = 'css-debugging-milestone-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-capstone-order', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-capstone-foundation' and qq.slug = 'q-css-capstone-order'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-capstone-typography', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-capstone-foundation' and qq.slug = 'q-css-capstone-typography'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-capstone-foundation-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'custom-properties'),
+       l.id, e.id, 3
+from public.lessons l, public.exercises e
+where l.slug = 'css-capstone-foundation' and e.slug = 'css-capstone-foundation-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-capstone-autofit', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-capstone-layout' and qq.slug = 'q-css-capstone-autofit'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-capstone-breakpoint-source', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-capstone-layout' and qq.slug = 'q-css-capstone-breakpoint-source'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-capstone-layout-guided', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'responsive'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-capstone-layout' and e.slug = 'css-capstone-layout-guided'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-capstone-outline', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-capstone-review' and qq.slug = 'q-css-capstone-outline'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, question_id, difficulty)
+select 'rv-q-q-css-capstone-review-direction', 'question'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, qq.id, 2
+from public.lessons l, public.quiz_questions qq
+where l.slug = 'css-capstone-review' and qq.slug = 'q-css-capstone-review-direction'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  question_id = excluded.question_id, difficulty = excluded.difficulty;
+insert into public.review_items (slug, kind, skill_id, lesson_id, exercise_id, difficulty)
+select 'rv-e-css-capstone-review-debug', 'exercise'::public.review_item_kind,
+       (select id from public.skills where slug = 'css-architecture'),
+       l.id, e.id, 4
+from public.lessons l, public.exercises e
+where l.slug = 'css-capstone-review' and e.slug = 'css-capstone-review-debug'
+on conflict (slug) do update set
+  skill_id = excluded.skill_id, lesson_id = excluded.lesson_id,
+  exercise_id = excluded.exercise_id, difficulty = excluded.difficulty;
 
 -- Items whose question or exercise has left the curriculum.
-delete from public.review_items where slug not in ('rv-q-q-what-is-html', 'rv-q-q-html-purpose', 'rv-e-first-markup-guided', 'rv-e-first-markup-debug', 'rv-q-q-tag-vs-element', 'rv-q-q-attribute-syntax', 'rv-q-q-void-elements', 'rv-e-attributes-guided', 'rv-e-attributes-challenge', 'rv-e-attributes-debug', 'rv-q-q-nesting-order', 'rv-q-q-dom-meaning', 'rv-q-q-comments', 'rv-e-nesting-guided', 'rv-e-nesting-debug', 'rv-q-q-doctype-purpose', 'rv-q-q-head-vs-body', 'rv-q-q-viewport', 'rv-q-q-charset', 'rv-e-skeleton-guided', 'rv-e-skeleton-debug', 'rv-q-q-index-html', 'rv-q-q-one-h1', 'rv-e-first-page-milestone', 'rv-q-q-heading-skip', 'rv-q-q-heading-purpose', 'rv-e-headings-guided', 'rv-e-headings-debug', 'rv-q-q-whitespace', 'rv-q-q-br-use', 'rv-q-q-hr-meaning', 'rv-e-paragraphs-guided', 'rv-e-paragraphs-debug', 'rv-q-q-strong-vs-em', 'rv-q-q-small-meaning', 'rv-e-emphasis-guided', 'rv-e-emphasis-challenge', 'rv-q-q-cite-meaning', 'rv-q-q-datetime-format', 'rv-q-q-q-quotes', 'rv-e-quotes-guided', 'rv-e-quotes-debug', 'rv-q-q-entity-lt', 'rv-q-q-list-choice', 'rv-q-q-nested-list', 'rv-e-lists-guided', 'rv-e-entities-debug', 'rv-q-q-semantic-choice', 'rv-e-article-milestone-build', 'rv-q-q-link-text', 'rv-q-q-noopener', 'rv-e-links-guided', 'rv-e-links-debug', 'rv-q-q-dotdot', 'rv-q-q-leading-slash', 'rv-q-q-fragment-case', 'rv-e-paths-guided', 'rv-e-fragments-challenge', 'rv-e-paths-debug', 'rv-q-q-tel-format', 'rv-q-q-download-attr', 'rv-e-special-links-guided', 'rv-q-q-nav-list', 'rv-q-q-skip-link-position', 'rv-q-q-aria-current', 'rv-e-nav-guided', 'rv-e-skip-link-challenge', 'rv-e-nav-debug', 'rv-q-q-filenames', 'rv-q-q-nav-consistency', 'rv-e-multipage-milestone-build', 'rv-q-q-img-dimensions', 'rv-q-q-hotlinking', 'rv-e-img-guided', 'rv-e-img-debug', 'rv-q-q-empty-alt', 'rv-q-q-alt-vs-caption', 'rv-q-q-missing-alt', 'rv-e-alt-guided', 'rv-e-figure-challenge', 'rv-q-q-srcset-w', 'rv-q-q-sizes-purpose', 'rv-e-srcset-guided', 'rv-e-srcset-debug', 'rv-q-q-picture-img', 'rv-q-q-lazy-hero', 'rv-q-q-picture-vs-srcset', 'rv-e-picture-guided', 'rv-e-lazy-challenge', 'rv-q-q-video-controls', 'rv-q-q-track-kind', 'rv-q-q-fallback-placement', 'rv-e-video-guided', 'rv-e-video-debug', 'rv-q-q-iframe-title', 'rv-q-q-sandbox', 'rv-e-iframe-guided', 'rv-e-media-milestone', 'rv-q-q-semantic-meaning', 'rv-q-q-main-count', 'rv-e-landmarks-guided', 'rv-q-q-article-test', 'rv-q-q-section-heading', 'rv-q-q-outline-algorithm', 'rv-e-section-article-guided', 'rv-e-section-debug', 'rv-q-q-case-sensitivity', 'rv-q-q-comments-value', 'rv-e-patterns-guided', 'rv-q-q-footer-placement', 'rv-e-semantic-rebuild', 'rv-q-q-scope-col', 'rv-q-q-caption-position', 'rv-q-q-layout-tables', 'rv-e-table-guided', 'rv-e-table-debug', 'rv-q-q-label-for', 'rv-q-q-placeholder', 'rv-q-q-number-type', 'rv-q-q-name-attribute', 'rv-e-labels-guided', 'rv-e-input-types-debug', 'rv-q-q-radio-group', 'rv-q-q-button-type', 'rv-q-q-legend-position', 'rv-e-fieldset-guided', 'rv-e-controls-challenge', 'rv-q-q-client-validation', 'rv-q-q-get-vs-post', 'rv-q-q-aria-describedby', 'rv-e-validation-guided', 'rv-e-form-milestone', 'rv-q-q-summary-position', 'rv-q-q-details-name', 'rv-e-details-guided', 'rv-q-q-dialog-close', 'rv-q-q-popover-js', 'rv-q-q-modal-content', 'rv-e-popover-guided', 'rv-e-dialog-debug', 'rv-q-q-progress-vs-meter', 'rv-q-q-datalist-restrict', 'rv-e-datalist-guided', 'rv-e-native-milestone', 'rv-q-q-a11y-tree', 'rv-q-q-keyboard-test', 'rv-q-q-div-button', 'rv-e-keyboard-debug', 'rv-q-q-focusable-defaults', 'rv-q-q-tabindex-negative', 'rv-q-q-positive-tabindex', 'rv-e-keyboard-skip-link-guided', 'rv-e-keyboard-operability-debug', 'rv-q-q-name-order', 'rv-q-q-alt-empty-vs-missing', 'rv-q-q-link-text-alone', 'rv-e-accessible-names-challenge', 'rv-e-accessible-names-debug', 'rv-q-q-aria-first-rule', 'rv-q-q-aria-behaviour', 'rv-q-q-labelledby-vs-label', 'rv-e-aria-guided', 'rv-e-aria-debug', 'rv-q-q-aria-current-page', 'rv-q-q-live-region-timing', 'rv-q-q-assertive-vs-polite', 'rv-e-aria-state-guided', 'rv-e-aria-state-debug', 'rv-q-q-placeholder-not-label', 'rv-q-q-fieldset-legend', 'rv-q-q-autocomplete-requirement', 'rv-e-accessible-form-challenge', 'rv-e-accessible-form-debug', 'rv-q-q-audit-order', 'rv-q-q-duplicate-id-impact', 'rv-e-a11y-audit-milestone', 'rv-q-q-title-length', 'rv-q-q-canonical', 'rv-q-q-noindex-security', 'rv-e-metadata-guided', 'rv-e-metadata-debug', 'rv-q-q-og-property', 'rv-q-q-structured-data-ranking', 'rv-q-q-og-image-url', 'rv-e-og-guided', 'rv-e-jsonld-challenge', 'rv-q-q-lang-missing-effect', 'rv-q-q-wrong-lang-worse', 'rv-q-q-dir-auto', 'rv-e-lang-guided', 'rv-e-lang-debug', 'rv-q-q-metadata-order', 'rv-e-seo-milestone-build', 'rv-q-q-layout-shift', 'rv-q-q-defer-async', 'rv-q-q-preload-overuse', 'rv-e-perf-guided', 'rv-q-q-noopener-why', 'rv-q-q-hidden-input', 'rv-q-q-csp-header', 'rv-e-security-debug', 'rv-q-q-iframe-cost', 'rv-q-q-sandbox-combination', 'rv-q-q-defer-vs-async', 'rv-e-embed-hardening-guided', 'rv-e-third-party-debug', 'rv-q-q-preload-auto', 'rv-e-performance-milestone-build', 'rv-q-q-validator-order', 'rv-q-q-validator-limits', 'rv-q-q-duplicate-id-effect', 'rv-e-validation-debug', 'rv-q-q-elements-panel', 'rv-q-q-network-404', 'rv-q-q-one-change', 'rv-e-devtools-debug', 'rv-q-q-bisection-steps', 'rv-q-q-minimal-repro-value', 'rv-q-q-one-change-at-a-time', 'rv-e-bisection-debug', 'rv-e-minimal-reproduction-challenge', 'rv-q-q-repair-order', 'rv-e-repair-milestone', 'rv-q-q-shell-difference', 'rv-e-shell-guided', 'rv-q-q-capstone-media', 'rv-e-capstone-main-build', 'rv-q-q-review-order', 'rv-q-q-publishing', 'rv-e-final-review-exercise', 'rv-q-q-css-rule-parts', 'rv-q-q-css-invalid-declaration', 'rv-q-q-css-where-it-lives', 'rv-e-css-first-rule-guided', 'rv-e-css-first-rule-debug', 'rv-q-q-css-id-vs-classes', 'rv-q-q-css-source-order', 'rv-q-q-css-important-cost', 'rv-e-css-specificity-guided', 'rv-e-css-specificity-debug', 'rv-q-q-css-what-inherits', 'rv-q-q-css-inheritance-vs-specificity', 'rv-q-q-css-button-font', 'rv-e-css-inheritance-guided', 'rv-e-css-inheritance-debug', 'rv-q-q-css-diagnose-order', 'rv-q-q-css-repair-direction', 'rv-e-css-cascade-milestone-debug', 'rv-q-q-css-width-measures', 'rv-q-q-css-border-box-selector', 'rv-q-q-css-margin-collapse', 'rv-e-css-border-box-guided', 'rv-e-css-box-debug', 'rv-q-q-css-child-combinator', 'rv-q-q-css-where-zero-specificity', 'rv-q-q-css-focus-visible', 'rv-e-css-selectors-guided', 'rv-q-q-css-padding-vs-margin', 'rv-q-q-css-border-needs-style', 'rv-e-css-box-milestone-challenge', 'rv-e-css-box-milestone-debug');
+delete from public.review_items where slug not in ('rv-q-q-what-is-html', 'rv-q-q-html-purpose', 'rv-e-first-markup-guided', 'rv-e-first-markup-debug', 'rv-q-q-tag-vs-element', 'rv-q-q-attribute-syntax', 'rv-q-q-void-elements', 'rv-e-attributes-guided', 'rv-e-attributes-challenge', 'rv-e-attributes-debug', 'rv-q-q-nesting-order', 'rv-q-q-dom-meaning', 'rv-q-q-comments', 'rv-e-nesting-guided', 'rv-e-nesting-debug', 'rv-q-q-doctype-purpose', 'rv-q-q-head-vs-body', 'rv-q-q-viewport', 'rv-q-q-charset', 'rv-e-skeleton-guided', 'rv-e-skeleton-debug', 'rv-q-q-index-html', 'rv-q-q-one-h1', 'rv-e-first-page-milestone', 'rv-q-q-heading-skip', 'rv-q-q-heading-purpose', 'rv-e-headings-guided', 'rv-e-headings-debug', 'rv-q-q-whitespace', 'rv-q-q-br-use', 'rv-q-q-hr-meaning', 'rv-e-paragraphs-guided', 'rv-e-paragraphs-debug', 'rv-q-q-strong-vs-em', 'rv-q-q-small-meaning', 'rv-e-emphasis-guided', 'rv-e-emphasis-challenge', 'rv-q-q-cite-meaning', 'rv-q-q-datetime-format', 'rv-q-q-q-quotes', 'rv-e-quotes-guided', 'rv-e-quotes-debug', 'rv-q-q-entity-lt', 'rv-q-q-list-choice', 'rv-q-q-nested-list', 'rv-e-lists-guided', 'rv-e-entities-debug', 'rv-q-q-semantic-choice', 'rv-e-article-milestone-build', 'rv-q-q-link-text', 'rv-q-q-noopener', 'rv-e-links-guided', 'rv-e-links-debug', 'rv-q-q-dotdot', 'rv-q-q-leading-slash', 'rv-q-q-fragment-case', 'rv-e-paths-guided', 'rv-e-fragments-challenge', 'rv-e-paths-debug', 'rv-q-q-tel-format', 'rv-q-q-download-attr', 'rv-e-special-links-guided', 'rv-q-q-nav-list', 'rv-q-q-skip-link-position', 'rv-q-q-aria-current', 'rv-e-nav-guided', 'rv-e-skip-link-challenge', 'rv-e-nav-debug', 'rv-q-q-filenames', 'rv-q-q-nav-consistency', 'rv-e-multipage-milestone-build', 'rv-q-q-img-dimensions', 'rv-q-q-hotlinking', 'rv-e-img-guided', 'rv-e-img-debug', 'rv-q-q-empty-alt', 'rv-q-q-alt-vs-caption', 'rv-q-q-missing-alt', 'rv-e-alt-guided', 'rv-e-figure-challenge', 'rv-q-q-srcset-w', 'rv-q-q-sizes-purpose', 'rv-e-srcset-guided', 'rv-e-srcset-debug', 'rv-q-q-picture-img', 'rv-q-q-lazy-hero', 'rv-q-q-picture-vs-srcset', 'rv-e-picture-guided', 'rv-e-lazy-challenge', 'rv-q-q-video-controls', 'rv-q-q-track-kind', 'rv-q-q-fallback-placement', 'rv-e-video-guided', 'rv-e-video-debug', 'rv-q-q-iframe-title', 'rv-q-q-sandbox', 'rv-e-iframe-guided', 'rv-e-media-milestone', 'rv-q-q-semantic-meaning', 'rv-q-q-main-count', 'rv-e-landmarks-guided', 'rv-q-q-article-test', 'rv-q-q-section-heading', 'rv-q-q-outline-algorithm', 'rv-e-section-article-guided', 'rv-e-section-debug', 'rv-q-q-case-sensitivity', 'rv-q-q-comments-value', 'rv-e-patterns-guided', 'rv-q-q-footer-placement', 'rv-e-semantic-rebuild', 'rv-q-q-scope-col', 'rv-q-q-caption-position', 'rv-q-q-layout-tables', 'rv-e-table-guided', 'rv-e-table-debug', 'rv-q-q-label-for', 'rv-q-q-placeholder', 'rv-q-q-number-type', 'rv-q-q-name-attribute', 'rv-e-labels-guided', 'rv-e-input-types-debug', 'rv-q-q-radio-group', 'rv-q-q-button-type', 'rv-q-q-legend-position', 'rv-e-fieldset-guided', 'rv-e-controls-challenge', 'rv-q-q-client-validation', 'rv-q-q-get-vs-post', 'rv-q-q-aria-describedby', 'rv-e-validation-guided', 'rv-e-form-milestone', 'rv-q-q-summary-position', 'rv-q-q-details-name', 'rv-e-details-guided', 'rv-q-q-dialog-close', 'rv-q-q-popover-js', 'rv-q-q-modal-content', 'rv-e-popover-guided', 'rv-e-dialog-debug', 'rv-q-q-progress-vs-meter', 'rv-q-q-datalist-restrict', 'rv-e-datalist-guided', 'rv-e-native-milestone', 'rv-q-q-a11y-tree', 'rv-q-q-keyboard-test', 'rv-q-q-div-button', 'rv-e-keyboard-debug', 'rv-q-q-focusable-defaults', 'rv-q-q-tabindex-negative', 'rv-q-q-positive-tabindex', 'rv-e-keyboard-skip-link-guided', 'rv-e-keyboard-operability-debug', 'rv-q-q-name-order', 'rv-q-q-alt-empty-vs-missing', 'rv-q-q-link-text-alone', 'rv-e-accessible-names-challenge', 'rv-e-accessible-names-debug', 'rv-q-q-aria-first-rule', 'rv-q-q-aria-behaviour', 'rv-q-q-labelledby-vs-label', 'rv-e-aria-guided', 'rv-e-aria-debug', 'rv-q-q-aria-current-page', 'rv-q-q-live-region-timing', 'rv-q-q-assertive-vs-polite', 'rv-e-aria-state-guided', 'rv-e-aria-state-debug', 'rv-q-q-placeholder-not-label', 'rv-q-q-fieldset-legend', 'rv-q-q-autocomplete-requirement', 'rv-e-accessible-form-challenge', 'rv-e-accessible-form-debug', 'rv-q-q-audit-order', 'rv-q-q-duplicate-id-impact', 'rv-e-a11y-audit-milestone', 'rv-q-q-title-length', 'rv-q-q-canonical', 'rv-q-q-noindex-security', 'rv-e-metadata-guided', 'rv-e-metadata-debug', 'rv-q-q-og-property', 'rv-q-q-structured-data-ranking', 'rv-q-q-og-image-url', 'rv-e-og-guided', 'rv-e-jsonld-challenge', 'rv-q-q-lang-missing-effect', 'rv-q-q-wrong-lang-worse', 'rv-q-q-dir-auto', 'rv-e-lang-guided', 'rv-e-lang-debug', 'rv-q-q-metadata-order', 'rv-e-seo-milestone-build', 'rv-q-q-layout-shift', 'rv-q-q-defer-async', 'rv-q-q-preload-overuse', 'rv-e-perf-guided', 'rv-q-q-noopener-why', 'rv-q-q-hidden-input', 'rv-q-q-csp-header', 'rv-e-security-debug', 'rv-q-q-iframe-cost', 'rv-q-q-sandbox-combination', 'rv-q-q-defer-vs-async', 'rv-e-embed-hardening-guided', 'rv-e-third-party-debug', 'rv-q-q-preload-auto', 'rv-e-performance-milestone-build', 'rv-q-q-validator-order', 'rv-q-q-validator-limits', 'rv-q-q-duplicate-id-effect', 'rv-e-validation-debug', 'rv-q-q-elements-panel', 'rv-q-q-network-404', 'rv-q-q-one-change', 'rv-e-devtools-debug', 'rv-q-q-bisection-steps', 'rv-q-q-minimal-repro-value', 'rv-q-q-one-change-at-a-time', 'rv-e-bisection-debug', 'rv-e-minimal-reproduction-challenge', 'rv-q-q-repair-order', 'rv-e-repair-milestone', 'rv-q-q-shell-difference', 'rv-e-shell-guided', 'rv-q-q-capstone-media', 'rv-e-capstone-main-build', 'rv-q-q-review-order', 'rv-q-q-publishing', 'rv-e-final-review-exercise', 'rv-q-q-css-rule-parts', 'rv-q-q-css-invalid-declaration', 'rv-q-q-css-where-it-lives', 'rv-e-css-first-rule-guided', 'rv-e-css-first-rule-debug', 'rv-q-q-css-id-vs-classes', 'rv-q-q-css-source-order', 'rv-q-q-css-important-cost', 'rv-e-css-specificity-guided', 'rv-e-css-specificity-debug', 'rv-q-q-css-what-inherits', 'rv-q-q-css-inheritance-vs-specificity', 'rv-q-q-css-button-font', 'rv-e-css-inheritance-guided', 'rv-e-css-inheritance-debug', 'rv-q-q-css-diagnose-order', 'rv-q-q-css-repair-direction', 'rv-e-css-cascade-milestone-debug', 'rv-q-q-css-width-measures', 'rv-q-q-css-border-box-selector', 'rv-q-q-css-margin-collapse', 'rv-e-css-border-box-guided', 'rv-e-css-box-debug', 'rv-q-q-css-child-combinator', 'rv-q-q-css-where-zero-specificity', 'rv-q-q-css-focus-visible', 'rv-e-css-selectors-guided', 'rv-q-q-css-padding-vs-margin', 'rv-q-q-css-border-needs-style', 'rv-e-css-box-milestone-challenge', 'rv-e-css-box-milestone-debug', 'rv-q-q-css-inline-ignores', 'rv-q-q-css-display-none-cost', 'rv-q-q-css-replaced-elements', 'rv-e-css-flow-guided', 'rv-q-q-css-absolute-against', 'rv-q-q-css-stacking-context-cause', 'rv-q-q-css-zindex-static', 'rv-e-css-position-guided', 'rv-e-css-stacking-debug', 'rv-q-q-css-out-of-flow-space', 'rv-q-q-css-relative-no-offsets', 'rv-e-css-flow-milestone-debug', 'rv-q-q-css-justify-axis', 'rv-q-q-css-align-items-default', 'rv-q-q-css-gap-benefit', 'rv-e-css-flex-centre-guided', 'rv-e-css-flex-axis-debug', 'rv-q-q-css-flex-1-expands', 'rv-q-q-css-flex-auto-vs-1', 'rv-q-q-css-min-width-zero', 'rv-e-css-flex-sidebar-guided', 'rv-e-css-flex-wrap-debug', 'rv-q-q-css-space-between', 'rv-q-q-css-nested-flex', 'rv-e-css-flex-milestone-challenge', 'rv-q-q-css-fr-meaning', 'rv-q-q-css-implicit-rows', 'rv-q-q-css-fr-vs-percent', 'rv-e-css-grid-tracks-guided', 'rv-q-q-css-auto-fit', 'rv-q-q-css-auto-fit-vs-fill', 'rv-q-q-css-grid-vs-flex', 'rv-e-css-grid-responsive-guided', 'rv-e-css-grid-areas-debug', 'rv-q-q-css-area-span', 'rv-q-q-css-nested-grid-why', 'rv-e-css-grid-milestone-challenge', 'rv-q-q-css-max-width', 'rv-q-q-css-clamp-parts', 'rv-q-q-css-ch-unit', 'rv-e-css-fluid-guided', 'rv-q-q-css-mobile-first', 'rv-q-q-css-breakpoint-source', 'rv-q-q-css-container-query-why', 'rv-e-css-mobile-first-guided', 'rv-e-css-responsive-debug', 'rv-q-q-css-query-last-resort', 'rv-q-q-css-rem-breakpoints', 'rv-e-css-responsive-milestone-challenge', 'rv-q-q-css-token-inherits', 'rv-q-q-css-var-fallback', 'rv-q-q-css-token-scope', 'rv-e-css-tokens-guided', 'rv-q-q-css-theme-approach', 'rv-q-q-css-token-naming', 'rv-q-q-css-prefers-scheme', 'rv-e-css-theme-guided', 'rv-e-css-tokens-debug', 'rv-q-q-css-variant-vs-theme', 'rv-q-q-css-no-literal-colours', 'rv-e-css-tokens-milestone-challenge', 'rv-q-q-css-measure', 'rv-q-q-css-lineheight-unit', 'rv-q-q-css-rem-type', 'rv-e-css-type-guided', 'rv-q-q-css-contrast-body', 'rv-q-q-css-colour-alone', 'rv-q-q-css-currentcolor', 'rv-e-css-contrast-debug', 'rv-q-q-css-scale-benefit', 'rv-q-q-css-heading-leading', 'rv-e-css-type-milestone-challenge', 'rv-q-q-css-transition-where', 'rv-q-q-css-transition-all', 'rv-q-q-css-duration', 'rv-e-css-transition-guided', 'rv-q-q-css-cheap-props', 'rv-q-q-css-reduced-motion', 'rv-q-q-css-keyframes-name', 'rv-e-css-motion-guided', 'rv-e-css-motion-debug', 'rv-q-q-css-motion-both', 'rv-q-q-css-motion-important', 'rv-e-css-motion-milestone-challenge', 'rv-q-q-css-important-escalation', 'rv-q-q-css-flat-selectors', 'rv-q-q-css-name-meaning', 'rv-e-css-naming-debug', 'rv-q-q-css-layer-order', 'rv-q-q-css-where-reset', 'rv-q-q-css-deletable', 'rv-e-css-layers-guided', 'rv-q-q-css-variant-class', 'rv-q-q-css-arch-goal', 'rv-e-css-architecture-milestone-challenge', 'rv-q-q-css-struck-through', 'rv-q-q-css-computed-panel', 'rv-q-q-css-missing-rule', 'rv-e-css-invalid-debug', 'rv-q-q-css-first-check', 'rv-q-q-css-inline-width', 'rv-q-q-css-bisect', 'rv-e-css-applies-debug', 'rv-q-q-css-signature-invalid', 'rv-q-q-css-repair-by-lowering', 'rv-e-css-debugging-milestone-debug', 'rv-q-q-css-capstone-order', 'rv-q-q-css-capstone-typography', 'rv-e-css-capstone-foundation-guided', 'rv-q-q-css-capstone-autofit', 'rv-q-q-css-capstone-breakpoint-source', 'rv-e-css-capstone-layout-guided', 'rv-q-q-css-capstone-outline', 'rv-q-q-css-capstone-review-direction', 'rv-e-css-capstone-review-debug');
 
 commit;
