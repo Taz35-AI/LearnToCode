@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { cx } from '@/lib/utils';
 import { Badge } from '@/components/ui';
+import { CourseSwitcher } from './course-switcher';
 import {
   BookIcon,
   CertificateIcon,
@@ -48,6 +49,10 @@ export function AppShell({
   learnerLevel,
   streakDays,
   onSignOut,
+  courses,
+  activeCourseSlug,
+  courseTitle,
+  onSwitchCourse,
 }: {
   children: React.ReactNode;
   displayName: string;
@@ -55,6 +60,10 @@ export function AppShell({
   learnerLevel: number;
   streakDays: number;
   onSignOut: () => void;
+  courses: { slug: string; title: string }[];
+  activeCourseSlug: string;
+  courseTitle: string;
+  onSwitchCourse: (formData: FormData) => void;
 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -108,6 +117,15 @@ export function AppShell({
             <LogoMark size={28} />
             HTML Hero
           </Link>
+          <p className="mt-1 pl-[2.375rem] text-xs text-muted">{courseTitle}</p>
+        </div>
+
+        <div className="px-3 pb-3">
+          <CourseSwitcher
+            courses={courses}
+            activeSlug={activeCourseSlug}
+            action={onSwitchCourse}
+          />
         </div>
 
         <nav aria-label="Main" className="flex-1 overflow-y-auto px-3">
@@ -176,6 +194,14 @@ export function AppShell({
               >
                 Close
               </button>
+            </div>
+            <div className="border-b border-app p-3">
+              <CourseSwitcher
+                courses={courses}
+                activeSlug={activeCourseSlug}
+                action={onSwitchCourse}
+                onSwitch={() => setMenuOpen(false)}
+              />
             </div>
             <nav aria-label="Main" className="flex-1 overflow-y-auto p-3">
               {navList}

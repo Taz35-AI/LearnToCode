@@ -4,6 +4,9 @@ import { getProfile, getStudyDates, getTotalXp } from '@/lib/data/learner';
 import { learnerLevel } from '@/lib/progress/xp';
 import { computeStreak } from '@/lib/progress/pace';
 import { logoutAction } from '@/lib/actions/auth';
+import { setActiveCourseAction } from '@/lib/actions/course';
+import { getCourses } from '@/lib/data/catalogue';
+import { getActiveCourseSlug } from '@/lib/data/course-context';
 import { AppShell } from '@/components/learn/app-shell';
 import { isSupabaseConfigured } from '@/lib/env';
 import { SetupRequired } from '@/components/learn/setup-required';
@@ -23,10 +26,12 @@ export default async function LearnLayout({ children }: { children: React.ReactN
   const user = await getCurrentUser();
   if (!user) redirect('/login');
 
-  const [profile, totalXp, studyDates] = await Promise.all([
+  const [profile, totalXp, studyDates, courses, activeCourseSlug] = await Promise.all([
     getProfile(user.id),
     getTotalXp(user.id),
     getStudyDates(user.id),
+    getCourses(),
+    getActiveCourseSlug(),
   ]);
 
   // A learner who has not finished onboarding has no plan, so send them there.
@@ -44,6 +49,10 @@ export default async function LearnLayout({ children }: { children: React.ReactN
       learnerLevel={level.level}
       streakDays={streak.current}
       onSignOut={logoutAction}
+      courses={courses.map(({ slug, title }) => ({ slug, title }))}
+      activeCourseSlug={activeCourseSlug}
+      courseTitle={courses.find((c) => c.slug === activeCourseSlug)?.title ?? 'HTML Hero'}
+      onSwitchCourse={setActiveCourseAction}
     >
       {children}
     </AppShell>

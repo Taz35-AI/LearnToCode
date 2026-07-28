@@ -2,9 +2,11 @@ import 'server-only';
 
 import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
+import { getActiveCourseSlug } from './course-context';
 import type {
   AchievementRow,
   AssessmentRow,
+  CourseRow,
   ExerciseRequirementRow,
   ExerciseRow,
   LearningMediaRow,
@@ -32,16 +34,29 @@ import type {
  *      same lesson in three places issues one query, not three.
  */
 
-export const COURSE_SLUG = 'html-hero';
-
+/**
+ * The learner's current course.
+ *
+ * Every catalogue query below is scoped to this. It used to be a hard-coded
+ * `html-hero`, which meant the CSS course could be seeded and published and
+ * still be unreachable from every page in the application.
+ */
 export const getCourse = cache(async () => {
+  const supabase = await createClient();
+  const slug = await getActiveCourseSlug();
+  const { data } = await supabase.from('courses').select('*').eq('slug', slug).maybeSingle();
+  return data;
+});
+
+/** Every published course, for the course switcher. */
+export const getCourses = cache(async (): Promise<CourseRow[]> => {
   const supabase = await createClient();
   const { data } = await supabase
     .from('courses')
     .select('*')
-    .eq('slug', COURSE_SLUG)
-    .maybeSingle();
-  return data;
+    .eq('is_published', true)
+    .order('ordinal');
+  return data ?? [];
 });
 
 export interface LevelWithModules extends LevelRow {
@@ -54,21 +69,45 @@ export const getRoadmap = cache(async (): Promise<LevelWithModules[]> => {
   const course = await getCourse();
   if (!course) return [];
 
-  const [levelsResult, modulesResult, lessonsResult, skillsResult, prereqsResult] =
-    await Promise.all([
-      supabase.from('levels').select('*').eq('course_id', course.id).order('ordinal'),
-      supabase.from('modules').select('*').order('ordinal'),
-      supabase.from('lessons').select('*').order('ordinal'),
-      supabase.from('module_skills').select('*'),
-      supabase.from('module_prerequisites').select('*'),
-    ]);
+  const { data: levelRows } = await supabase
+    .from('levels')
+    .select('*')
+    .eq('course_id', course.id)
+    .order('ordinal');
 
-  const modules = modulesResult.data ?? [];
+  const levels = levelRows ?? [];
+  const levelIds = levels.map((level) => level.id);
+  if (levelIds.length === 0) return [];
+
+  // Scoped to this course's levels. These used to be fetched unfiltered and
+  // joined in memory, which pulled every module and lesson of every course to
+  // render one of them.
+  const { data: moduleRows } = await supabase
+    .from('modules')
+    .select('*')
+    .in('level_id', levelIds)
+    .order('ordinal');
+
+  const modules = moduleRows ?? [];
+  const moduleIds = modules.map((module) => module.id);
+
+  const [lessonsResult, skillsResult, prereqsResult] = await Promise.all([
+    moduleIds.length
+      ? supabase.from('lessons').select('*').in('module_id', moduleIds).order('ordinal')
+      : Promise.resolve({ data: [] as LessonRow[] }),
+    moduleIds.length
+      ? supabase.from('module_skills').select('*').in('module_id', moduleIds)
+      : Promise.resolve({ data: [] as { module_id: string; skill_id: string }[] }),
+    moduleIds.length
+      ? supabase.from('module_prerequisites').select('*').in('module_id', moduleIds)
+      : Promise.resolve({ data: [] as { module_id: string; prerequisite_module_id: string }[] }),
+  ]);
+
   const lessons = lessonsResult.data ?? [];
   const moduleSkills = skillsResult.data ?? [];
   const modulePrereqs = prereqsResult.data ?? [];
 
-  return (levelsResult.data ?? []).map((level) => ({
+  return levels.map((level) => ({
     ...level,
     modules: modules
       .filter((m) => m.level_id === level.id)
@@ -83,13 +122,33 @@ export const getRoadmap = cache(async (): Promise<LevelWithModules[]> => {
   }));
 });
 
-/** Module gating data, in the shape `evaluateModuleGate` expects. */
+/**
+ * Module gating data, in the shape `evaluateModuleGate` expects.
+ *
+ * Scoped to the active course: a learner in the CSS course must not have their
+ * progress computed against the HTML course's modules, and vice versa.
+ */
 export const getModuleGates = cache(async () => {
   const supabase = await createClient();
-  const [{ data: modules }, { data: prereqs }, { data: skills }] = await Promise.all([
-    supabase.from('modules').select('id, slug, title, level_id, ordinal').order('ordinal'),
-    supabase.from('module_prerequisites').select('*'),
-    supabase.from('module_skills').select('*'),
+  const course = await getCourse();
+  if (!course) return [];
+
+  const { data: levels } = await supabase.from('levels').select('id').eq('course_id', course.id);
+  const levelIds = (levels ?? []).map((level) => level.id);
+  if (levelIds.length === 0) return [];
+
+  const { data: modules } = await supabase
+    .from('modules')
+    .select('id, slug, title, level_id, ordinal')
+    .in('level_id', levelIds)
+    .order('ordinal');
+
+  const moduleIds = (modules ?? []).map((module) => module.id);
+  if (moduleIds.length === 0) return [];
+
+  const [{ data: prereqs }, { data: skills }] = await Promise.all([
+    supabase.from('module_prerequisites').select('*').in('module_id', moduleIds),
+    supabase.from('module_skills').select('*').in('module_id', moduleIds),
   ]);
 
   return (modules ?? []).map((module) => ({
@@ -255,12 +314,21 @@ export const getLessonDetail = cache(
   },
 );
 
-/** The flat course order, used for next/previous and progress maths. */
+/**
+ * The flat course order, used for next/previous and progress maths.
+ *
+ * Scoped by `course_slug`. Unscoped, the last lesson of the HTML course had the
+ * first lesson of the CSS course as its "next", so the continue button walked a
+ * learner straight out of the course they were in — and every completion
+ * percentage was computed against both courses at once.
+ */
 export const getLessonOrder = cache(async (): Promise<{ id: string; slug: string; title: string; moduleId: string }[]> => {
   const supabase = await createClient();
+  const slug = await getActiveCourseSlug();
   const { data } = await supabase
     .from('course_outline')
     .select('lesson_id, lesson_slug, lesson_title, module_id, level_ordinal, module_ordinal, lesson_ordinal')
+    .eq('course_slug', slug)
     .order('level_ordinal')
     .order('module_ordinal')
     .order('lesson_ordinal');

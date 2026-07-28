@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Quiz, type QuizQuestionView } from '@/components/learn/quiz';
+import { CourseSwitcher } from '@/components/learn/course-switcher';
 import { LessonBlock } from '@/components/learn/lesson-blocks';
 import { Badge, Button, Callout, EmptyState, ErrorState, Field, ProgressBar, Stat } from '@/components/ui';
 import { inlineFormat } from '@/lib/utils';
@@ -687,5 +688,49 @@ describe('quiz', () => {
       />,
     );
     expect(screen.getByText(/answered this before and were incorrect/)).toBeInTheDocument();
+  });
+});
+
+/**
+ * The course switcher.
+ *
+ * It is the only route to the CSS course, so "does it render both courses and
+ * submit the right slug" is load-bearing rather than cosmetic.
+ */
+describe('CourseSwitcher', () => {
+  const courses = [
+    { slug: 'html-hero', title: 'HTML Hero' },
+    { slug: 'css-architect', title: 'CSS Architect' },
+  ];
+
+  it('offers every course and marks the current one', () => {
+    render(<CourseSwitcher courses={courses} activeSlug="html-hero" action={() => {}} />);
+
+    const group = screen.getByRole('group', { name: /course/i });
+    expect(within(group).getByRole('button', { name: /HTML Hero/ })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+    expect(within(group).getByRole('button', { name: 'CSS Architect' })).not.toHaveAttribute(
+      'aria-current',
+    );
+  });
+
+  it('submits the slug of the course chosen', async () => {
+    const action = vi.fn();
+    render(<CourseSwitcher courses={courses} activeSlug="html-hero" action={action} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'CSS Architect' }));
+
+    expect(action).toHaveBeenCalledTimes(1);
+    const submitted = action.mock.calls[0]?.[0] as FormData;
+    expect(submitted.get('course')).toBe('css-architect');
+  });
+
+  it('renders nothing when there is only one course to choose from', () => {
+    const { container } = render(
+      <CourseSwitcher courses={[courses[0]!]} activeSlug="html-hero" action={() => {}} />,
+    );
+    expect(container).toBeEmptyDOMElement();
   });
 });

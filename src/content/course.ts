@@ -108,14 +108,21 @@ export function courseStats(course: CourseSpec = COURSE) {
   };
 }
 
-/** The same figures summed across every course the seed will emit. */
-export function programmeStats() {
-  const perCourse = COURSES.map((course) => courseStats(course));
+/**
+ * The same figures summed across several courses.
+ *
+ * Defaults to every course, which is what the seed generator and the database
+ * health check need. Anything a *learner* is shown must pass
+ * `publishedCourses()` instead — a course still being written must never
+ * inflate the figures on the marketing page.
+ */
+export function programmeStats(courses: CourseSpec[] = COURSES) {
+  const perCourse = courses.map((course) => courseStats(course));
   const sum = (pick: (s: ReturnType<typeof courseStats>) => number) =>
     perCourse.reduce((total, s) => total + pick(s), 0);
 
   return {
-    courses: COURSES.length,
+    courses: courses.length,
     publishedCourses: publishedCourses().length,
     levels: sum((s) => s.levels),
     modules: sum((s) => s.modules),
@@ -123,6 +130,8 @@ export function programmeStats() {
     blocks: sum((s) => s.blocks),
     retrievalBlocks: sum((s) => s.retrievalBlocks),
     exercises: sum((s) => s.exercises),
+    debugChallenges: sum((s) => s.debugChallenges),
+    projectMissions: sum((s) => s.projectMissions),
     quizQuestions: sum((s) => s.quizQuestions),
     totalMinutes: sum((s) => s.totalMinutes),
   };

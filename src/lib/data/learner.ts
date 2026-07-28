@@ -6,7 +6,8 @@ import { getLessonOrder, getModuleGates, getRoadmap, getSkills } from './catalog
 import { evaluateModuleGate, isMastered, recommendPractice } from '@/lib/progress/mastery';
 import { buildPaceReport, computeStreak, recommendPace } from '@/lib/progress/pace';
 import { learnerLevel } from '@/lib/progress/xp';
-import { totalCourseMinutes } from '@/content/course';
+import { COURSE, courseBySlug, totalCourseMinutes } from '@/content/course';
+import { getActiveCourseSlug } from './course-context';
 import type {
   ExerciseAttemptRow,
   LearningPlanRow,
@@ -303,7 +304,9 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     {
       minutesPerDay: plan?.minutes_per_day ?? 60,
       studyDays: plan?.study_days ?? [1, 2, 3, 4, 5],
-      totalCourseMinutes: totalCourseMinutes(),
+      // The course the learner is actually in, not always the HTML one — a
+      // pace estimate built from the wrong course's length is worse than none.
+      totalCourseMinutes: totalCourseMinutes(courseBySlug(await getActiveCourseSlug()) ?? COURSE),
       targetCompletionDate: plan?.target_completion_date
         ? new Date(plan.target_completion_date)
         : null,

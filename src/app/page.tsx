@@ -9,17 +9,21 @@ import {
   TargetIcon,
   TrophyIcon,
 } from '@/components/ui/icons';
-import { LEVELS, courseStats, totalCourseMinutes } from '@/content/course';
+import { programmeStats, publishedCourses } from '@/content/course';
 import { formatMinutes } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'HTML Hero — learn HTML properly, from complete beginner to professional',
+  title: 'HTML Hero — learn HTML and CSS properly, from complete beginner to professional',
   description:
-    'A mastery-based interactive course. Twelve levels, real coding exercises, debugging challenges and one professional website you build as you go.',
+    'Two mastery-based interactive courses. Twenty-four levels, real coding exercises, debugging challenges and one professional website you build and style as you go.',
 };
 
 export default function LandingPage() {
-  const stats = courseStats();
+  // Programme-wide, so the figures describe what is actually on offer. They
+  // were course-scoped and stayed that way after the CSS course shipped, which
+  // meant the page advertised roughly half of what a learner would get.
+  const courses = publishedCourses();
+  const stats = programmeStats(courses);
 
   return (
     <>
@@ -59,13 +63,13 @@ export default function LandingPage() {
                 Mastery-based · not day-based
               </p>
               <h1 className="mt-3 text-4xl font-bold leading-[1.1] text-ink lg:text-5xl text-balance">
-                Learn HTML properly, from never having written a tag.
+                Learn HTML and CSS properly, from never having written a tag.
               </h1>
               <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted">
-                Twelve levels take you from &ldquo;what is a tag?&rdquo; to building, validating and
-                publishing a professional multi-page website. Every term is explained before it is
-                used. Every level is unlocked by demonstrating you understand it — never by a day
-                number.
+                Two courses and {stats.levels} levels take you from &ldquo;what is a tag?&rdquo; to
+                building, styling and publishing a professional multi-page website. Every term is
+                explained before it is used. Every level is unlocked by demonstrating you understand
+                it — never by a day number.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -79,8 +83,8 @@ export default function LandingPage() {
               </div>
 
               <p className="mt-5 text-sm text-muted">
-                About {formatMinutes(totalCourseMinutes())} of material · roughly 30 days at 45–75
-                minutes a day
+                About {formatMinutes(stats.totalMinutes)} of material across both courses ·
+                roughly 30 days each at 45–75 minutes a day
               </p>
             </div>
 
@@ -134,10 +138,11 @@ export default function LandingPage() {
         {/* --- Numbers --- */}
         <section aria-labelledby="numbers" className="border-y border-app bg-[hsl(var(--bg-subtle))]">
           <h2 id="numbers" className="sr-only">
-            What the course contains
+            What the programme contains
           </h2>
           <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-5 py-10 lg:grid-cols-5 lg:px-8">
             {[
+              [courses.length, 'courses'],
               [stats.levels, 'mastery levels'],
               [stats.lessons, 'interactive lessons'],
               [stats.exercises, 'coding exercises'],
@@ -204,31 +209,41 @@ export default function LandingPage() {
               The journey
             </h2>
             <p className="mt-3 max-w-2xl text-muted">
-              Twelve levels, {stats.modules} modules. Each ends with a milestone project and an
-              assessment you must pass to move on.
+              {stats.levels} levels across {courses.length} courses, {stats.modules} modules. Each
+              level ends with a milestone project and an assessment you must pass to move on.
             </p>
 
-            <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {LEVELS.map((level, index) => (
-                <li key={level.slug}>
-                  <Card className="h-full p-5">
-                    <div className="flex items-center gap-3">
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[hsl(var(--accent-soft))] text-sm font-bold text-[hsl(var(--accent))]">
-                        {index + 1}
-                      </span>
-                      <h3 className="font-semibold text-ink">{level.title}</h3>
-                    </div>
-                    <p className="mt-2.5 text-sm text-muted">{level.subtitle}</p>
-                    <p className="mt-3 flex gap-2 text-sm text-ink">
-                      <span className="mt-0.5 shrink-0 text-[hsl(var(--success))]" aria-hidden="true">
-                        <CheckIcon size={15} />
-                      </span>
-                      {level.outcome}
-                    </p>
-                  </Card>
-                </li>
-              ))}
-            </ol>
+            {courses.map((course) => (
+              <div key={course.slug} className="mt-10">
+                <h3 className="text-xl font-bold text-ink">{course.title}</h3>
+                <p className="mt-1.5 max-w-2xl text-sm text-muted">{course.outcome}</p>
+
+                <ol className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {course.levels.map((level, index) => (
+                    <li key={level.slug}>
+                      <Card className="h-full p-5">
+                        <div className="flex items-center gap-3">
+                          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[hsl(var(--accent-soft))] text-sm font-bold text-[hsl(var(--accent))]">
+                            {index + 1}
+                          </span>
+                          <h4 className="font-semibold text-ink">{level.title}</h4>
+                        </div>
+                        <p className="mt-2.5 text-sm text-muted">{level.subtitle}</p>
+                        <p className="mt-3 flex gap-2 text-sm text-ink">
+                          <span
+                            className="mt-0.5 shrink-0 text-[hsl(var(--success))]"
+                            aria-hidden="true"
+                          >
+                            <CheckIcon size={15} />
+                          </span>
+                          {level.outcome}
+                        </p>
+                      </Card>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))}
           </div>
         </section>
 

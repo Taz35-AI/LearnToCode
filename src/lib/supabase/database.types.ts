@@ -116,6 +116,11 @@ export type CourseRow = Timestamps & {
   recommended_days: number;
   recommended_minutes_per_day: number;
   version: string;
+  /** Added by 0008_multi_course.sql, when the platform became a programme. */
+  ordinal: number;
+  accent: string;
+  outcome: string;
+  is_published: boolean;
 }
 
 export type LevelRow = Timestamps & {
