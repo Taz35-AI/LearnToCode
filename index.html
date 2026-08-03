@@ -19,8 +19,27 @@
         Restore
         <input id="restore-input" type="file" accept="application/json" hidden />
       </label>
+      <button id="signout-btn" class="btn btn-secondary" type="button" hidden>Sign out</button>
     </div>
   </header>
+
+  <!-- Sign-in overlay (shown only when Supabase is configured and not signed in) -->
+  <div id="auth-overlay" class="auth-overlay" hidden>
+    <form id="auth-form" class="auth-card" autocomplete="on">
+      <h2>Sign in</h2>
+      <p class="auth-hint">Use the account set up in Supabase.</p>
+      <div class="field">
+        <label for="auth-email">Email</label>
+        <input id="auth-email" type="email" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label for="auth-password">Password</label>
+        <input id="auth-password" type="password" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn btn-primary" id="auth-submit">Sign in</button>
+      <p id="auth-error" class="auth-error" role="alert" hidden></p>
+    </form>
+  </div>
 
   <main>
     <!-- Summary cards -->
@@ -137,10 +156,12 @@
     </section>
   </main>
 
-  <footer class="app-footer">
+  <footer class="app-footer" id="mode-footer">
     Data is stored in this browser only. Use <strong>Backup</strong> regularly and keep the file safe.
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
