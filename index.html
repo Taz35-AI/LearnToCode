@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reimbursement Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Reimbursement Tracker</h1>
+      <p class="subtitle">Company invoices &amp; expenses paid on a personal card</p>
+    </div>
+    <div class="header-actions">
+      <button id="export-csv-btn" class="btn btn-secondary" type="button">Export CSV</button>
+      <button id="backup-btn" class="btn btn-secondary" type="button">Backup</button>
+      <label class="btn btn-secondary file-btn">
+        Restore
+        <input id="restore-input" type="file" accept="application/json" hidden />
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <!-- Summary cards -->
+    <section class="summary" aria-label="Summary">
+      <div class="card card-outstanding">
+        <span class="card-label">Owed to him (outstanding)</span>
+        <span class="card-value" id="sum-outstanding">£0.00</span>
+        <span class="card-detail" id="sum-outstanding-count">0 payments</span>
+      </div>
+      <div class="card">
+        <span class="card-label">Reimbursed to date</span>
+        <span class="card-value" id="sum-reimbursed">£0.00</span>
+        <span class="card-detail" id="sum-reimbursed-count">0 payments</span>
+      </div>
+      <div class="card">
+        <span class="card-label">Total VAT recorded</span>
+        <span class="card-value" id="sum-vat">£0.00</span>
+        <span class="card-detail">across all entries</span>
+      </div>
+    </section>
+
+    <!-- Entry form -->
+    <section class="panel" aria-label="Add payment">
+      <h2 id="form-title">Add a payment</h2>
+      <form id="entry-form" autocomplete="off">
+        <div class="form-grid">
+          <div class="field">
+            <label for="f-date">Date paid</label>
+            <input id="f-date" type="date" required />
+          </div>
+          <div class="field">
+            <label for="f-reference">Reference <span class="optional">(invoice no. or your own ref)</span></label>
+            <input id="f-reference" type="text" maxlength="60" placeholder="e.g. INV-2041" />
+          </div>
+          <div class="field">
+            <label for="f-supplier">Supplier <span class="optional">(leave blank for parking, tolls, etc.)</span></label>
+            <input id="f-supplier" type="text" maxlength="80" placeholder="e.g. Acme Supplies Ltd" />
+          </div>
+          <div class="field">
+            <label for="f-description">Description</label>
+            <input id="f-description" type="text" maxlength="120" placeholder="e.g. Office materials / Parking at site" />
+          </div>
+          <div class="field">
+            <label for="f-vat">VAT</label>
+            <select id="f-vat">
+              <option value="20" selected>Standard 20%</option>
+              <option value="5">Reduced 5%</option>
+              <option value="0">No VAT / zero-rated</option>
+              <option value="custom">Custom rate…</option>
+            </select>
+          </div>
+          <div class="field" id="custom-vat-field" hidden>
+            <label for="f-vat-custom">Custom VAT %</label>
+            <input id="f-vat-custom" type="number" min="0" max="100" step="0.1" placeholder="e.g. 12.5" />
+          </div>
+          <div class="field">
+            <label for="f-gross">Gross £ <span class="optional">(amount on card)</span></label>
+            <input id="f-gross" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+          <div class="field">
+            <label for="f-net">Net £ <span class="optional">(auto-calculated)</span></label>
+            <input id="f-net" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+        <p class="vat-preview" id="vat-preview">VAT: £0.00</p>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="save-btn">Add payment</button>
+          <button type="button" class="btn btn-secondary" id="cancel-edit-btn" hidden>Cancel edit</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Filters + table -->
+    <section class="panel" aria-label="Payments">
+      <div class="list-toolbar">
+        <h2>Payments</h2>
+        <div class="filters">
+          <input id="filter-search" type="search" placeholder="Search ref, supplier, description…" />
+          <select id="filter-status">
+            <option value="all">All</option>
+            <option value="outstanding">Outstanding</option>
+            <option value="reimbursed">Reimbursed</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="entries-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Reference</th>
+              <th>Supplier</th>
+              <th>Description</th>
+              <th class="num">Net</th>
+              <th class="num">VAT</th>
+              <th class="num">Gross</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="entries-body"></tbody>
+          <tfoot>
+            <tr id="totals-row">
+              <td colspan="4">Totals (filtered)</td>
+              <td class="num" id="total-net">£0.00</td>
+              <td class="num" id="total-vat">£0.00</td>
+              <td class="num" id="total-gross">£0.00</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+        <p id="empty-state" class="empty-state" hidden>No payments yet — add the first one above.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    Data is stored in this browser only. Use <strong>Backup</strong> regularly and keep the file safe.
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
