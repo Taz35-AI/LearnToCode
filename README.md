@@ -27,39 +27,18 @@ It's a plain static web app — no install, no build, no server.
 - **Locally:** just open `index.html` in a browser.
 - **Hosted:** deploy the repo to any static host (Vercel, Netlify, GitHub Pages).
 
-## Where the data lives
+## Important: where the data lives
 
-Two modes, chosen automatically from `config.js`:
-
-- **Supabase mode** (recommended): fill in `SUPABASE_URL` and `SUPABASE_ANON_KEY`
-  in `config.js`. Data is stored in a shared Supabase database behind a sign-in,
-  so it syncs across devices and everyone who signs in sees the same list.
-- **Local mode**: leave `config.js` empty. Entries are saved in that browser only
-  (localStorage). Use **Backup** regularly.
-
-### Connecting Supabase (one-time setup)
-
-1. In the [Supabase dashboard](https://supabase.com/dashboard), open your project.
-2. **SQL Editor** → New query → paste and run `supabase/schema.sql`. This creates
-   the `payments` table with Row Level Security (only signed-in users can access it).
-3. **Authentication → Users → Add user** — create an account for each person
-   (tick *Auto Confirm User*).
-4. **Authentication → Sign In / Up** — turn **off** "Allow new users to sign up",
-   so nobody else can create an account.
-5. **Project Settings → API** — copy the *Project URL* and *anon public* key into
-   `config.js`, commit, and deploy.
-
-On first sign-in, if the browser still has entries from local mode and the
-database is empty, the app offers to upload them automatically.
+Entries are saved in **that browser on that device** (localStorage). They are not
+synced anywhere. Use the **Backup** button regularly and keep the JSON file safe —
+**Restore** brings everything back on a new device or after clearing the browser.
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | Page structure: summary cards, entry form, payments table, sign-in |
+| `index.html` | Page structure: summary cards, entry form, payments table |
 | `styles.css` | All styling |
-| `app.js` | Logic: VAT/net/gross calculation, storage backends, auth, CSV export |
-| `config.js` | Supabase URL + anon key (empty = local mode) |
-| `supabase/schema.sql` | Database table + Row Level Security, run once in Supabase |
+| `app.js` | Logic: VAT/net/gross calculation, storage, filtering, CSV export, backup |
 
 Amounts are stored internally as integer pence to avoid floating-point rounding errors.

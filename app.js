@@ -2,15 +2,10 @@
 
 /* =========================================================
  * Reimbursement Tracker
- *
  * All amounts are stored as integer pence to avoid floating
  * point errors. VAT is derived from gross (or gross from net)
  * at the entry's rate; a 0% rate covers no-VAT items such as
  * parking, where there may also be no supplier.
- *
- * Storage: if config.js contains Supabase credentials, data is
- * kept in a shared Supabase table behind a sign-in; otherwise
- * it falls back to this browser's localStorage.
  * ======================================================= */
 
 const STORAGE_KEY = "reimbursement-tracker:v1";
@@ -60,6 +55,29 @@ function todayIso() {
   return `${now.getFullYear()}-${month}-${day}`;
 }
 
+/* ---------- Storage ---------- */
+
+function loadEntries() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter(isValidEntry) : [];
+  } catch (error) {
+    console.error("Could not load saved data:", error);
+    return [];
+  }
+}
+
+function saveEntries(entries) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  } catch (error) {
+    console.error("Could not save data:", error);
+    alert("Saving failed — your browser storage may be full or blocked.");
+  }
+}
+
 function isValidEntry(entry) {
   return (
     entry &&
@@ -71,137 +89,9 @@ function isValidEntry(entry) {
   );
 }
 
-/* ---------- Local storage backend ---------- */
-
-const localStore = {
-  name: "local",
-
-  read() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed.filter(isValidEntry) : [];
-    } catch (error) {
-      console.error("Could not load saved data:", error);
-      return [];
-    }
-  },
-
-  write(list) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-  },
-
-  async list() {
-    return this.read();
-  },
-
-  async upsert(entry) {
-    const list = this.read();
-    const index = list.findIndex((e) => e.id === entry.id);
-    if (index >= 0) list[index] = entry;
-    else list.push(entry);
-    this.write(list);
-  },
-
-  async remove(id) {
-    this.write(this.read().filter((e) => e.id !== id));
-  },
-
-  async replaceAll(list) {
-    this.write(list);
-  },
-};
-
-/* ---------- Supabase backend ---------- */
-
-/** Map an app entry (camelCase, pence) to a database row (snake_case). */
-function toRow(entry) {
-  return {
-    id: entry.id,
-    date: entry.date,
-    reference: entry.reference,
-    supplier: entry.supplier,
-    description: entry.description,
-    vat_rate: entry.vatRate,
-    gross_pence: entry.grossPence,
-    net_pence: entry.netPence,
-    vat_pence: entry.vatPence,
-    reimbursed: entry.reimbursed,
-    reimbursed_date: entry.reimbursedDate,
-    created_at: entry.createdAt,
-  };
-}
-
-function fromRow(row) {
-  return {
-    id: row.id,
-    date: row.date,
-    reference: row.reference ?? "",
-    supplier: row.supplier ?? "",
-    description: row.description ?? "",
-    vatRate: Number(row.vat_rate),
-    grossPence: Number(row.gross_pence),
-    netPence: Number(row.net_pence),
-    vatPence: Number(row.vat_pence),
-    reimbursed: Boolean(row.reimbursed),
-    reimbursedDate: row.reimbursed_date,
-    createdAt: row.created_at,
-  };
-}
-
-function createCloudStore(client) {
-  return {
-    name: "cloud",
-
-    async list() {
-      const { data, error } = await client
-        .from("payments")
-        .select("*")
-        .order("date", { ascending: false })
-        .limit(2000);
-      if (error) throw error;
-      return data.map(fromRow);
-    },
-
-    async upsert(entry) {
-      const { error } = await client.from("payments").upsert(toRow(entry));
-      if (error) throw error;
-    },
-
-    async remove(id) {
-      const { error } = await client.from("payments").delete().eq("id", id);
-      if (error) throw error;
-    },
-
-    async replaceAll(list) {
-      const { error: deleteError } = await client
-        .from("payments")
-        .delete()
-        .not("id", "is", null);
-      if (deleteError) throw deleteError;
-      if (list.length === 0) return;
-      const { error: insertError } = await client
-        .from("payments")
-        .insert(list.map(toRow));
-      if (insertError) throw insertError;
-    },
-  };
-}
-
-/* ---------- Backend selection ---------- */
-
-const appConfig = window.APP_CONFIG || {};
-const cloudConfigured = Boolean(appConfig.SUPABASE_URL && appConfig.SUPABASE_ANON_KEY);
-const supabaseClient =
-  cloudConfigured && window.supabase
-    ? window.supabase.createClient(appConfig.SUPABASE_URL, appConfig.SUPABASE_ANON_KEY)
-    : null;
-const store = supabaseClient ? createCloudStore(supabaseClient) : localStore;
-
 /* ---------- State ---------- */
 
-let entries = [];
+let entries = loadEntries();
 let editingId = null; // id of the entry being edited, or null when adding
 
 /* ---------- DOM references ---------- */
@@ -226,23 +116,6 @@ const searchInput = document.getElementById("filter-search");
 const statusFilter = document.getElementById("filter-status");
 const tableBody = document.getElementById("entries-body");
 const emptyState = document.getElementById("empty-state");
-const modeFooter = document.getElementById("mode-footer");
-
-const authOverlay = document.getElementById("auth-overlay");
-const authForm = document.getElementById("auth-form");
-const authEmail = document.getElementById("auth-email");
-const authPassword = document.getElementById("auth-password");
-const authSubmit = document.getElementById("auth-submit");
-const authError = document.getElementById("auth-error");
-const signOutBtn = document.getElementById("signout-btn");
-
-/* ---------- Error reporting ---------- */
-
-function reportError(action, error) {
-  console.error(`${action} failed:`, error);
-  const detail = error && error.message ? ` (${error.message})` : "";
-  alert(`${action} failed — please try again.${detail}`);
-}
 
 /* ---------- VAT rate from the form ---------- */
 
@@ -316,7 +189,7 @@ function startEditing(entry) {
   form.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-async function handleSubmit(event) {
+function handleSubmit(event) {
   event.preventDefault();
 
   const grossPence = poundsToPence(grossInput.value);
@@ -344,65 +217,50 @@ async function handleSubmit(event) {
     createdAt: existing ? existing.createdAt : new Date().toISOString(),
   };
 
-  saveBtn.disabled = true;
-  try {
-    await store.upsert(entry);
-    if (existing) {
-      entries = entries.map((e) => (e.id === entry.id ? entry : e));
-    } else {
-      entries.push(entry);
-    }
-    resetForm();
-    render();
-  } catch (error) {
-    reportError("Saving the payment", error);
-  } finally {
-    saveBtn.disabled = false;
+  if (existing) {
+    entries = entries.map((e) => (e.id === editingId ? entry : e));
+  } else {
+    entries.push(entry);
   }
+
+  saveEntries(entries);
+  resetForm();
+  render();
 }
 
 /* ---------- Row actions ---------- */
 
-async function toggleReimbursed(id) {
+function toggleReimbursed(id) {
   const entry = entries.find((e) => e.id === id);
   if (!entry) return;
 
-  const updated = { ...entry };
   if (entry.reimbursed) {
-    if (!confirm("Mark this payment as NOT reimbursed again?")) return;
-    updated.reimbursed = false;
-    updated.reimbursedDate = null;
+    const undo = confirm("Mark this payment as NOT reimbursed again?");
+    if (!undo) return;
+    entry.reimbursed = false;
+    entry.reimbursedDate = null;
   } else {
     const suggested = todayIso();
     const input = prompt("Date reimbursed (YYYY-MM-DD):", suggested);
     if (input === null) return; // cancelled
-    updated.reimbursed = true;
-    updated.reimbursedDate = /^\d{4}-\d{2}-\d{2}$/.test(input.trim()) ? input.trim() : suggested;
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(input.trim()) ? input.trim() : suggested;
+    entry.reimbursed = true;
+    entry.reimbursedDate = date;
   }
 
-  try {
-    await store.upsert(updated);
-    entries = entries.map((e) => (e.id === id ? updated : e));
-    render();
-  } catch (error) {
-    reportError("Updating the payment", error);
-  }
+  saveEntries(entries);
+  render();
 }
 
-async function deleteEntry(id) {
+function deleteEntry(id) {
   const entry = entries.find((e) => e.id === id);
   if (!entry) return;
   const label = entry.reference || entry.description || formatMoney(entry.grossPence);
   if (!confirm(`Delete "${label}"? This cannot be undone.`)) return;
-
-  try {
-    await store.remove(id);
-    entries = entries.filter((e) => e.id !== id);
-    if (editingId === id) resetForm();
-    render();
-  } catch (error) {
-    reportError("Deleting the payment", error);
-  }
+  entries = entries.filter((e) => e.id !== id);
+  if (editingId === id) resetForm();
+  saveEntries(entries);
+  render();
 }
 
 /* ---------- Filtering ---------- */
@@ -559,7 +417,7 @@ function exportBackup() {
 
 function restoreBackup(file) {
   const reader = new FileReader();
-  reader.onload = async () => {
+  reader.onload = () => {
     try {
       const restored = JSON.parse(reader.result);
       if (!Array.isArray(restored) || !restored.every(isValidEntry)) {
@@ -568,12 +426,13 @@ function restoreBackup(file) {
       if (entries.length > 0 && !confirm(`Replace the ${entries.length} current entries with the ${restored.length} entries in this backup?`)) {
         return;
       }
-      await store.replaceAll(restored);
       entries = restored;
+      saveEntries(entries);
       resetForm();
       render();
     } catch (error) {
-      reportError("Restoring the backup", error);
+      console.error("Restore failed:", error);
+      alert("That file is not a valid backup from this app.");
     }
   };
   reader.onerror = () => alert("Could not read the file.");
@@ -590,116 +449,10 @@ function downloadFile(content, filename, mimeType) {
   URL.revokeObjectURL(url);
 }
 
-/* ---------- Auth (cloud mode only) ---------- */
-
-function showAuthOverlay(visible) {
-  authOverlay.hidden = !visible;
-  signOutBtn.hidden = visible;
-  if (visible) authEmail.focus();
-}
-
-async function handleSignIn(event) {
-  event.preventDefault();
-  authError.hidden = true;
-  authSubmit.disabled = true;
-  try {
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email: authEmail.value.trim(),
-      password: authPassword.value,
-    });
-    if (error) throw error;
-    authPassword.value = "";
-    showAuthOverlay(false);
-    await loadAndRender();
-    await offerLocalMigration();
-  } catch (error) {
-    console.error("Sign-in failed:", error);
-    authError.textContent = error.message || "Sign-in failed — check email and password.";
-    authError.hidden = false;
-  } finally {
-    authSubmit.disabled = false;
-  }
-}
-
-async function handleSignOut() {
-  try {
-    await supabaseClient.auth.signOut();
-  } catch (error) {
-    console.error("Sign-out failed:", error);
-  }
-  entries = [];
-  resetForm();
-  render();
-  showAuthOverlay(true);
-}
-
-/**
- * One-time helper: if this browser still has entries from local-only
- * mode and the shared database is empty, offer to move them up.
- */
-async function offerLocalMigration() {
-  const localEntries = localStore.read();
-  if (localEntries.length === 0 || entries.length > 0) return;
-  const move = confirm(
-    `This browser has ${localEntries.length} entr${localEntries.length === 1 ? "y" : "ies"} saved from before the database was connected. Upload them now?`,
-  );
-  if (!move) return;
-  try {
-    await store.replaceAll(localEntries);
-    localStorage.removeItem(STORAGE_KEY);
-    entries = localEntries;
-    render();
-  } catch (error) {
-    reportError("Uploading the existing entries", error);
-  }
-}
-
-/* ---------- Load & boot ---------- */
-
-async function loadAndRender() {
-  try {
-    entries = await store.list();
-  } catch (error) {
-    reportError("Loading the payments", error);
-    entries = [];
-  }
-  render();
-}
-
-async function init() {
-  resetForm();
-
-  if (!supabaseClient) {
-    if (cloudConfigured) {
-      // Config is filled in but the Supabase library failed to load.
-      alert("Could not load the database library — running in local-only mode for now.");
-    }
-    modeFooter.innerHTML =
-      "Data is stored in this browser only. Use <strong>Backup</strong> regularly and keep the file safe.";
-    await loadAndRender();
-    return;
-  }
-
-  modeFooter.innerHTML =
-    "Data is stored securely in your Supabase database and shared between everyone who signs in.";
-
-  const { data } = await supabaseClient.auth.getSession();
-  if (data.session) {
-    showAuthOverlay(false);
-    await loadAndRender();
-    await offerLocalMigration();
-  } else {
-    render();
-    showAuthOverlay(true);
-  }
-}
-
 /* ---------- Wire-up ---------- */
 
 form.addEventListener("submit", handleSubmit);
 cancelEditBtn.addEventListener("click", resetForm);
-authForm.addEventListener("submit", handleSignIn);
-signOutBtn.addEventListener("click", handleSignOut);
 
 vatSelect.addEventListener("change", () => {
   customVatField.hidden = vatSelect.value !== "custom";
@@ -720,4 +473,5 @@ document.getElementById("restore-input").addEventListener("change", (event) => {
   event.target.value = ""; // allow re-selecting the same file
 });
 
-init();
+resetForm();
+render();
